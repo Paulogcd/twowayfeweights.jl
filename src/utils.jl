@@ -240,7 +240,6 @@ function twowayfeweights_rename_var(df::DataFrames.DataFrame, Y, G, T, D, D0, co
         random_weight_df = df[:, random_weights] # ? 
         rename!(random_weight_df, random_weight_rename)
     end
-
     
     # original_names = c(Y, G, T, D, controls, treatments)
     original_names = [Y, G, T, D, controls, treatments]

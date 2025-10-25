@@ -207,16 +207,16 @@ end
     twowayfeweights_rename_var(df, Y, G, T, D, D0, controls, treatments, random_weights)
 Rename variables according to the control, random_weight, syntax, in a dataframe.
 """
-# twowayfeweights_rename_var <- function(df, Y, G, T, D, D0, controls, treatments, random_weights) {
-function twowayfeweights_rename_var(df::DataFrames.DataFrame, Y, G, T, D, D0, controls, treatments, random_weights)
+function twowayfeweights_rename_var(;df::DataFrames.DataFrame, Y, G, T, D, D0, controls, treatments, random_weights)
+    # twowayfeweights_rename_var <- function(df, Y, G, T, D, D0, controls, treatments, random_weights) {
 
     # controls = ["age", "date", "weather"]
     # treatments = ["money"]
     
     # controls_rename <- get_controls_rename(controls)
     # treatments_rename <- get_treatments_rename(treatments)
-    controls_rename = get_controls_rename(controls)
-    treatments_rename = get_treatments_rename(treatments)
+    controls_rename     = get_controls_rename(controls)
+    treatments_rename   = get_treatments_rename(treatments)
   
     # if (length(random_weights) > 0) {
     #     random_weight_rename <- get_random_weight_rename(random_weights)
@@ -237,8 +237,9 @@ function twowayfeweights_rename_var(df::DataFrames.DataFrame, Y, G, T, D, D0, co
     # If there is any random weight variables, rename them with "weights_" in front of their names.
     if length(random_weights) > 0
         random_weight_rename = get_random_weight_rename(random_weights)
-        random_weight_df = df[:, random_weights] # ? 
-        rename!(random_weight_df, random_weight_rename)
+        # random_weight_df = DataFrames.DataFrame(df[:, random_weights]) # ? 
+        random_weight_df = select(df, random_weights) # ? 
+        rename!(random_weight_df, random_weights => random_weight_rename)
     end
     
     # original_names = c(Y, G, T, D, controls, treatments)
@@ -252,20 +253,24 @@ function twowayfeweights_rename_var(df::DataFrames.DataFrame, Y, G, T, D, D0, co
     # }
     # D0 = ["this"]
     if length(D0) > 0 
-        original_names = append!(original_names, D0)
-        new_names = append!(new_names, "D0")
+        original_names = vcat(original_names, D0)
+        new_names = vcat(new_names, "D0")
+        # new_names = append!(new_names, "D0")
     end
     
     # df <- data.frame(df) %>% dplyr::select_at(dplyr::vars(original_names))
-    df = DataFrames.DataFrame(df)[:,[original_names]] # ? 
+    df = DataFrames.DataFrame(
+        df[:, original_names]
+    )
+         # ? 
     # colnames(df) <- new_names
-    DataFrames.rename![df, new_names] # to be tested <=> "?"
+    DataFrames.rename!(df, new_names) # to be tested <=> "?"
     
     # if (length(random_weights) > 0) {
     #     df <- cbind(df, random_weight_df)
     # }
-    if length(random_weight) > 0 
-        df = append!(df, random_weight_df)
+    if length(random_weights) > 0 
+        df = hcat(df, random_weight_df)
     end
     
     # return(df)

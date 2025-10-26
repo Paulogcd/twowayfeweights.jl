@@ -253,8 +253,8 @@ function twowayfeweights_rename_var(;df::DataFrames.DataFrame, Y, G, T, D, D0, c
     # }
     # D0 = ["this"]
     if length(D0) > 0 
-        original_names = vcat(original_names, D0)
-        new_names = vcat(new_names, "D0")
+        original_names  = vcat(original_names, D0)
+        new_names       = vcat(new_names, "D0")
         # new_names = append!(new_names, "D0")
     end
     
@@ -278,21 +278,21 @@ function twowayfeweights_rename_var(;df::DataFrames.DataFrame, Y, G, T, D, D0, c
 # }
 end
 
-
-# twowayfeweights_transform
 # twowayfeweights_transform <- function(df, controls, weights, treatments) {
-function twowayfeweights_transform(df,controls,weights,treatments)
+function twowayfeweights_transform(;df::DataFrames.DataFrame, controls, weights, treatments)
 
-#   .data = NULL # ? 
-    data = []
+#   .data = NULL # This is done to modify the default .data of dplyr functions.
+#   data = []
 #
 #   ret = twowayfeweights_normalize_var(df, "D")
-    ret = twowayfeweights_normalize_var(df, "D") # ? No former definition of twowayfeweights_normalize_var
+    # No former definition of twowayfeweights_normalize_var, 
+    # go check the file "twowayfeweights_normalize_var.jl"
+    ret = twowayfeweights_normalize_var(df = df, varname = "D") 
 
 #   if (ret$retcode) {
-    if ret.retcode # if ret is a list, we can use "." instead of "$"
+    if ret[:retcode] # if ret is a list, we can use "." instead of "$"
 #     df <- ret$df
-        df = ret.df
+        df = ret[:df]
         print("The treatment variable in the regression varies within some group * period cells.")
         print("The treatment variable in the regression varies within some group * period cells.")
         print("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
@@ -305,10 +305,10 @@ function twowayfeweights_transform(df,controls,weights,treatments)
 #   for (control in controls) {
     for control in controls
 #     ret = twowayfeweights_normalize_var(df, control)
-        ret = twowayfeweights_normalize_var(df, control)
+        ret = twowayfeweights_normalize_var(df = df, varname = control)
 #     if (ret$retcode) {
-        if ret.retcode
-            df = ret.df
+        if ret[:retcode]
+            df = ret[:df]
             print("The control variable %s in the regression varies within some group * period cells.", control)
             print("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
             print("with controls apply to group * period level controls.")
@@ -328,17 +328,17 @@ function twowayfeweights_transform(df,controls,weights,treatments)
 #   for (treatment in treatments) {
     for treatment in treatments
 #     ret = twowayfeweights_normalize_var(df, treatment)
-        ret = twowayfeweights_normalize_var(df, treatment)
+        ret = twowayfeweights_normalize_var(df = df, varname = treatment)
 #     if (ret$retcode) {
-        if ret.retcode
-#       df <- ret$df
-        df = ret.df
-        print("The other treatment variable %s in the regression varies within some group * period cells.", treatment)
-        print("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
-        print("with several treatments apply to group * period level controls.")
-        print("The command will replace replace other treatment variable %s by its average value in each group * period.", treatment)
-        print("The results below apply to the regression with other treatment variable %s averaged at the group * period level.", treatment)
-#     }
+        if ret[:retcode]
+#           df <- ret$df
+            df = ret[:df]
+            print("The other treatment variable %s in the regression varies within some group * period cells.", treatment)
+            print("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
+            print("with several treatments apply to group * period level controls.")
+            print("The command will replace replace other treatment variable %s by its average value in each group * period.", treatment)
+            print("The results below apply to the regression with other treatment variable %s averaged at the group * period level.", treatment)
+    #     }
         end
 #   }
     end
@@ -349,17 +349,18 @@ function twowayfeweights_transform(df,controls,weights,treatments)
         df.weights = 1
 #   } else {
     else 
-        df.weights = weights
+        df.weights = repeat(weights, nrow(df))
     end
 #     df$weights <- weights
 #   }
 #   
 #   df$Tfactor <- factor(df$T)
-    df.Tfactor = factor(df.T)
+    df.Tfactor = CategoricalArrays.categorical(string.(df.T))
+    # CategoricalArrays.levels(df.T)
 #   TfactorLevels <- length(levels(df$Tfactor))
-    TfactorLevels = length() # ? How to handle that?
+    # TfactorLevels = length(CategoricalArrays.levels(df.Tfactor)) # ¿What is the goal of this line?
 #   df <- df %>% dplyr::mutate(TFactorNum = as.numeric(factor(.data$Tfactor, labels = seq(1:TfactorLevels))))
-    # df.TFactorNum = ...
+    df.TFactorNum = Int64.(df.T)
 #   
 #   return(df)
     return df
@@ -378,6 +379,11 @@ function twowayfeweights_filter(df, Y, G, T, D, D0, cmd_type, controls, treatmen
 #       dplyr::mutate(tag = rowSums(dplyr::across(.cols = c(Y, G, T, D, controls, treatments), .fns = is.na))) %>%
 #       dplyr::filter(.data$tag == 0) %>%
 #       dplyr::select(-.data$tag)
+        gdf = DataFrames.transform(
+            DataFrames.groupby(df,
+                [:Y,:G,:T,:D,:controls,:treatments]), 
+            
+        )
 #   } else {
     else
 #     df <- df %>%

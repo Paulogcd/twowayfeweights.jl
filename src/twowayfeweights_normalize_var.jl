@@ -5,17 +5,9 @@ Internal function to replace a variable by its mean per group and time period.
 """
 function twowayfeweights_normalize_var(;df::DataFrames.DataFrame, varname::String)
 # twowayfeweights_normalize_var = function(df, varname) {
-    # For example: 
-    # df = DataFrames.DataFrame(
-    #             X = rand(8),
-    #             Y = rand(8), 
-    #             C = rand(8), 
-    #             G = [1,1,1,1,2,2,2,2], 
-    #             T = [1,1,2,2,1,1,2,2]
-    # )
 #   suppressWarnings({ 
 #   .data = NULL # This is a "workaround" to avoid no global binding error message. 
-    # data = []
+#   data = []
 #   
 #   var = rlang::sym(varname) # Create a symbol out of the string.
     # varname = "C"
@@ -27,12 +19,11 @@ function twowayfeweights_normalize_var(;df::DataFrames.DataFrame, varname::Strin
     # df[:,:G] = [1,1,2,2]
     # df[:,:T] = [1,1,1,1]
     sdf = transform(
-        groupby(df, [:G, :T]), 
-        var => mean => :tmp_mean_gt, 
-        var => std => :tmp_sd_gt
-    ); 
-    # sdf
-    # df
+        groupby(df, [:G, :T]),
+        var => Statistics.mean => :tmp_mean_gt, 
+        var => Statistics.std => :tmp_sd_gt
+    );
+
     # Here, we have to choose an approach: 
     # either with transform!, that changes the df directly (and sdf is irrelevant)
     # or create a copy, which can be helpful for clarity.
@@ -40,8 +31,8 @@ function twowayfeweights_normalize_var(;df::DataFrames.DataFrame, varname::Strin
     # We have to create a new data frame anyways.
   
 #   tmp_sd_gt_sum = sum(sdf$tmp_sd_gt, na.rm=TRUE)
-    tmp_sd_gt_sum = sum(sdf.tmp_sd_gt)
-    # This condition is essentially if the sum of the temporary standard variation is not null.
+    tmp_sd_gt_sum = sum(sdf[!,:tmp_sd_gt])
+    # This condition is essential if the sum of the temporary standard variation is not null.
     # I don't find strict equivalent of na.rm = TRUE in Julia.
     # This is problematic if I want to handle missing AND NaN.
     # If I want to deal with them separately, it is possible, but not both at the same time.
@@ -51,21 +42,22 @@ function twowayfeweights_normalize_var(;df::DataFrames.DataFrame, varname::Strin
         # isnan.(a)
         # map(x -> isnan(x) ? zero(x) : x, a)
         # rr = map(x -> ismissing(x) || isnan(x) ? zero(x) : x, a)
-    # missing || true
-    # missing || NaN
-    # NaN || missing
-    # typeof(NaN)
-    # isnan(missing) # missing
-    # isnan(NaN) # true
+        # missing || true
+        # missing || NaN
+        # NaN || missing
+        # typeof(NaN)
+        # isnan(missing) # missing
+        # isnan(NaN) # true
 
 #   if (tmp_sd_gt_sum > 0) {
-    retcode = (tmp_sd_gt_sum > 0)
+    retcode     = (tmp_sd_gt_sum > 0)
+    result      = []
     if retcode
-        result = sdf
         # innerjoin(df, sdf, on = [:T,:G], makeunique=true)
+        result = sdf
         # result = leftjoin(df, sdf, on = [:T,:G], makeunique=false)
-        # result = leftjoin(df, sdf, on = Pair(:T,:G), makeunique=true) # Useless if I don't create a new dataframe.
         result = transform(result, :tmp_mean_gt => var)
+        # result = leftjoin(df, sdf, on = Pair(:T,:G), makeunique=true) # Useless if I don't create a new dataframe.
         result = select(result, Not(:tmp_sd_gt, :tmp_mean_gt))
     end
 #     df = df %>% 
@@ -78,44 +70,14 @@ function twowayfeweights_normalize_var(;df::DataFrames.DataFrame, varname::Strin
 #   })
     # !, !!, !!! and := are rlang functions.
 
-    return (;retocde = retcode, df = result)
-end
+    return OrderedCollections.OrderedDict(:retcode => retcode, :df => result)
+    # This is the type that RCall gives me when I run the original 
+    # R code, so let's try to stick with it. 
+
+    # return (;retcode = retcode, df = result)
 #   return(list(retcode = (tmp_sd_gt_sum > 0), df = df))
 # }
 # 
-
-# df = fill(rand(4),5)
-# df = DataFrames.DataFrame(df, :auto)
-# rename!(df, ["X","Y","G","T","C"])
-# df
-
-# For example: 
-# df = DataFrames.DataFrame(
-#             # X = rand(8),
-#             X = [1,2,3,4,5,6,7,8], 
-#             # Y = rand(8), 
-#             Y = [1,2,3,4,5,6,7,8] * 2,
-#             # C = rand(8), 
-#             C = [2,3,4,5,6,7,8,9],
-#             G = [1,1,1,1,2,2,2,2], 
-#             T = [1,1,2,2,1,1,2,2]
-# )
-# 
-# df
-
-# In R: 
-# df <- data.frame(X = rnorm(8), 
-#                     Y = rnorm(8),
-#                     C = rnorm(8),  
-#                     G = c(rep(1,4), rep(2,4)),
-#                     T = c(1,1,2,2,1,1,2,2))
-
-# rr = twowayfeweights_normalize_var(df = df, varname = "C")
-
-# df.C
-# rr.df.C
-
-# rr.df == df
+end
 
 # Not cleaned, but works.
-

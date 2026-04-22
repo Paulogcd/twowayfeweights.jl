@@ -71,20 +71,6 @@ end
 # get_controls_rename(x)
 # ?get_controls_rename()
 
-"""
-    fn_treatment_rename(x)
-
-Rename a variable by writing "OT_" in front of it.
-The `fn_treatment_rename` function is the equivalent of the original `get_controls_rename` function, defined in the original R code such as: 
-        fn_treatment_rename <- function(x) paste("OT", x, sep="_")
-"""
-function fn_treatment_rename(x)
-    
-    x = string.(x)
-    result = "OT_" .* x
-
-    return(result)
-end
 
 # get_treatments_rename <- function(treatments) {unlist(lapply(treatments, fn_treatment_rename))}
 """
@@ -207,7 +193,16 @@ end
     twowayfeweights_rename_var(df, Y, G, T, D, D0, controls, treatments, random_weights)
 Rename variables according to the control, random_weight, syntax, in a dataframe.
 """
-function twowayfeweights_rename_var(;df::DataFrames.DataFrame, Y, G, T, D, D0, controls, treatments, random_weights)
+function twowayfeweights_rename_var(;
+    df::DataFrames.DataFrame,
+    Y::Union{String, Vector{String}},
+    G::Union{String, Vector{String}},
+    T::Union{String, Vector{String}},
+    D::Union{String, Vector{String}},
+    D0::Union{String, Vector{String}, Nothing}, # Can be nothing. To do : check all the possible types of each parameter.
+    controls::Union{String, Vector{String}},
+    treatments::Union{String, Vector{String}},
+    random_weights::Union{String, Vector{String}})
     # twowayfeweights_rename_var <- function(df, Y, G, T, D, D0, controls, treatments, random_weights) {
 
     # controls = ["age", "date", "weather"]
@@ -229,10 +224,10 @@ function twowayfeweights_rename_var(;df::DataFrames.DataFrame, Y, G, T, D, D0, c
     #                     "random_weights_2",
     #                     "random_weights_3",
     #                     "random_weights_4"]
-    # df = DataFrames.DataFrame(random_weights_1 = [1,2,3], 
-    #                             random_weights_2 = [1,2,3], 
-    #                             random_weights_3 = [1,2,3], 
-    #                             random_weights_4 = [1,2,3])
+    df = DataFrames.DataFrame(random_weights_1 = [1,2,3], 
+                                random_weights_2 = [1,2,3], 
+                                random_weights_3 = [1,2,3], 
+                                random_weights_4 = [1,2,3])
     
     # If there is any random weight variables, rename them with "weights_" in front of their names.
     if length(random_weights) > 0

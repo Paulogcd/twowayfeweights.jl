@@ -24,7 +24,7 @@
         random_vector_test = [Random.randstring(12) for _ in 1:100]
         @rput random_vector_test
         # @rget random_vector_test
-        @test random_vector_test == rcopy(R"random_vector_test") # We check they are the same.
+        @test random_vector_test == rcopy(R"random_vector_test") # We check they are the same
 
         # We apply our julia code and the original code to this vector: 
         julia_code_result = fn_ctrl_rename(random_vector_test)

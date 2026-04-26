@@ -70,5 +70,6 @@
         df = random_data_frame_test,
         varname = 'Y')")
     
-    Test.@test julia_code_result == R_code_result
+    Test.@test julia_code_result[:retcode] == R_code_result[:retcode]
+    Test.@test julia_code_result[:df] == R_code_result[:df]
 end;

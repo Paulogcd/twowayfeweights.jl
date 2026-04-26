@@ -9,6 +9,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 CategoricalArrays = "1.0.2"
@@ -16,6 +17,7 @@ DataFrames = "1.8.0"
 OrderedCollections = "1.8.1"
 RCall = "0.14.9"
 Random = "1.11.0"
+Test = "1.11.0"
 julia = "1.6.7"
 
 [extras]

@@ -6,6 +6,7 @@ module twowayfeweights
     using Test
     using Statistics
     using OrderedCollections
+    using CategoricalArrays
 
     # Package code here.
 

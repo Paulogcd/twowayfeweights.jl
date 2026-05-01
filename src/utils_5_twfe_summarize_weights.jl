@@ -1,6 +1,4 @@
-# ##
-# # twowayfeweights_summarize_weights
-# twowayfeweights_summarize_weights <- function(df, var_weight) {
+
 function twowayfeweights_summarize_weights(df, var_weight)
 #   weight_plus <- df[[var_weight]][df[[var_weight]] > 0 & !is.na(df[[var_weight]])] # What is this condition?
     weight_plus = df[[var_weight]][df[[var_weight]] > 0 &&  is.equal(df[[var_weight]], NaN)] # ? 

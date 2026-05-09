@@ -215,8 +215,7 @@
         # For each group, we are then going to generate randomly 
         # the values and add them to the data frame that we 
         # just initialized:
-        random_data_frame_test = DataFrames.DataFrame()
-        
+        random_data_frame_test = DataFrames.DataFrame()        
         for g in 1:G
             
             random_Y_test               = Random.rand(T)
@@ -230,9 +229,10 @@
                 Y               = random_Y_test,
                 G               = g, 
                 T               = 1:T, 
-                D               = random_D, 
+                traitement      = random_D, 
                 D0              = random_D0,
-                controls        = random_controls,
+                control_1       = random_controls,
+                control_2       = random_controls.^2,
                 treatments      = treatments,
                 random_weights  = random_weights)
             
@@ -246,22 +246,22 @@
         julia_code_result = twowayfeweights_filter(
             df = random_data_frame_test,
             Y = "Y",
-            D = "D",
+            D = "traitement",
             D0 = "D0",
             G = "G",
             T = "T",
-            controls      = ["controls"],
-            treatments      = ["treatments"],
+            controls      = ["control_1", "control_2"],
+            treatments      = "treatments",
             cmd_type = "fdTR")
 
         R_code_result = rcopy(R"TwoWayFEWeights:::twowayfeweights_filter(
             df = random_data_frame_test,
             Y = 'Y',
-            D = 'D',
+            D = 'traitement',
             D0 = 'D0',
             G = 'G',
             T = 'T',
-            controls      = 'controls',
+            controls      = c('control_1', 'control_2'),
             treatments      = 'treatments',
             cmd_type = 'fdTR')")
 

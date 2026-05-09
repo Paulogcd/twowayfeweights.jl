@@ -7,6 +7,7 @@ module twowayfeweights
     using Statistics
     using OrderedCollections
     using CategoricalArrays
+    using FixedEffectModels
 
     # Package code here.
 

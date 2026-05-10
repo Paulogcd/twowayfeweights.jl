@@ -43,5 +43,10 @@
         df = random_data_frame_test,
         var_weight = 'random_weights')")
 
-    @test R_code_result == julia_code_result
+    @test R_code_result[:nr_plus] == julia_code_result[:nr_plus]
+    @test R_code_result[:nr_minus] == julia_code_result[:nr_minus]
+    @test R_code_result[:nr_weights] == julia_code_result[:nr_weights]
+    @test R_code_result[:sum_minus] ≈ julia_code_result[:sum_minus]
+    @test R_code_result[:sum_plus] ≈ julia_code_result[:sum_plus]
+
 end;

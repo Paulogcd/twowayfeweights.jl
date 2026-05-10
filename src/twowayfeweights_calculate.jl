@@ -2,10 +2,10 @@
 Internal funcion for calculating the twoway FE weights.
 """
 function twowayfeweights_calculate(;
-    dat::
+    dat::DataFrames.DataFrame,
     type = ["feTR", "fdTR", "feS", "fdS"],
-    controls,
-    treatments)
+    controls::Union{String, Vector{String}},
+    treatments::Union{String, Vector{String}})
 
     # type = match.arg(type) ?
 
@@ -23,6 +23,7 @@ function twowayfeweights_calculate(;
 
     obs = sum(dat.weights)
     gdat = dat %>%
+    gdat = DataFrames.group_by(dat, [G, T])
         dplyr::group_by(.data$G, .data$T) %>%
         dplyr::summarise(P_gt = sum(.data$weights)) %>% dplyr::ungroup()
     dat = dat %>% 
@@ -45,6 +46,30 @@ function twowayfeweights_calculate(;
   
     # Add non-NULL treatment vars
     xvars = [controls, treatments]
+
+    if type == "fdS"
+        denom.lm = ...
+    else 
+        denom.lm = ...
+    end
+
+    if type_fe
+        EPS_VAR = "eps_1"
+    else
+        EPS_VAR = "eps_2"
+    end
+
+    if type_fe || type == "fdS"
+        dat[:, Symbol(EPS_VAR)] = residual...(denom.lm)
+
+  
+  # GM: could we make this if(!type_TR), combined with weights !=0 above?
+  if (type_fe || type=="fdS") {
+    dat[[EPS_VAR]] = resid(denom.lm)
+  } else if (type == "fdTR") {
+    dat[[EPS_VAR]] = resid(denom.lm, na.rm = FALSE)
+    dat[[EPS_VAR]] = ifelse(is.na(dat[[EPS_VAR]]), 0, dat[[EPS_VAR]])
+  }
   
 
     return OrderedCollections.OrderedDict(:dat => dat, beta => :beta)

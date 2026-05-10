@@ -20,7 +20,7 @@ function twowayfeweights_summarize_weights(;
 
     nr_weights = nr_plus + nr_minus
    
-    result = OrderedCollections.OrderedDict(
+    result = OrderedCollections.OrderedDict{Symbol, Any}(
         :nr_plus    => nr_plus,
         :nr_minus   => nr_minus,
         :nr_weights => nr_weights,

@@ -9,7 +9,6 @@ This package is dedicated to the translation of the twowayfeweights package of C
 
 - twowayfeweights_calculate.R
 
-- utils_6.R
 - print.R
 - twowayfeweights.R
 - twowayfeweights_result.R
@@ -26,3 +25,4 @@ This package is dedicated to the translation of the twowayfeweights package of C
 - utils_3.R
 - utils_4.R
 - utils_5.R
+- utils_6.R

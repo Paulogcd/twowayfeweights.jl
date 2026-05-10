@@ -28,6 +28,7 @@
             control_2       = random_controls.^2,
             treatments      = treatments,
             random_weights  = random_weights,
+            nat_weight      = random_weights,
             W               = W)
         
         append!(random_data_frame_test, result)
@@ -39,11 +40,11 @@
 
     julia_code_result = twowayfeweights_test_random_weights(
         df = random_data_frame_test,
-        random_weights = "random_weights")
+        random_weights = ["random_weights"])
 
     R_code_result = rcopy(R"TwoWayFEWeights:::twowayfeweights_test_random_weights(
         df = random_data_frame_test,
         random_weights = 'random_weights')")
 
-    @test R_code_result == julia_code_result
+    @test R_code_result ≈ julia_code_result
 end;

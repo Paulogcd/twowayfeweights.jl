@@ -93,6 +93,6 @@ The `fn_random_weight_rename` function is the equivalent of the original `fn_ran
 """
 function get_random_weight_rename(ws)
     ws = string.(ws)
-    result = twowayfeweights.fn_random_weight_rename(ws)
+    result = fn_random_weight_rename(ws)
     return result
 end

@@ -137,7 +137,7 @@ end
 
 
 """
-    fn_treatment_weight_rename(x)
+    fn_random_weight_rename(x)
 
 Rename a vector of variables by putting "RW_" in front of them.
 The `fn_random_weight_rename` function is the equivalent of the original `fn_random_weight_rename` function, defined in the original R code such as: 
@@ -186,7 +186,7 @@ julia> fn_treatment_weight_rename(x)
  "RW_4"
 ```
 """
-function get_random_weight_rename(ws)
+function get_random_weight_rename(ws)Ò
     ws = string.(ws)
     result = fn_random_weight_rename(ws) 
     return(result)

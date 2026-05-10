@@ -7,14 +7,14 @@ The `fn_ctrl_rename` function is the equivalent of the original `fn_ctrl_rename`
 
 # Examples
 ```jldoctest
-julia> x = [1,2,3,4]
+julia> twowayfeweights.x = [1,2,3,4]
 4-element Vector{Int64}:
  1
  2
  3
  4
 
-julia> fn_ctrl_rename(x)
+julia> twowayfeweights.fn_ctrl_rename(x)
 4-element Vector{String}:
  "ctrl1_"
  "ctrl2_"
@@ -41,14 +41,14 @@ The `get_controls_rename` function is the equivalent of the original `get_contro
     get_controls_rename <- function(controls) unlist(lapply(controls, fn_ctrl_rename))
 
 ```jldoctest
-julia> x = [1,2,3,4]
+julia> twowayfeweights.x = [1,2,3,4]
 4-element Vector{Int64}:
  1
  2
  3
  4
 
-julia> fn_ctrl_rename(x)
+julia> twowayfeweights.fn_ctrl_rename(x)
 4-element Vector{String}:
  "ctrl1_"
  "ctrl2_"
@@ -84,14 +84,14 @@ The `get_treatments_rename` function is the equivalent of the original `get_trea
     get_treatments_rename <- function(treatments) {unlist(lapply(treatments, fn_treatment_rename))}
 
 ```jldoctest
-julia> x = [1,2,3,4]
+julia> twowayfeweights.x = [1,2,3,4]
 4-element Vector{Int64}:
  1
  2
  3
  4
 
-julia> get_treatments_rename(x)
+julia> twowayfeweights.get_treatments_rename(x)
 4-element Vector{String}:
  "OT_1"
  "OT_2"
@@ -115,13 +115,13 @@ The `fn_treatment_weight_rename` function is the equivalent of the original `fn_
     fn_treatment_weight_rename <- function(x) paste("weight_", x, sep = "")
 
 ```jldoctest
-julia> x = [1,2,3,4]
+julia> twowayfeweights.x = [1,2,3,4]
 4-element Vector{Int64}:
  1
  2
  3
  4
-julia> fn_treatment_weight_rename(x)
+julia> twowayfeweights.fn_treatment_weight_rename(x)
 4-element Vector{String}:
  "weight_1"
  "weight_2"
@@ -144,13 +144,13 @@ The `fn_random_weight_rename` function is the equivalent of the original `fn_ran
     fn_random_weight_rename <- function(x) paste("RW", x, sep="_")
 
 ```jldoctest
-julia> x = [1,2,3,4]
+julia> twowayfeweights.x = [1,2,3,4]
 4-element Vector{Int64}:
  1
  2
  3
  4
-julia> fn_random_weight_rename(x)
+julia> twowayfeweights.fn_random_weight_rename(x)
 4-element Vector{String}:
  "RW_1"
  "RW_2"
@@ -172,13 +172,13 @@ The `fn_random_weight_rename` function is the equivalent of the original `fn_ran
     # get_random_weight_rename <- function(ws) unlist(lapply(ws, fn_random_weight_rename))
 
 ```jldoctest
-julia> x = [1,2,3,4]
+julia> twowayfeweights.x = [1,2,3,4]
 4-element Vector{Int64}:
  1
  2
  3
  4
-julia> get_random_weight_rename(x)
+julia> twowayfeweights.get_random_weight_rename(x)
 4-element Vector{String}:
  "RW_1"
  "RW_2"

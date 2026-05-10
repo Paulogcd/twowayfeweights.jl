@@ -12,9 +12,6 @@ function fn_ctrl_rename(x)
 
     return(result)
 end
-# x = [1,2,3,4]
-# fn_ctrl_rename(x)
-# ?fn_ctrl_rename
 
 """
     get_controls_rename(controls)
@@ -29,9 +26,6 @@ function get_controls_rename(controls)
 
     return(result)
 end
-# x = [1,2,3,4]
-# get_controls_rename(x)
-# ?get_controls_rename()
 
 """
     fn_treatment_rename(treatments)

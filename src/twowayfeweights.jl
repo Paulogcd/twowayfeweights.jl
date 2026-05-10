@@ -1,4 +1,9 @@
-module twowayfeweights
+"""
+    Twowayfeweights
+
+Julia implementation of two-way fixed effects weight diagnostics.
+"""
+module Twowayfeweights
 
     using Random
     using DataFrames

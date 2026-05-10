@@ -186,7 +186,7 @@ julia> get_random_weight_rename(x)
  "RW_4"
 ```
 """
-function get_random_weight_rename(ws)Ò
+function get_random_weight_rename(ws)
     ws = string.(ws)
     result = fn_random_weight_rename(ws) 
     return(result)

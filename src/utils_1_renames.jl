@@ -188,6 +188,6 @@ julia> get_random_weight_rename(x)
 """
 function get_random_weight_rename(ws)
     ws = string.(ws)
-    result = fn_random_weight_rename(ws) 
-    return(result)
+    result = twowayfeweights.fn_random_weight_rename(ws)
+    return result
 end

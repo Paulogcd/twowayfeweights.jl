@@ -132,7 +132,7 @@ julia> fn_treatment_weight_rename(x)
 function fn_treatment_weight_rename(x)
     x = string.(x)
     result = "weight_" .* x
-    return(result)
+    return result
 end
 
 
@@ -150,7 +150,7 @@ julia> x = [1,2,3,4]
  2
  3
  4
-julia> fn_treatment_weight_rename(x)
+julia> fn_random_weight_rename(x)
 4-element Vector{String}:
  "RW_1"
  "RW_2"
@@ -178,7 +178,7 @@ julia> x = [1,2,3,4]
  2
  3
  4
-julia> fn_treatment_weight_rename(x)
+julia> get_random_weight_rename(x)
 4-element Vector{String}:
  "RW_1"
  "RW_2"

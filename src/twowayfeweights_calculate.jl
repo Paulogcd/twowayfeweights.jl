@@ -16,15 +16,19 @@ function twowayfeweights_calculate(;
     type_TR = (type in ["feTR", "fdTR"])
     type_fe = (type in ["feTR", "feS"])
 
-    if type_TR 
-        DVAR = [type == "feTR" ? "D" : "D0"]
-        mean_D = mean(skipmissing.(dat[:,:DVAR]), dat.weights)
+    if type_TR
+        DVAR = type == "feTR" ? "D" : "D0"
+        mean_D = mean(skipmissing(dat[:, Symbol(DVAR)]), dat.weights) 
+        # This should be fixed. 
     end
 
-    # obs = sum(dat.weights)
-    # gdat = dat %>%
-    # gdat = DataFrames.group_by(dat, [G, T])
-    #     dplyr::group_by(.data$G, .data$T) %>%
+    obs = sum(dat.weights)
+    gdat = DataFrames.combine(DataFrames.groupby(dat, [:G, :T]), :weights .=> (x->sum(x)) .=> :P_gt)
+
+    dat2 = DataFrames.leftjoin(dat, gdat, on = [:G, :T])
+    dat = DataFrames.combine(dat2, :P_gt => (x --> x * (DVAR/mean_D)))
+
+
     #     dplyr::summarise(P_gt = sum(.data$weights)) %>% dplyr::ungroup()
     # dat = dat %>% 
     #     dplyr::left_join(gdat, by=c("T", "G")) %>% 

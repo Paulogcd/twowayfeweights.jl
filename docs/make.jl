@@ -1,10 +1,15 @@
 using Documenter
-using Twowayfeweights
+using TwoWayFEWeights
 
 makedocs(
-    sitename = "Twowayfeweights",
+    sitename = "TwoWayFEWeights",
     format = Documenter.HTML(),
-    modules = [Twowayfeweights]
+    modules = [TwoWayFEWeights],
+    pages = [
+        "index.md",
+        "TWFE.md",
+        "guide.md"
+    ]
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.

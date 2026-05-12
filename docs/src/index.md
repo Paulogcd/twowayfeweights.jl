@@ -1,3 +1,7 @@
-# twowayfeweights.jl
+# TwoWayFEWeights.jl
 
-Documentation for twowayfeweights.jl
+Documentation for TwoWayFEWeights.jl
+
+```@autodocs
+Modules = [TwoWayFEWeights]
+```

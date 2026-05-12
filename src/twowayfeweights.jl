@@ -1,9 +1,9 @@
 """
-    Twowayfeweights
+    TwowayFEWeights
 
 Julia implementation of two-way fixed effects weight diagnostics.
 """
-module Twowayfeweights
+module TwoWayFEWeights
 
     using Random
     using DataFrames
@@ -14,8 +14,6 @@ module Twowayfeweights
     using CategoricalArrays
     using LinearAlgebra
     using FixedEffectModels
-
-    # Package code here.
 
     # Util functions
     begin

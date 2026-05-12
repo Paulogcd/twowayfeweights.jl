@@ -6,6 +6,12 @@ This package is the Julia translation of the R twowayfeweights package of Cléme
 
 It provides a set of functions to compute the two way fixed effects (TWFE) estimate of de Chaisemartin and D'Haultfoeuille (2020), [available here](https://www.aeaweb.org/articles?id=10.1257/aer.20181169).
 
+# Workflow
+
+1. Once I am done with modifications, I add and commit.
+2. I then use Pkg.develop(".") (or "] dev .")
+3. Then I include the make.jl file in the docs.
+
 # To do
 
 - twowayfeweights_calculate.R

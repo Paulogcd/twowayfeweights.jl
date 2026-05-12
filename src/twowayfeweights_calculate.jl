@@ -18,15 +18,25 @@ function twowayfeweights_calculate(;
 
     if type_TR
         DVAR = type == "feTR" ? "D" : "D0"
-        mean_D = mean(skipmissing(dat[:, Symbol(DVAR)]), dat.weights) 
-        # This should be fixed. 
+        # mean_D = mean(skipmissing(dat[:, Symbol(DVAR)]), dat.weights)
+        # Here, the original R package uses the function weighted.mean, which specifies: 
+          # Missing values in w are not handled specially and so give a missing value as the result. 
+          # However, zero weights are handled specially and the corresponding x values are omitted from the sum.
+        # Also, I discovered this thread: 
+        # https://discourse.julialang.org/t/re-weighted-statistics-with-missings/107502/20
+        # And this issue: 
+        # https://github.com/JuliaStats/Statistics.jl/issues/88
+        # This seems like a *major* issue.
+        # To reproduce the behavior of the original R package, I will define a function in the extra_utils file.
+        mean_D = weighted_mean(x = dat[:, Symbol(DVAR)], w  = dat[:, :weights])
     end
 
     obs = sum(dat.weights)
     gdat = DataFrames.combine(DataFrames.groupby(dat, [:G, :T]), :weights .=> (x->sum(x)) .=> :P_gt)
 
     dat2 = DataFrames.leftjoin(dat, gdat, on = [:G, :T])
-    dat = DataFrames.combine(dat2, :P_gt => (x --> x * (DVAR/mean_D)))
+    dat.P_gt = DataFrames.combine(dat2, :P_gt => (x -> x .* (dat2[:, Symbol(DVAR)] ./ mean_D))) # This generates a 14 x 1 Df.
+    # To fix.
 
 
     #     dplyr::summarise(P_gt = sum(.data$weights)) %>% dplyr::ungroup()

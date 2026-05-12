@@ -14,6 +14,8 @@ module TwoWayFEWeights
     using CategoricalArrays
     using LinearAlgebra
     using FixedEffectModels
+    using StatsBase
+    using Missings
 
     # Util functions
     begin

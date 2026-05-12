@@ -1,13 +1,14 @@
-name = "Twowayfeweights"
-uuid = "7a2c1f84-c3fb-497c-8c15-a6222db6fa69"
+name = "TwoWayFEWeights"
+uuid = "82ae8496-443a-4292-ae20-d7c088f3d720"
 version = "1.0.0-DEV"
 authors = ["Paulogcd <gugelmopaulo@gmail.com> and contributors"]
+
+[workspace]
+projects = ["docs"]
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
-Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FixedEffectModels = "9d5cd8c9-2029-5cab-9928-427838db53e3"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
@@ -17,24 +18,19 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-CategoricalArrays = "1.0.2"
-DataFrames = "1.8.0"
-DataFramesMeta = "0.15.6"
-Documenter = "1.17.0"
+CategoricalArrays = "1.1.0"
+DataFrames = "1.8.2"
 FixedEffectModels = "1.13.1"
 LinearAlgebra = "1.12.0"
 OrderedCollections = "1.8.1"
-RCall = "0.14.9"
+RCall = "0.14.13"
 Random = "1.11.0"
 Statistics = "1.11.1"
 Test = "1.11.0"
-julia = "1.6.7"
+julia = "1.10.10"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test"]
-
-[workspace]
-projects = ["docs"]

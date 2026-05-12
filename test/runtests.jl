@@ -1,4 +1,4 @@
-using Twowayfeweights
+using TwoWayFEWeights
 using Test
 using RCall # We use RCall to compare our output to the one of the original functions.
 using Random 

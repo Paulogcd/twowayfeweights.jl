@@ -127,34 +127,74 @@ function twowayfeweights_calculate(;
 
         # EN COURS !!
         dat[:, :eps_1_weight] = dat[:, Symbol(EPS_VAR)] .* dat[:, :weights]
-        dplyr::mutate(eps_1_weight = .data[[EPS_VAR]] * .data$weights) %>%
-        dplyr::arrange(.data$G, .data$Tfactor) %>%
-        gdat = DataFrames.groupby(dat, [:G, :T])
-        dplyr::group_by(.data$G) %>%
-        dplyr::mutate(E_eps_1_g_ge_aux = rev(cumsum(rev(.data$eps_1_weight)))) %>%
-        dplyr::mutate(weights_aux = rev(cumsum(rev(.data$weights)))) %>%
-        dplyr::mutate(E_eps_1_g_ge = .data$E_eps_1_g_ge_aux / .data$weights_aux) %>% dplyr::ungroup()
+        sort!(dat, [:G, :Tfactor])
+        gdat = DataFrames.groupby(dat, [:G])
+
+
+        # Here, there is a (classic?) problem with operations on grouped dataframe.
+        # We cannot modify them as we would for a standard dataframe, so we use the transform! (note the !)
+        # to modify gdat.
+        transform!(gdat, :eps_1_weight => (x -> reverse(cumsum(reverse(x)))) => :E_eps_1_g_ge_aux)
+        # dplyr::mutate(E_eps_1_g_ge_aux = rev(cumsum(rev(.data$eps_1_weight)))) %>%
+        
+        transform!(gdat, :weights => (x -> reverse(cumsum(reverse(x)))) => :weights_aux)
+        # dplyr::mutate(weights_aux = rev(cumsum(rev(.data$weights))))
+        
+        transform!(gdat, [:E_eps_1_g_ge_aux, :weights_aux] => ((x, y) -> (x ./ y)) => :E_eps_1_g_ge)
+        # dplyr::mutate(E_eps_1_g_ge = .data$E_eps_1_g_ge_aux / .data$weights_aux) %>% dplyr::ungroup()
+
+        # dat
     
     elseif type == "fdTR"
-
+        dat[:, :eps_2] = ifelse(ismissing(dat[:, Symbol(EPS_VAR)]), 0, dat[:, Symbol(EPS_VAR)])
     end
 
-  else if (type=="feS") {
+    # New regression
+    push!(xvars, "D")
+
+    if type == "fdS"
+        dat_regression = dat[dat[:, :weights] .!= 0,:]
+
+        # regressors in xvar
+        rhs = sum(term.(Symbol.(xvars)))
+        # fixed effects
+        fe_terms = sum(fe.(term.(Symbol.(fes))))
+        # full formula
+        ff = term(:D) ~ rhs + fe_terms
+
+        beta_lm = reg(dat_regression, ff, weights = :weights, save = :all)
+
+    else
+        # regressors in xvar
+        rhs = sum(term.(Symbol.(xvars)))
+        # fixed effects
+        fe_terms = sum(fe.(term.(Symbol.(fes))))
+        # full formula
+        ff = term(:D) ~ rhs + fe_terms
+
+        beta_lm = reg(dat, ff, save = :residuals)
+
+    end
     
-    dat = dat %>% 
-      dplyr::mutate(eps_1_weight = .data[[EPS_VAR]] * .data$weights) %>%
-      dplyr::arrange(.data$G, .data$Tfactor) %>%
-      dplyr::group_by(.data$G) %>%
-      dplyr::mutate(E_eps_1_g_ge_aux = rev(cumsum(rev(.data$eps_1_weight)))) %>%
-      dplyr::mutate(weights_aux = rev(cumsum(rev(.data$weights)))) %>%
-      dplyr::mutate(E_eps_1_g_ge = .data$E_eps_1_g_ge_aux / .data$weights_aux) %>% dplyr::ungroup()
+    beta = coef(beta_lm)[coefnames(beta_lm) .== "D"]
     
-  } else if (type=="fdTR") {
+    if type == "feTR"
+        # Original comment:
+        # * Keeping only one observation in each group * period cell
+        # This should be done after this function
+        # bys `group' `time': gen group_period_unit=(_n==1)	
+        # 	drop if group_period_unit==0
+        # 	drop group_period_unit
+        gdat = DataFrames.groupby(dat, [:G, :Tfactor])
+        dat = combine(gdat) do sdf
+            sdf[argmin(sdf.D), :] # This seems off.
+        end
+
+    elseif type == "fdTR"
     
-    dat = dat %>% 
-      dplyr::mutate(eps_2 = ifelse(is.na(.data[[EPS_VAR]]), 0, .data[[EPS_VAR]])) # dup with l. 55?
+    elseif type == "feS"
     
-  }
+    end
 
     return OrderedCollections.OrderedDict(:dat => dat, beta => :beta)
 

@@ -27,6 +27,6 @@ function weighted_mean(;x, w, warnings = true)
 
     return result
 end
-x = [1, 2, 3]
-y = [1, missing, 3]
-weighted_mean(x = x, w = w)
+# x = [1, 2, 3]
+# y = [1, missing, 3]
+# weighted_mean(x = x, w = w)

@@ -27,6 +27,7 @@
             control_1       = random_controls,
             control_2       = random_controls.^2,
             Tfactor         = random_controls.^2,
+            TFactorNum      = random_controls.^3,
             treatments      = treatments,
             weights         = random_weights,
             W               = W)

@@ -33,7 +33,9 @@ function twowayfeweights_calculate(;
         # https://github.com/JuliaStats/Statistics.jl/issues/88
         # This seems like a *major* issue.
         # To reproduce the behavior of the original R package, I will define a function in the extra_utils file.
-        mean_D = weighted_mean(x = dat[:, Symbol(DVAR)], w  = dat[:, :weights])
+        # mean_D = weighted_mean(x = dat[:, Symbol(DVAR)], w  = dat[:, :weights])
+        mean_D = TwoWayFEWeights.weighted_mean(x = dat[:, Symbol(DVAR)], w  = dat[:, :weights])
+        # To fix.
     end
 
     obs = sum(dat.weights)
@@ -43,7 +45,7 @@ function twowayfeweights_calculate(;
     dat = DataFrames.transform(dat, :P_gt => (x -> x ./ obs) => :P_gt)
     
     if type_TR
-        dat = DataFrames.transform(dat2, :P_gt => (x -> x .* (dat2[:, Symbol(DVAR)] ./ mean_D)) => :nat_weight)
+        dat = DataFrames.transform(dat, :P_gt => (x -> x .* (dat[:, Symbol(DVAR)] ./ mean_D)) => :nat_weight)
     end
 
     if (isnothing(controls))
@@ -125,11 +127,9 @@ function twowayfeweights_calculate(;
         
     elseif type == "feS"
 
-        # EN COURS !!
         dat[:, :eps_1_weight] = dat[:, Symbol(EPS_VAR)] .* dat[:, :weights]
         sort!(dat, [:G, :Tfactor])
         gdat = DataFrames.groupby(dat, [:G])
-
 
         # Here, there is a (classic?) problem with operations on grouped dataframe.
         # We cannot modify them as we would for a standard dataframe, so we use the transform! (note the !)
@@ -142,8 +142,6 @@ function twowayfeweights_calculate(;
         
         transform!(gdat, [:E_eps_1_g_ge_aux, :weights_aux] => ((x, y) -> (x ./ y)) => :E_eps_1_g_ge)
         # dplyr::mutate(E_eps_1_g_ge = .data$E_eps_1_g_ge_aux / .data$weights_aux) %>% dplyr::ungroup()
-
-        # dat
     
     elseif type == "fdTR"
         dat[:, :eps_2] = ifelse(ismissing(dat[:, Symbol(EPS_VAR)]), 0, dat[:, Symbol(EPS_VAR)])
@@ -176,6 +174,7 @@ function twowayfeweights_calculate(;
 
     end
     
+    # Is there a better way to select the beta of the D variable?
     beta = coef(beta_lm)[coefnames(beta_lm) .== "D"]
     
     if type == "feTR"
@@ -186,12 +185,36 @@ function twowayfeweights_calculate(;
         # 	drop if group_period_unit==0
         # 	drop group_period_unit
         gdat = DataFrames.groupby(dat, [:G, :Tfactor])
-        dat = combine(gdat) do sdf
-            sdf[argmin(sdf.D), :] # This seems off.
+        sdat = combine(gdat) do sdf
+            sdf[argmin(sdf.D), :] # This seems off, as we are already using a dataframe with only one observation per G * T
         end
 
     elseif type == "fdTR"
+        
+    # À faire.
+    # dat = dat %>% 
+    #   dplyr::arrange(.data$G, .data$TFactorNum) %>%
+    #   dplyr::group_by(.data$G) %>% 
+    #   dplyr::mutate(w_tilde_2 = ifelse(.data$TFactorNum + 1 == dplyr::lead(.data$TFactorNum), .data$eps_2 - dplyr::lead(.data$eps_2) * (dplyr::lead(.data$P_gt) / .data$P_gt), NA)) %>%
+    #   dplyr::mutate(w_tilde_2 = ifelse(is.na(.data$w_tilde_2) | is.infinite(.data$w_tilde_2), .data$eps_2, .data$w_tilde_2)) %>%
+    #   dplyr::mutate(w_tilde_2_E_D_gt = .data$w_tilde_2 * .data$D0) %>% dplyr::ungroup()
+
+    # dat = DataFrames.sort(dat, [:G, :TFactorNum])
+    # gdat = DataFrames.combine(
+    #     DataFrames.groupby(dat, [:G]),
+    #     w_tilder_2 = ifelse(dat.TFactorNum + 1 == dat)
+    # )
+
     
+    denom_W = weighted.mean(dat$w_tilde_2_E_D_gt, dat$P_gt, na.rm = TRUE)
+    dat = dat %>% 
+      # dplyr::mutate(W = .data$w_tilde_2 * mean_D0 / denom_W) %>% 
+      dplyr::mutate(W = .data$w_tilde_2 * mean_D / denom_W) %>% 
+      dplyr::mutate(weight_result = .data$W * .data$nat_weight)
+    dat = dat %>%
+      dplyr::select(-.data$eps_2, -.data$P_gt, -.data$w_tilde_2, -.data$w_tilde_2_E_D_gt)
+    
+        
     elseif type == "feS"
     
     end

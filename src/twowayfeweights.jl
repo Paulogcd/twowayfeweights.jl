@@ -19,6 +19,9 @@ module TwoWayFEWeights
 
     # Util functions
     begin
+        include("utils_extra.jl")
+        export(weighted_mean)
+        
         include("utils_1_renames.jl")
         export(fn_ctrl_rename)
         export(get_controls_rename)

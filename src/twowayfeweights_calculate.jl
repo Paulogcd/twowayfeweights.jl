@@ -11,10 +11,10 @@ function twowayfeweights_calculate(;
 
     # type = match.arg(type) ?
 
-    dat = random_data_frame_test
-    type = "feTR"
-    controls = "control_1"
-    treatments = "D0"
+    # dat = random_data_frame_test
+    # type = "feTR"
+    # controls = "control_1"
+    # treatments = "D0"
 
     if (!isnothing(treatments) && type != "feTR")
         @error("When the `other_treatments` argument is specified, you need to specify `type = 'feTR'` too.")
@@ -235,7 +235,7 @@ function twowayfeweights_calculate(;
         )
         
         gdat = gdat[(.!ismissing.(gdat.delta_D)), :]
-        gdat.abs_delta_D = abs.(gdat.delta_D),
+        gdat.abs_delta_D = abs.(gdat.delta_D)
         
         # The dplyr::case_when function can be replicated using the ternary syntax, mentioned here: 
         # https://bkamins.github.io/julialang/2020/12/18/casewhen.html
@@ -284,12 +284,12 @@ function twowayfeweights_calculate(;
             :nat_weight => (x -> x ./ P_S) => :nat_weight,
             (:s_gt, :eps_2) => ((x, y) -> x .* y) => :W
         )
-
+        # TO FIX. Here, in the original version, they use na.rm = TRUE
         denom_W = weighted_mean(dat.W, dat.nat_weight)
 
         dat = DataFrames.transform(
             dat,
-            (:W, :nat_weight) -> ((x, y) -> x .* y) => :weight_result
+            (:W, :nat_weight) => ((x, y) -> x .* y) => :weight_result
         )
 
         dat = dat[:, Not(:eps_2, :P_gt, :abs_delta_D)]

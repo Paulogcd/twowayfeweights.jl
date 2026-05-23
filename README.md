@@ -14,7 +14,9 @@ It provides a set of functions to compute the two way fixed effects (TWFE) estim
 
 # To do
 
-- twowayfeweights_calculate.R
+- twowayfeweights_calculate.R:
+    - (to be tested)
+    - fix row 287 na.rm
 
 - print.R
 - twowayfeweights.R

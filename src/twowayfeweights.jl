@@ -49,6 +49,9 @@ module TwoWayFEWeights
         
         include("utils_6_test_random_weights.jl")
         export(twowayfeweights_test_random_weights)
+
+        include("twowayfeweights_calculate.jl")
+        export(twowayfeweights_calculate)
     end
 
 end

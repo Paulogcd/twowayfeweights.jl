@@ -16,6 +16,7 @@ module TwoWayFEWeights
     using FixedEffectModels
     using StatsBase
     using Missings
+    using ShiftedArrays
 
     # Util functions
     begin

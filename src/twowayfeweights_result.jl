@@ -52,17 +52,16 @@ function twowayfeweights_result(;
         
         if ret.sum_minus < 0
             
-            
-            dat_sens[dat_sens[: , :weight_result] != 0, :]
-            dat_sens = DataFrames.sort(dat_sens, [:W, order(rev = true)])
+            dat_sens = dat_sens[dat_sens[: , :weight_result] != 0, :]
+            dat_sens = DataFrames.sort(dat_sens, [:W], order(rev = true))
             dat_sens.P_k = 0
             dat_sens.S_k = 0
             dat_sens.T_k = 0
 
             # To do:
             # # Modif. Diego: Replaced the previous two loops with build-in routines
-            # N = nrow(dat_sens)
-            # dat_sens = dat_sens[order(dat_sens$W, -dat_sens$G, -dat_sens$T),]
+            N = nrow(dat_sens)
+            dat_sens = dat_sens[order(dat_sens.W, -dat_sens.G, -dat_sens.T),]
             # dat_sens$Wsq = dat_sens$nat_weight * dat_sens$W^2
             # dat_sens$P_k = cumsum(dat_sens$nat_weight) 
             # dat_sens$S_k = cumsum(dat_sens$weight_result) 

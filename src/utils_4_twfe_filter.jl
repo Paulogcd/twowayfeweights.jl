@@ -9,20 +9,23 @@ function twowayfeweights_filter(;
     G::Union{String},
     T::Union{String}, 
     D::Union{String},
-    D0::Union{String},
+    D0::Union{String, Nothing},
     cmd_type::Union{String},
-    controls::Union{String, Vector{String}},
-    treatments::Union{String, Vector{String}})
+    controls::Union{String, Vector{String}, Nothing},
+    treatments::Union{String, Vector{String}, Nothing})
 
     # To define the column names so that they can be called correctly, we use the Symbol function.
 
-    if(cmd_type != "fdTR")
+    if (cmd_type != "fdTR")
 
         # In the original package, they seem to not allow for NA in the 
         # Y, G, T, D, controls, and treatments columns.
         # We are going to use the missing value instead.
-        df = dropmissing(df, Symbol.([G, T, D, treatments]))
-        df = dropmissing(df, Symbol.(controls))
+        columns_to_filter = ifelse(isnothing(treatments), [G, T, D], [G, T, D, treatments])
+        if !isnothing(controls)
+            push!(columns_to_filter, controls)
+        end
+        df = dropmissing(df, columns_to_filter)
     else
 
         # They allow for another case:
@@ -34,14 +37,21 @@ function twowayfeweights_filter(;
         
     end
 
-    if length(controls) > 0
+    if !isnothing(controls)
         # df[!, :tag3] .= ismissing.(df[!, Symbol.(controls)]) # former version
         df[!, :tag3] = [any(ismissing, row) for row in eachrow(df[:, Symbol.(controls)])]
         df = df[(df.tag1 .== 1) .| (df.tag3 .== 0), :]
         df = df[:, Not(:tag3)]
     end
         
-    df = df[:, Not(:tag1, :tag2)]
+    
+    if "tag1" in names(df)
+        df = df[:, Not(:tag1)]
+    end
+
+    if "tag2" in names(df)
+        df = df[:, Not(:tag2)]
+    end
 
     return df
 end

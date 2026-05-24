@@ -10,18 +10,32 @@ function twowayfeweights_rename_var(;
     T::Union{String, Vector{String}},
     D::Union{String, Vector{String}},
     D0::Union{String, Vector{String}, Nothing}, # Can be nothing. To do : check all the possible types of each parameter.
-    controls::Union{String, Vector{String}},
-    treatments::Union{String, Vector{String}},
+    controls::Union{String, Vector{String}, Nothing},
+    treatments::Union{String, Vector{String}, Nothing},
     random_weights::Union{String, Vector{String}, Nothing} # Can also be nothing.
     )
 
-    # We rename the control and treatment variables.
-    controls_rename     = get_controls_rename(controls)
-    treatments_rename   = get_treatments_rename(treatments)
-
     # We define the original and new names.
-    original_names      = [Y, G, T, D, controls, treatments]
-    new_names           = ["Y", "G", "T", "D", controls_rename, treatments_rename]
+    original_names      = [Y, G, T, D]
+    new_names           = ["Y", "G", "T", "D"]
+
+    # If the treatments are provided, we rename and include it.
+    # The original package did not define this step, however, looking
+    # at the behavior of the main twowayfeweights function, this should be due to 
+    # the NULL value being ignored when put in the columns argument in R. 
+    # Since this is not the case in Julia, we treat the treatments = nothing separately:
+    if !isnothing(treatments)
+        original_names      = vcat(original_names, treatments)
+        treatments_rename   = get_treatments_rename(treatments)
+        new_names           = vcat(new_names, treatments_rename)
+    end
+    
+    # Same for controls
+    if !isnothing(treatments)
+        original_names      = vcat(original_names, controls)
+        controls_rename     = get_controls_rename(controls)
+        new_names           = vcat(new_names, controls_rename)
+    end
 
     # If D0 is provided, we rename and include it.
     if !isnothing(D0)

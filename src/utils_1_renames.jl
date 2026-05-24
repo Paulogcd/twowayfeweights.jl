@@ -7,8 +7,8 @@ The `fn_ctrl_rename` function is the equivalent of the original `fn_ctrl_rename`
 """
 function fn_ctrl_rename(x)
 
-    x = string.(x)
-    result = "ctrl_" .* x # How does it compare to the simple "string.("ctrl_", x)"?
+    # result = ifelse.(!isnothing.(x), "ctrl_" .* x, nothing) # How does it compare to the simple "string.("ctrl_", x)"?
+    result = ifelse.(.!isnothing.(x), string.("ctrl_", x), nothing) # How does it compare to the simple "string.("ctrl_", x)"?
 
     return(result)
 end
@@ -33,7 +33,8 @@ end
     Rename a vector of variable names by placing "OT" in front of it.
 """
 function fn_treatment_rename(treatments)
-    string.("OT_", treatments)
+    result = ifelse.(.!isnothing.(treatments), string.("OT_", treatments), nothing)
+    return(result)
 end
 
 """
@@ -58,9 +59,8 @@ Rename a vector of variables by putting "weight_" in front of them.
 The `fn_treatment_weight_rename` function is the equivalent of the original `fn_treatment_weight_rename` function, defined in the original R code such as: 
     fn_treatment_weight_rename <- function(x) paste("weight_", x, sep = "")
 """
-function fn_treatment_weight_rename(x)
-    x = string.(x)
-    result = "weight_" .* x
+function fn_treatment_weight_rename(x) 
+    result = ifelse.(.!isnothing.(treatments), string.("weight_", x), nothing)
     return result
 end
 
@@ -73,8 +73,10 @@ The `fn_random_weight_rename` function is the equivalent of the original `fn_ran
     fn_random_weight_rename <- function(x) paste("RW", x, sep="_")
 """
 function fn_random_weight_rename(x)
-    x = string.(x)
-    result = "RW_" .* x
+    # x = string.(x)
+    # result = "RW_" .* x
+    result = ifelse.(.!isnothing.(x), string.("RW_", x), nothing)
+
     return(result)
 end
 
@@ -86,7 +88,7 @@ The `fn_random_weight_rename` function is the equivalent of the original `fn_ran
     # get_random_weight_rename <- function(ws) unlist(lapply(ws, fn_random_weight_rename))
 """
 function get_random_weight_rename(ws)
-    ws = string.(ws)
+    # ws = string.(ws)
     result = fn_random_weight_rename(ws)
     return result
 end

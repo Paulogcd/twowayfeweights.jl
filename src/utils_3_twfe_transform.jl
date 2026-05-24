@@ -12,7 +12,7 @@ Internal function.
 """
 function twowayfeweights_transform(;
     df::DataFrames.DataFrame,
-    controls::Union{String, Vector{String}},
+    controls::Union{String, Vector{String}, Nothing},
     weights::Union{String, Vector{String}, Nothing},
     treatments::Union{String, Vector{String}, Nothing})
 
@@ -29,36 +29,40 @@ function twowayfeweights_transform(;
     end
 
 
-    for control in controls
-        
-        ret = twowayfeweights_normalize_var(df = df, varname = control)
+    if !isnothing(controls)
+        for control in controls
+            
+            ret = twowayfeweights_normalize_var(df = df, varname = control)
 
-        if ret[:retcode]
-            df = ret[:df]
-            @info("The control variable %s in the regression varies within some group * period cells.", control)
-            @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
-            @info("with controls apply to group * period level controls.")
-            @info("The command will replace replace control variable %s by its average value in each group * period.", control)
-            @info("The results below apply to the regression with control variable %s averaged at the group * period level.", control)
+            if ret[:retcode]
+                df = ret[:df]
+                @info("The control variable %s in the regression varies within some group * period cells.", control)
+                @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
+                @info("with controls apply to group * period level controls.")
+                @info("The command will replace replace control variable %s by its average value in each group * period.", control)
+                @info("The results below apply to the regression with control variable %s averaged at the group * period level.", control)
+            end
         end
     end
 
-    for treatment in treatments
-        
-        ret = twowayfeweights_normalize_var(df = df, varname = treatment)
-        
-        if ret[:retcode]
-            df = ret[:df]
-            @info("The other treatment variable %s in the regression varies within some group * period cells.", treatment)
-            @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
-            @info("with several treatments apply to group * period level controls.")
-            @info("The command will replace replace other treatment variable %s by its average value in each group * period.", treatment)
-            @info("The results below apply to the regression with other treatment variable %s averaged at the group * period level.", treatment)
+    if !isnothing(treatments)
+        for treatment in treatments
+            
+            ret = twowayfeweights_normalize_var(df = df, varname = treatment)
+            
+            if ret[:retcode]
+                df = ret[:df]
+                @info("The other treatment variable %s in the regression varies within some group * period cells.", treatment)
+                @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
+                @info("with several treatments apply to group * period level controls.")
+                @info("The command will replace replace other treatment variable %s by its average value in each group * period.", treatment)
+                @info("The results below apply to the regression with other treatment variable %s averaged at the group * period level.", treatment)
+            end
         end
     end
 
-    if weights == [] # possible equivalent for is.null in R?
-        df.weights = 1
+    if isnothing(weights) # Possible equivalent for is.null in R? Nous utilisons nothing.
+        df.weights .= 1
     else 
         # This is NOT what is expected.
         # The weights variable should be a numerical vector then?

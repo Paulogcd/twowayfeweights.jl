@@ -6,8 +6,8 @@ Internal funcion for calculating the twoway FE weights.
 function twowayfeweights_calculate(;
     dat::DataFrames.DataFrame,
     type = ["feTR", "fdTR", "feS", "fdS"],
-    controls::Union{String, Vector{String}},
-    treatments::Union{String, Vector{String}})
+    controls::Union{String, Vector{String}, Nothing},
+    treatments::Union{String, Vector{String}, Nothing})
 
     # type = match.arg(type) ?
 
@@ -50,7 +50,7 @@ function twowayfeweights_calculate(;
     end
 
     if (isnothing(controls))
-        controls = 1
+        controls = ConstantTerm(1)
     end
 
     fes = "Tfactor"
@@ -60,18 +60,32 @@ function twowayfeweights_calculate(;
     end
   
     # Add non-NULL treatment vars
-    xvars = [controls, treatments]
+    if !isnothing(treatments)
+        xvars = [controls, treatments]
+    else
+        xvars = Any[ConstantTerm(1)]
+    end
 
     if type == "fdS"
         
         dat_regression = dat[dat[:, :weights] .!= 0,:]
 
         # regressors in xvar
-        rhs = sum(term.(Symbol.(xvars)))
+        if length(xvars) == 1
+            rhs = xvars[1] == "1" ? ConstantTerm(1) : term(Symbol(xvars[1]))
+        else
+            rhs_terms = map(x -> x == "1" ? ConstantTerm(1) : term(Symbol(x)), xvars)
+            rhs = sum(rhs_terms)
+        end
+        
         # fixed effects
         fe_terms = sum(fe.(term.(Symbol.(fes))))
         # full formula
-        ff = term(:D) ~ rhs + fe_terms
+        if rhs == [term(Symbol(1))]
+            ff = term(:D) ~ ConstantTerm(1) + fe_terms
+        else
+            ff = term(:D) ~ rhs + fe_terms
+        end
 
         denom_lm = reg(dat_regression, ff, weights = :weights, save = :residuals)
         # This can also be obtained with: 
@@ -81,13 +95,28 @@ function twowayfeweights_calculate(;
         # denom.lm = feols(D ~ .[xvars] | .[fes], data = subset(dat, weights!=0), weights = dat$weights)
     else 
         # regressors in xvars
-        rhs = sum(term.(Symbol.(xvars)))
+        rhs_terms = map(xvars) do x
+            x == "1" ? ConstantTerm(1) : term(Symbol(x))
+        end
+        
+        if length(xvars) == 1
+            rhs = rhs_terms
+        else
+            rhs = foldl(+, rhs_terms)
+        end
+
         # fixed effects
-        fe_terms = sum(fe.(term.(Symbol.(fes))))
+        fe_terms = foldl(+, fe.(term.(Symbol.(fes))))
+        
         # full formula
-        ff = term(:D) ~ rhs + fe_terms
+        if rhs == [term(Symbol(1))]
+            ff = term(:D) ~ ConstantTerm(1) + fe_terms
+        else
+            ff = term(:D) ~ rhs + fe_terms
+        end
+
         denom_lm = reg(dat, ff, weights = :weights, save = :residuals)
-        # denom.lm = feols(D ~ .[xvars] | .[fes], data = dat, weights = dat$weights)
+    
     end
 
     if type_fe
@@ -103,7 +132,7 @@ function twowayfeweights_calculate(;
         dat[:, Symbol(EPS_VAR)] = ifelse.(ismissing.(dat[:, Symbol(EPS_VAR)]), 0, dat[:, Symbol(EPS_VAR)])
     end
     
-    # Beta reg ----
+    # Beta regression ----
     if type == "feTR"
     
         dat[:, "eps_1_E_D_gt"] = dat[:, Symbol(EPS_VAR)] .* dat[:, Symbol(DVAR)]
@@ -124,7 +153,12 @@ function twowayfeweights_calculate(;
             end
         end
 
-        dat = dat[:, Not(Symbol(EPS_VAR), "P_gt")]
+        if "P_gt" in names(dat)
+            dat = dat[:, Not(Symbol(EPS_VAR), "P_gt")]
+        end
+        if Symbol(EPS_VAR) in names(dat)
+            dat = dat[:, Not(Symbol(EPS_VAR))]
+        end
         
     elseif type == "feS"
 
@@ -149,7 +183,7 @@ function twowayfeweights_calculate(;
     end
 
     # New regression
-    push!(xvars, "D")
+    push!(xvars, Term(Symbol("D")))
 
     if type == "fdS"
         dat_regression = dat[dat[:, :weights] .!= 0, :]
@@ -159,17 +193,19 @@ function twowayfeweights_calculate(;
         # fixed effects
         fe_terms = sum(fe.(term.(Symbol.(fes))))
         # full formula
-        ff = term(:D) ~ rhs + fe_terms
+        ff = term(:Y) ~ rhs + fe_terms
 
         beta_lm = reg(dat_regression, ff, weights = :weights, save = :all)
 
     else
-        # regressors in xvar
-        rhs = sum(term.(Symbol.(xvars)))
+        
+        rhs = foldl(+, xvars)
+
         # fixed effects
-        fe_terms = sum(fe.(term.(Symbol.(fes))))
+        fe_terms = foldl(+, fe.(term.(Symbol.(fes))))
+        
         # full formula
-        ff = term(:D) ~ rhs + fe_terms
+        ff = term(:Y) ~ rhs + fe_terms
 
         beta_lm = reg(dat, ff, save = :residuals)
 
@@ -186,7 +222,7 @@ function twowayfeweights_calculate(;
         # 	drop if group_period_unit==0
         # 	drop group_period_unit
         gdat = DataFrames.groupby(dat, [:G, :Tfactor])
-        sdat = combine(gdat) do sdf
+        dat = combine(gdat) do sdf
             sdf[argmin(sdf.D), :] # This seems off, as we are already using a dataframe with only one observation per G * T
         end
 
@@ -295,6 +331,6 @@ function twowayfeweights_calculate(;
         dat = dat[:, Not(:eps_2, :P_gt, :abs_delta_D)]
     end
 
-    return OrderedCollections.OrderedDict(:dat => dat, beta => :beta)
+    return OrderedCollections.OrderedDict(:dat => dat, :beta => beta)
 
 end

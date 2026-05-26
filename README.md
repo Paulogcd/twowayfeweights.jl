@@ -21,6 +21,8 @@ It provides a set of functions to compute the two way fixed effects (TWFE) estim
 - print.R
 - twowayfeweights.R
 - twowayfeweights_result.R
+- twowayfeweights_transform:
+    - Write different methods in case controls, etc.. are vectors{String} or just String.
 
 - Check all documentation of functions.
 - Harmonize documentation for utils (internal functions).

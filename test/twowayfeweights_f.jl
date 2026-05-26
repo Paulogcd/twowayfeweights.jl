@@ -11,7 +11,7 @@
     wagepan = ReadStatTables.readstat(path)
     wagepan = DataFrames.DataFrame(wagepan)
 
-    twowayfeweights(
+    resultat_ = twowayfeweights(
         data = wagepan,
         Y = "lwage",
         G = "nr",
@@ -29,6 +29,12 @@ D = "union"
 type = "feTR"
 summary_measures = true
 test_random_weights = "educ"
+
+D0 = nothing
+controls = nothing
+weights = nothing
+other_treatments = nothing
+path = nothing
 
     #' twowayfeweights(
 #'   wagepan,                        # input data

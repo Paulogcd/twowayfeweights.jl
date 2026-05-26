@@ -13,8 +13,6 @@ function twowayfeweights(;
     test_random_weights = nothing,
     path = nothing)
 
-    # type = match.arg(tolower(type))
-    #   type = match.arg(type) ? 
     if type == "fdTR" && isnothing(D0)
         @error("The `D0` argument must also be provided if `type = 'fdTR'`.\n")
     end
@@ -23,7 +21,7 @@ function twowayfeweights(;
         @error("When the `other_treatments` argument is specified, you need to specify `type = 'feTR'` too.")
     end
 
-    columns_to_check = ifelse(!isnothing(D0), [Y, G, T, D, D0], [Y, G, T, D])
+    columns_to_check = ifelse(D0 in names(data), [Y, G, T, D, D0], [Y, G, T, D])
     for v in columns_to_check
         if !(data[:, v] isa Vector{<:Number})
             data[:, v] = parse.(Float64, data[:, v]) # What about it cannot be parsed in Float64 but only 32 or 16?
@@ -35,6 +33,7 @@ function twowayfeweights(;
     controls_rename         = get_controls_rename(controls)
     treatments_rename       = get_treatments_rename(other_treatments)
     random_weight_rename    = get_random_weight_rename(test_random_weights)
+    
     data_renamed = twowayfeweights_rename_var(
         df = data,
         Y = Y,
@@ -84,11 +83,11 @@ function twowayfeweights(;
     # Set class and add extra features for post-processing (printing etc.)
     # class(res) = "twowayfeweights"
     
-    res.type              = type
-    res.params            = (;Y = Y, G = G, T = T, D = D, D0 = D0)
-    res.summary_measures  = summary_measures
-    res.other_treatments  = treatments_rename
-    res.random_weights    = random_weight_rename
+    res[:type]              = type
+    res[:params]            = (;Y = Y, G = G, T = T, D = D, D0 = D0)
+    res[:summary_measures]  = summary_measures
+    res[:other_treatments]  = treatments_rename
+    res[:random_weights]    = random_weight_rename
   
   
     if !(isnothing(path))
@@ -96,6 +95,6 @@ function twowayfeweights(;
         CSV.write(path, res.dat_result)
     end
   
-  return(res)
+  return res
   
 end

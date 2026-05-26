@@ -144,7 +144,7 @@ function twowayfeweights_calculate(;
         end
 
         dat[:, :W] = dat[:, Symbol(EPS_VAR)] .* mean_D / denom_W
-        dat[:, :weighted_result] = dat[:, :W] .* dat[:, :nat_weight]
+        dat[:, :weight_result] = dat[:, :W] .* dat[:, :nat_weight]
 
         if !isnothing(treatments)
             for treatment in [treatments]
@@ -225,6 +225,8 @@ function twowayfeweights_calculate(;
         dat = combine(gdat) do sdf
             sdf[argmin(sdf.D), :] # This seems off, as we are already using a dataframe with only one observation per G * T
         end
+
+        # missing?
 
     elseif type == "fdTR"
         

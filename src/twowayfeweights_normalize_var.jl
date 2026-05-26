@@ -5,7 +5,7 @@ Internal function to replace a variable by its mean per group and time period.
 """
 function twowayfeweights_normalize_var(;
     df::DataFrames.DataFrame,
-    varname::String)
+    varname::Union{String, Char})
 
     var = Symbol(varname)
     sdf = DataFrames.transform(

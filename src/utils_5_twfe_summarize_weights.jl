@@ -16,7 +16,7 @@ function twowayfeweights_summarize_weights(;
 
     weight_minus    = df[(df[!, var_weight] .< 0 .& ismissing.(df[!, var_weight])), var_weight]
     nr_minus        = length(weight_minus)
-    sum_minus       = sum(nr_minus)
+    sum_minus       = sum(weight_minus)
 
     nr_weights = nr_plus + nr_minus
    

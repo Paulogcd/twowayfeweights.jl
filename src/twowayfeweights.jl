@@ -17,6 +17,7 @@ module TwoWayFEWeights
     using StatsBase
     using Missings
     using ShiftedArrays
+    using ReadStatTables
 
     # Util functions
     begin
@@ -52,6 +53,9 @@ module TwoWayFEWeights
 
         include("twowayfeweights_calculate.jl")
         export(twowayfeweights_calculate)
+
+        include("twowayfeweights_f.jl")
+        include("twowayfeweights_result.jl")
     end
 
 end

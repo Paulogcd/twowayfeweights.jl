@@ -18,11 +18,17 @@ It provides a set of functions to compute the two way fixed effects (TWFE) estim
     - (to be tested)
     - fix row 287 na.rm
 
+- Corriger l'homonymie twowayfeweights entre Struct et fonction.
+
 - print.R
 - twowayfeweights.R
 - twowayfeweights_result.R
-- twowayfeweights_transform:
-    - Write different methods in case controls, etc.. are vectors{String} or just String.
+
+Write different methods for Vector{String} and/or String: 
+    - twowayfeweights_test_random_weights
+    - twowayfeweights_transform
+
+- tests
 
 - Check all documentation of functions.
 - Harmonize documentation for utils (internal functions).

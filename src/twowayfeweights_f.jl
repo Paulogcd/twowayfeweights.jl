@@ -72,7 +72,7 @@ function twowayfeweights(;
         treatments = treatments_rename
     )
   
-    # Create main return object list (Not implemented yet)
+    # Create main return object list
     res = twowayfeweights_result(
         dat            = res[:dat],
         beta           = res[:beta],
@@ -88,7 +88,8 @@ function twowayfeweights(;
     res[:summary_measures]  = summary_measures
     res[:other_treatments]  = treatments_rename
     res[:random_weights]    = random_weight_rename
-  
+
+    res = twowayfeweights(res)
   
     if !(isnothing(path))
         # write.csv(res$dat_result, path, row.names = FALSE)

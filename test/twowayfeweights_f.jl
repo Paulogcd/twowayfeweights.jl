@@ -11,7 +11,7 @@
     wagepan = ReadStatTables.readstat(path)
     wagepan = DataFrames.DataFrame(wagepan)
 
-    resultat_ = twowayfeweights(
+    resultat = twowayfeweights(
         data = wagepan,
         Y = "lwage",
         G = "nr",

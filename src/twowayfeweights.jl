@@ -18,6 +18,8 @@ module TwoWayFEWeights
     using Missings
     using ShiftedArrays
     using ReadStatTables
+    using PrettyTables
+    using Crayons
 
     # Util functions
     begin

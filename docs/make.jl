@@ -1,4 +1,5 @@
 using Documenter
+using DocumenterMermaid
 using TwoWayFEWeights
 
 makedocs(
@@ -8,7 +9,8 @@ makedocs(
     pages = [
         "index.md",
         "TWFE.md",
-        "guide.md"
+        "guide.md",
+        "package_structure.md"
     ]
 )
 

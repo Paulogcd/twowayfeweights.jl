@@ -15,16 +15,11 @@ It provides a set of functions to compute the two way fixed effects (TWFE) estim
 # To do
 
 - twowayfeweights_calculate.R:
-    - (to be tested)
     - fix row 287 na.rm
 
 - Corriger l'homonymie twowayfeweights entre Struct et fonction.
 
-- print.R
-- twowayfeweights.R
-- twowayfeweights_result.R
-
-Write different methods for Vector{String} and/or String: 
+- Write different methods for Vector{String} and/or String: 
     - twowayfeweights_test_random_weights
     - twowayfeweights_transform
 
@@ -33,6 +28,11 @@ Write different methods for Vector{String} and/or String:
 - Check all documentation of functions.
 - Harmonize documentation for utils (internal functions).
 - Wherever there are "info" messages, make it prettier using the features of Julia REPL.
+
+Documentation: 
+- Internal process
+- Getting Started
+- Econometric theory
 
 # Done
  

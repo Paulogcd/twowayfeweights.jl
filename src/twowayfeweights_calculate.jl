@@ -9,8 +9,6 @@ function twowayfeweights_calculate(;
     controls::Union{String, Vector{String}, Nothing},
     treatments::Union{String, Vector{String}, Nothing})
 
-    # type = match.arg(type) ?
-
     # dat = random_data_frame_test
     # type = "feTR"
     # controls = "control_1"
@@ -25,15 +23,15 @@ function twowayfeweights_calculate(;
 
     if type_TR
         DVAR = type == "feTR" ? "D" : "D0"
-        # mean_D = mean(skipmissing(dat[:, Symbol(DVAR)]), dat.weights)
+
         # Here, the original R package uses the function weighted.mean, which specifies: 
-          # Missing values in w are not handled specially and so give a missing value as the result. 
+          # Missing values in w are not handled specially and give a missing value as the result.
           # However, zero weights are handled specially and the corresponding x values are omitted from the sum.
-        # Also, I discovered this thread: 
+        # Also, I discovered this thread:
         # https://discourse.julialang.org/t/re-weighted-statistics-with-missings/107502/20
         # And this issue: 
         # https://github.com/JuliaStats/Statistics.jl/issues/88
-        # This seems like a *major* issue.
+        # This seems like a *major* issue?
         # To reproduce the behavior of the original R package, I will define a function in the extra_utils file.
         # mean_D = weighted_mean(x = dat[:, Symbol(DVAR)], w  = dat[:, :weights])
         mean_D = weighted_mean(x = dat[:, Symbol(DVAR)], w  = dat[:, :weights])
@@ -89,7 +87,7 @@ function twowayfeweights_calculate(;
 
         denom_lm = reg(dat_regression, ff, weights = :weights, save = :residuals)
         # This can also be obtained with: 
-        # denom.lm = FixedEffectModels.reg(dat, @formula(D ~ control_1 + D0 + fe(G) + fe(Tfactor)), weights = :weights)
+        # denom_lm = FixedEffectModels.reg(dat, @formula(D ~ control_1 + D0 + fe(G) + fe(Tfactor)), weights = :weights)
 
         # Original regression in R:
         # denom.lm = feols(D ~ .[xvars] | .[fes], data = subset(dat, weights!=0), weights = dat$weights)
@@ -170,13 +168,10 @@ function twowayfeweights_calculate(;
         # We cannot modify them as we would for a standard dataframe, so we use the transform! function 
         # (note the !) to modify gdat.
         transform!(gdat, :eps_1_weight => (x -> reverse(cumsum(reverse(x)))) => :E_eps_1_g_ge_aux)
-        # dplyr::mutate(E_eps_1_g_ge_aux = rev(cumsum(rev(.data$eps_1_weight)))) %>%
         
         transform!(gdat, :weights => (x -> reverse(cumsum(reverse(x)))) => :weights_aux)
-        # dplyr::mutate(weights_aux = rev(cumsum(rev(.data$weights))))
         
         transform!(gdat, [:E_eps_1_g_ge_aux, :weights_aux] => ((x, y) -> (x ./ y)) => :E_eps_1_g_ge)
-        # dplyr::mutate(E_eps_1_g_ge = .data$E_eps_1_g_ge_aux / .data$weights_aux) %>% dplyr::ungroup()
     
     elseif type == "fdTR"
         dat[:, :eps_2] = ifelse(ismissing(dat[:, Symbol(EPS_VAR)]), 0, dat[:, Symbol(EPS_VAR)])
@@ -212,7 +207,7 @@ function twowayfeweights_calculate(;
     end
     
     # Is there a better way to select the beta of the D variable?
-    beta = coef(beta_lm)[coefnames(beta_lm) .== "D"]
+    beta = only(coef(beta_lm)[coefnames(beta_lm) .== "D"])
     
     if type == "feTR"
         # Original comment:
@@ -225,8 +220,6 @@ function twowayfeweights_calculate(;
         dat = combine(gdat) do sdf
             sdf[argmin(sdf.D), :] # This seems off, as we are already using a dataframe with only one observation per G * T
         end
-
-        # missing?
 
     elseif type == "fdTR"
         
@@ -253,7 +246,7 @@ function twowayfeweights_calculate(;
     elseif type == "feS"
 
         # To tet with a dataframe that supports the operation, with the correct columns.
-        # Also, re-write so that is uses transform(groupby.., col1, col2, etc...)
+        # Also, re-write so that it uses transform(groupby.., col1, col2, etc...)
 
         dat = DataFrames.sort(dat, [:G, :Tfactor])
             

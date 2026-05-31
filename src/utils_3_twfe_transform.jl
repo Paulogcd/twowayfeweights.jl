@@ -18,8 +18,8 @@ function twowayfeweights_transform(;
 
     ret = twowayfeweights_normalize_var(df = df, varname = "D")
 
-    if ret[:retcode] # if ret is a list, we can use "." instead of "$"
-        # To do : make it prettier by making use of the wonders of Julia REPL possibilities.
+    if ret[:retcode]
+        # To do : make it prettier.
         df = ret[:df]
         @info("The treatment variable in the regression varies within some group * period cells.")
         @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
@@ -105,10 +105,10 @@ function twowayfeweights_transform(;
         end
     end
 
-    if isnothing(weights) # Possible equivalent for is.null in R? Nous utilisons nothing.
+    if isnothing(weights)
         df.weights .= 1
     else 
-        # This is NOT what is expected.
+        # This is NOT what is expected?
         # The weights variable should be a numerical vector then?
         df.weights = repeat(weights, nrow(df))
     end

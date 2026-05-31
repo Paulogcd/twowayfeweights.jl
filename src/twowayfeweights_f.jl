@@ -24,8 +24,7 @@ function twowayfeweights(;
     columns_to_check = ifelse(D0 in names(data), [Y, G, T, D, D0], [Y, G, T, D])
     for v in columns_to_check
         if !(data[:, v] isa Vector{<:Number})
-            data[:, v] = parse.(Float64, data[:, v]) # What about it cannot be parsed in Float64 but only 32 or 16?
-            print(v)
+            data[:, v] = parse.(Float64, data[:, v])
         end
     end
 

@@ -21,12 +21,22 @@
         summary_measures = true,
         test_random_weights = "educ")
 
+    resultat_2 = twowayfeweights(
+        data = wagepan,
+        Y = "lwage",
+        G = "nr",
+        T = "year",
+        D = "union",
+        type = "feS",
+        summary_measures = true,
+        test_random_weights = "educ")
+
     data = wagepan
     Y = "lwage"
     G = "nr"
     T = "year"
     D = "union"
-    type = "feTR"
+    type = "feS"
     summary_measures = true
     test_random_weights = "educ"
 

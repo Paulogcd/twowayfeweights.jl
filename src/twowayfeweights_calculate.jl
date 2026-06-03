@@ -5,7 +5,7 @@ Internal funcion for calculating the twoway FE weights.
 """
 function twowayfeweights_calculate(;
     dat::DataFrames.DataFrame,
-    type = ["feTR", "fdTR", "feS", "fdS"],
+    type::String,
     controls::Union{String, Vector{String}, Nothing},
     treatments::Union{String, Vector{String}, Nothing})
 
@@ -245,16 +245,13 @@ function twowayfeweights_calculate(;
     
     elseif type == "feS"
 
-        # To tet with a dataframe that supports the operation, with the correct columns.
+        # To test with a dataframe that supports the operation, with the correct columns.
         # Also, re-write so that it uses transform(groupby.., col1, col2, etc...)
 
         dat = DataFrames.sort(dat, [:G, :Tfactor])
-            
-        gdat = DataFrames.transform(
-            DataFrames.groupby(
-                DataFrames.sort(dat, [:G, :Tfactor]),
-                :G
-            ),
+        gdat = DataFrames.groupby(dat, :G)
+        
+        DataFrames.transform!(gdat,
             [:TFactorNum, :D] =>
                 ((t, d) ->
                     ifelse.(
@@ -264,34 +261,29 @@ function twowayfeweights_calculate(;
                     )
                 ) => :delta_D,
         )
-        
-        gdat = gdat[(.!ismissing.(gdat.delta_D)), :]
-        gdat.abs_delta_D = abs.(gdat.delta_D)
+        # PROBLEM HERE
+        dat.parent = dat.parent[(.!ismissing.(dat.parent.delta_D)), :]
+        dat.abs_delta_D = abs.(dat.delta_D)
         
         # The dplyr::case_when function can be replicated using the ternary syntax, mentioned here: 
         # https://bkamins.github.io/julialang/2020/12/18/casewhen.html
         # For the whole thread, see: 
         # https://discourse.julialang.org/t/case-when-style-operation-on-dataframes/63414/7
         # One could also think of the ifelse solution proposed by Nils HG.
-        gdat.s_gt = (
-            gdat.delta_D .> 0 ? 1 :
-            gdat.delta_D .< 0 ? -1 : 
-            0
-        )
-        gdat.nat_weight = gdat.P_gt .* gdat.abs_delta_D
+        # In fact, refer to: 
+        # https://discourse.julialang.org/t/ternary-operator-on-a-dataframe/102798/8
+        dat.s_gt = ifelse.(dat.delta_D .> 0, 1, ifelse.(dat.delta_D .< 0, -1, 0))
+        dat.nat_weight = dat.P_gt .* dat.abs_delta_D
         
-        gdat.P_S = sum(dat.nat_weight)
-        gdat = DataFrames.transform(
-            nat_weight = gdat.nat_weight ./ gdat.P_S,
-            om_tilde_1 = dat.s_gt .* gdat.E_eps_1_g_ge ./ gdat.P_gt
-        )
+        dat.P_S .= sum(dat.nat_weight)
+        DataFrames.transform!(dat, [:nat_weight, :P_S] => ((x, y) -> x ./ y) => :nat_weight)
+        DataFrames.transform!(dat, [:s_gt, :E_eps_1_g_ge, :P_gt] => ((x, y, z) -> x .* y ./ z) => :om_tilde_1)
  
-        denom_W = weighted_mean(gdat.om_tilde_1, gdat.nat_weight)
+        denom_W = weighted_mean(x = dat.om_tilde_1, w = dat.nat_weight)
 
-        dat = DataFrames.transform(
-            W = gdat.om_tilde_1 ./ denom_W,
-            weight_result = gdat.W .* gdat.nat_weight
-        )
+        DataFrames.transform!(dat, :om_tilde_1 => (x -> x ./ denom_W) => :W)
+        DataFrames.transform!(dat, [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result)
+
         dat = dat[:, Not(:eps_1, :P_gt, :om_tilde_1, :E_eps_1_g_ge, :E_eps_1_g_ge_aux, :weights_aux, :abs_delta_D, :delta_D)]
     
     elseif type =="fdS"

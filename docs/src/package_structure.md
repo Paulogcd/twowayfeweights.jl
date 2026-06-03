@@ -34,11 +34,11 @@ for v in columns_to_check
     end
 end
 ```
-The first check...
-WHY? EXPLANATION.
 
-The second check...
-WHY? EXPLANATION.
+If the type is "fdTR", i.e. we want to compute the first difference under the common trend assumption, we need the D0 parameter.
+D0 is the mean of the treatment in group g at period t
+
+If we include other treatments, we need to specify that the type is "feTR", i.e. we want to compute the fixed effect difference under the common trend assumption,
 
 # 2. Renaming
 

@@ -196,7 +196,7 @@ function twowayfeweights(;
     # class(res) = "twowayfeweights"
     
     res[:type]              = type
-    res[:params]            = (;Y = Y, G = G, T = T, D = D, D0 = D0)
+    res[:params]            = OrderedCollections.OrderedDict(:Y => Y, :G => G, :T => T, :D => D, :D0 => D0)
     res[:summary_measures]  = summary_measures
     res[:other_treatments]  = treatments_rename
     res[:random_weights]    = random_weight_rename

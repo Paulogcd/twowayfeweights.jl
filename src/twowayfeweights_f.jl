@@ -134,12 +134,12 @@ function twowayfeweights(;
         @error("When the `other_treatments` argument is specified, you need to specify `type = 'feTR'` too.")
     end
 
-    columns_to_check = ifelse(D0 in names(data), [Y, G, T, D, D0], [Y, G, T, D])
-    for v in columns_to_check
-        if !(data[:, v] isa Vector{<:Number})
-            data[:, v] = parse.(Float64, data[:, v])
-        end
-    end
+    # columns_to_check = ifelse(D0 in names(data), [Y, G, T, D, D0], [Y, G, T, D])
+    # for v in columns_to_check
+    #     if !(data[:, v] isa Vector{<:Number})
+    #         data[:, v] = parse.(Float64, data[:, v])
+    #     end
+    # end
 
     # We rename:
     controls_rename         = get_controls_rename(controls)
@@ -159,10 +159,10 @@ function twowayfeweights(;
   
     # Transform?
     data_transformed = twowayfeweights_transform(
-        df = data_renamed,
-        controls = controls_rename,
-        weights = weights,
-        treatments = test_random_weights)
+        df          = data_renamed,
+        controls    = controls_rename,
+        weights     = weights,
+        treatments  = test_random_weights)
     
     # Filter?
     data_filtered = twowayfeweights_filter(

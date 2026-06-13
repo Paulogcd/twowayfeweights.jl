@@ -35,8 +35,8 @@ function twowayfeweights_result(;
         W_mean = weighted_mean(x = dat.W, w = dat.nat_weight) # Check: is this the one I use, or not?
         # Original comment: 
         # Modif. Diego: DoF adjustment to the sd of w_gt
-        M       = sum((dat.nat_weight .!= 0)) # Number of non null values.
-        W_sd    = sqrt(sum(skipmissing(dat.nat_weight .* (dat.W .- W_mean).^2))) * sqrt(M/(M - 1)) # na.rm here
+        M           = sum((dat.nat_weight .!= 0)) # Number of non null values.
+        W_sd        = sqrt(sum(skipmissing(dat.nat_weight .* (dat.W .- W_mean).^2))) * sqrt(M/(M - 1)) # na.rm here
         sensibility = abs.(beta) ./ W_sd
         
         dat_result = dat[:, [:T, :G, :weight_result]]
@@ -69,23 +69,16 @@ function twowayfeweights_result(;
             dat_sens.S_k = cumsum(dat_sens.weight_result)
             dat_sens.T_k = cumsum(dat_sens.Wsq)
             
-            # dat_sens = dat_sens[order(-dat_sens$W, dat_sens$G, dat_sens$T),]
             dat_sens = DataFrames.sort(dat_sens, [order(:W, rev = true), order(:G), order(:T)])
             dat_sens.sens_measure2 = (abs.(beta) ./ sqrt.(dat_sens.T_k + ((dat_sens.S_k.^2) ./ (1 .- dat_sens.P_k))))
 
-            #     dplyr::mutate(sens_measure2 = abs(beta) / sqrt(.data$T_k + .data$S_k^2 / (1 - .data$P_k))) %>%
             dat_sens.indicator .= dat_sens.W .<  (.-(dat_sens.S_k)) ./ (1 .- dat_sens.P_k)
-            #     dplyr::mutate(indicator = as.numeric(.data$W < - .data$S_k / (1 - .data$P_k)))
-            # dat_sens$indicator[1] = 0
+            
             dat_sens.indicator[1] = 0
             dat_sens.indicator_l = lag(dat_sens.indicator, default = -1)
-            # dat_sens = dat_sens %>%
-            #     dplyr::mutate(indicator_l = dplyr::lag(.data$indicator, default = -1))
+            
             dat_sens.indicator .= max.(dat_sens.indicator, dat_sens.indicator_l)
-            # dat_sens = dat_sens %>%
-            #     dplyr::rowwise() %>%
-            #     dplyr::mutate(indicator=max(.data$indicator, .data$indicator_l))
-            # total_indicator = sum(dat_sens$indicator)
+
             total_indicator = sum(dat_sens.indicator)
             sensibility2 = dat_sens.sens_measure2[N - total_indicator + 1]
             ret[:sensibility2] = sensibility2
@@ -121,10 +114,6 @@ function twowayfeweights_result(;
                 ret[:treatment][:tot_cells] = sum(skipmissing(dat.treatment != 0)) # na.rm here
             end
         end
-        
-        # dat_result = dat %>%
-        #     dplyr::select_at(dplyr::vars(columns)) %>% 
-        #     dplyr::rename(weight = .data$weight_result)
 
         dat_result = dat[:, columns]
         dat_result = DataFrames.rename(dat_result, :weight_result => :weight)

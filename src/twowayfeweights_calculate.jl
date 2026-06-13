@@ -9,11 +9,6 @@ function twowayfeweights_calculate(;
     controls::Union{String, Vector{String}, Nothing},
     treatments::Union{String, Vector{String}, Nothing})
 
-    # dat = random_data_frame_test
-    # type = "feTR"
-    # controls = "control_1"
-    # treatments = "D0"
-
     if (!isnothing(treatments) && type != "feTR")
         @error("When the `other_treatments` argument is specified, you need to specify `type = 'feTR'` too.")
     end
@@ -69,15 +64,20 @@ function twowayfeweights_calculate(;
         dat_regression = dat[dat[:, :weights] .!= 0,:]
 
         # regressors in xvar
+        rhs_terms = map(xvars) do x
+            x == "1" ? ConstantTerm(1) : term(Symbol(x))
+        end
+
         if length(xvars) == 1
-            rhs = xvars[1] == "1" ? ConstantTerm(1) : term(Symbol(xvars[1]))
+            rhs = rhs_terms
         else
-            rhs_terms = map(x -> x == "1" ? ConstantTerm(1) : term(Symbol(x)), xvars)
-            rhs = sum(rhs_terms)
+            rhs = foldl(+, rhs_terms)
         end
         
         # fixed effects
-        fe_terms = sum(fe.(term.(Symbol.(fes))))
+        fes_vec = isa(fes, AbstractString) ? [fes] : fes
+        fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
+        
         # full formula
         if rhs == [term(Symbol(1))]
             ff = term(:D) ~ ConstantTerm(1) + fe_terms
@@ -85,13 +85,19 @@ function twowayfeweights_calculate(;
             ff = term(:D) ~ rhs + fe_terms
         end
 
-        denom_lm = reg(dat_regression, ff, weights = :weights, save = :residuals)
+        dat_regression.Tfactor = collect(unwrap.(dat_regression.Tfactor))
+        
+        denom_lm = reg(dat_regression, ff, weights = :weights, save = :all)
+
+        # After comparing some regression results, seems to not be the problem with type = "fdS".
+
         # This can also be obtained with: 
         # denom_lm = FixedEffectModels.reg(dat, @formula(D ~ control_1 + D0 + fe(G) + fe(Tfactor)), weights = :weights)
 
         # Original regression in R:
         # denom.lm = feols(D ~ .[xvars] | .[fes], data = subset(dat, weights!=0), weights = dat$weights)
     else 
+
         # regressors in xvars
         rhs_terms = map(xvars) do x
             x == "1" ? ConstantTerm(1) : term(Symbol(x))
@@ -104,7 +110,8 @@ function twowayfeweights_calculate(;
         end
 
         # fixed effects
-        fe_terms = foldl(+, fe.(term.(Symbol.(fes))))
+        fes_vec = isa(fes, AbstractString) ? [fes] : fes
+        fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
         
         # full formula
         if rhs == [term(Symbol(1))]
@@ -126,7 +133,7 @@ function twowayfeweights_calculate(;
     if type_fe || type == "fdS"
         dat[:, Symbol(EPS_VAR)] = residuals(denom_lm)
     elseif type == "fdTR"
-        dat[:, Symbol(EPS_VAR)] = skipmissing.(residuals(denom_lm))
+        dat[:, Symbol(EPS_VAR)] .= residuals(denom_lm)
         dat[:, Symbol(EPS_VAR)] = ifelse.(ismissing.(dat[:, Symbol(EPS_VAR)]), 0, dat[:, Symbol(EPS_VAR)])
     end
     
@@ -174,30 +181,39 @@ function twowayfeweights_calculate(;
         transform!(gdat, [:E_eps_1_g_ge_aux, :weights_aux] => ((x, y) -> (x ./ y)) => :E_eps_1_g_ge)
     
     elseif type == "fdTR"
-        dat[:, :eps_2] = ifelse(ismissing(dat[:, Symbol(EPS_VAR)]), 0, dat[:, Symbol(EPS_VAR)])
+        dat[:, :eps_2] = ifelse.(.!ismissing(dat[:, Symbol(EPS_VAR)]), dat[:, Symbol(EPS_VAR)], 0)
+        # dat.eps_2 .= ifelse(.!ismissing(dat[:, Symbol(EPS_VAR)]))
     end
 
     # New regression
     push!(xvars, Term(Symbol("D")))
 
     if type == "fdS"
+        
         dat_regression = dat[dat[:, :weights] .!= 0, :]
 
-        # regressors in xvar
-        rhs = sum(term.(Symbol.(xvars)))
+        # Regressors in xvars
+        rhs = foldl(+, xvars)
+
         # fixed effects
-        fe_terms = sum(fe.(term.(Symbol.(fes))))
+        fes_vec = isa(fes, AbstractString) ? [fes] : fes
+        fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
+        
         # full formula
         ff = term(:Y) ~ rhs + fe_terms
 
-        beta_lm = reg(dat_regression, ff, weights = :weights, save = :all)
+        beta_lm = reg(dat, ff, save = :all)
+
+        # The original regression was: 
+        # beta.lm = feols(Y ~ .[xvars] | .[fes], data = subset(dat, weights != 0), weights = dat$weights, only.coef = TRUE)
 
     else
         
         rhs = foldl(+, xvars)
 
         # fixed effects
-        fe_terms = foldl(+, fe.(term.(Symbol.(fes))))
+        fes_vec = isa(fes, AbstractString) ? [fes] : fes
+        fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
         
         # full formula
         ff = term(:Y) ~ rhs + fe_terms
@@ -224,22 +240,33 @@ function twowayfeweights_calculate(;
     elseif type == "fdTR"
         
         dat = DataFrames.sort(dat, [:G, :TFactorNum])
-        gdat = DataFrames.combine(
-            DataFrames.groupby(dat, [:G]),
-            w_tilde_2 = ifelse(dat.TFactorNum .+ 1 .== lead(dat.TFactorNum), (dat.eps_2 - lead(dat.eps_2) .* lead(dat.P_gt) / dat.P_gt), missing)
-        )
-        gdat = DataFrames.combine(
-            DataFrames.groupby(gdat, [:G]),
-            w_tilde_2 = ifelse(ismissing(dat.w_tilde_2) | Base.IsInfinite(dat.w_tilde_2), (dat.eps_2), dat.tilde_2)
-        )
-        gdat = DataFrames.combine(
-            DataFrames.groupby(gdat, [:G]),
-            w_tilde_2 = dat.w_tilde_2 .* dat.D0
+        gdat = DataFrames.groupby(dat, [:G])
+        
+        DataFrames.transform!(
+            dat,
+            [:TFactorNum, :eps_2, :P_gt] => ((x, y, z) -> (ifelse.(ifelse.(ismissing.(x .+ 1 .== lead(x)), false, x .+ 1 .== lead(x)), (y - lead(y) .* lead(z) ./ z), missing))) => :w_tilde_2
         )
 
-        denom_W = weighted_mean(gdat.w_tilde_2_E_D_gt, gdat.P_gt)
-        dat = DataFrames.transform(gdat, W = dat.w_tilde_2 .* mean_D ./ denom_W)
-        dat = DataFrames.transform(gdat, weight_result = dat.W .* dat.nat_weight)
+        DataFrames.transform!(
+            dat,
+            [:w_tilde_2, :eps_2] =>
+                ((x, y) -> map((a, b) -> (!ismissing(a) && isfinite(a)) ? a : b, x, y)) =>
+                :w_tilde_2
+        )
+
+        DataFrames.transform!(
+            dat,
+            [:w_tilde_2, :D0] => ((x, y) -> x .* y) => :w_tilde_2_E_D_gt
+        )
+
+        denom_W = weighted_mean(x = dat.w_tilde_2_E_D_gt, w = dat.P_gt)
+        DataFrames.transform!(
+            dat,
+            :w_tilde_2 => (x -> (x .* mean_D ./ denom_W)) => :W
+        )
+        DataFrames.transform!(
+            dat,
+            [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result)
     
         dat = dat[:, Not(:eps_2, :P_gt, :w_tilde_2, :w_tilde_2_E_D_gt)]
     
@@ -249,7 +276,7 @@ function twowayfeweights_calculate(;
         # Also, re-write so that it uses transform(groupby.., col1, col2, etc...)
 
         dat = DataFrames.sort(dat, [:G, :Tfactor])
-        gdat = DataFrames.groupby(dat, :G)
+        gdat = DataFrames.groupby(dat, [:G])
         
         DataFrames.transform!(gdat,
             [:TFactorNum, :D] =>
@@ -261,9 +288,16 @@ function twowayfeweights_calculate(;
                     )
                 ) => :delta_D,
         )
-        # PROBLEM HERE
-        dat.parent = dat.parent[(.!ismissing.(dat.parent.delta_D)), :]
-        dat.abs_delta_D = abs.(dat.delta_D)
+        
+        # Here are some notes for future references: 
+        # DataFrames.filter((x -> !ismissing(x.delta_D)), gdat) # Runs, but does not eliminate the missing values rows.
+        # This is because the !ismissing function runs on groups, and not on rows.
+        # We can just change the underlying dat dataframe, s.t.:        
+        dropmissing!(dat, :delta_D)
+
+        # dat = gdat[(.!ismissing.(gdat.delta_D)), :]
+        DataFrames.transform!(dat, :delta_D => (x -> abs.(x)) => :abs_delta_D)
+        # dat.abs_delta_D = abs.(dat.delta_D)
         
         # The dplyr::case_when function can be replicated using the ternary syntax, mentioned here: 
         # https://bkamins.github.io/julialang/2020/12/18/casewhen.html
@@ -288,31 +322,39 @@ function twowayfeweights_calculate(;
     
     elseif type =="fdS"
 
-        dat = DataFrames.transform(
+        DataFrames.transform!(
             dat, 
-            :delta_D =>
-                (x -> (
-                    x .> 0 ? 1 :
-                    x .< 0 ? -1 : 
-                    0)
-                ) => :s_gt,
-            :D => (x -> abs.(x)) => :abs_delta_D,
-            (:P_gt, :abs_delta_D) => ((x, y) -> x .* y) => :nat_weight
+            :D => (x -> ifelse.(x .> 0, 1, ifelse.(x .< 0, -1, 0))) => :s_gt,
+        )
+
+        DataFrames.transform!(
+            dat, :D => (x -> abs.(x)) => :abs_delta_D
+        )
+
+        DataFrames.transform!(
+            dat,
+            [:P_gt, :abs_delta_D] => ((x, y) -> x .* y) => :nat_weight
         )
     
         P_S = sum(dat.nat_weight)
     
-        dat = DataFrames.transform(
+        DataFrames.transform!(
             dat,
             :nat_weight => (x -> x ./ P_S) => :nat_weight,
-            (:s_gt, :eps_2) => ((x, y) -> x .* y) => :W
         )
-        # TO FIX. Here, in the original version, they use na.rm = TRUE
-        denom_W = weighted_mean(dat.W, dat.nat_weight)
 
-        dat = DataFrames.transform(
+        # dat.nat_weight
+
+        DataFrames.transform!(
+            dat,    
+            [:s_gt, :eps_2] => ((x, y) -> x .* y) => :W
+        )
+        
+        denom_W = weighted_mean(x = dat.W, w = dat.nat_weight)
+
+        DataFrames.transform!(
             dat,
-            (:W, :nat_weight) => ((x, y) -> x .* y) => :weight_result
+            [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result
         )
 
         dat = dat[:, Not(:eps_2, :P_gt, :abs_delta_D)]

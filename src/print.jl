@@ -118,7 +118,7 @@ function Base.show(io::IO, x::twowayfeweights)
         
             summary_measures_string = summary_measures_string * "\n" * "   min \U03C3(\U0394) compatible with \U03B2_" * subscr * " and \U0394_TR = 0: " * string(x[:sensibility])
         
-            if x[:sensibility2] > 0 && x[:sum_minus] < 0
+            if (:sensibility2 in keys(x)) && x[:sensibility2] > 0 && x[:sum_minus] < 0
                 summary_measures_string = summary_measures_string * "\n" * "   min \U03C3(\U0394) compatible with treatment effect of opposite sign than \U03B2_" * subscr * " in all (g,t) cells: " * string(x[:sensibility2])
             end
             summary_measures_string = summary_measures_string * "\n Reference: Corollary 1, de Chaisemartin, C, and D'Haultfoeille, X (2020a)"
@@ -130,7 +130,7 @@ function Base.show(io::IO, x::twowayfeweights)
     end
 
     message_ERC = string(
-        "\nThe development of the original package (R and Stata) was funded by the European Union (ERC, REALLYCREDIBLE,GA N. 101043899).")
+        "\nThe development of the original packages (R and Stata) was funded by the European Union (ERC, REALLYCREDIBLE,GA N. 101043899).")
 
     message = """
     $full_assumption_message

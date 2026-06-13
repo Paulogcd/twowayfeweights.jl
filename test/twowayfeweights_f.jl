@@ -11,7 +11,7 @@
     wagepan = ReadStatTables.readstat(path)
     wagepan = DataFrames.DataFrame(wagepan)
 
-    resultat = twowayfeweights(
+    resultat_1 = twowayfeweights(
         data = wagepan,
         Y = "lwage",
         G = "nr",
@@ -31,14 +31,29 @@
         summary_measures = true,
         test_random_weights = "educ")
 
-    data = wagepan
-    Y = "lwage"
-    G = "nr"
-    T = "year"
-    D = "union"
-    type = "feS"
-    summary_measures = true
-    test_random_weights = "educ"
+    resultat_3 = twowayfeweights(
+        data = wagepan,
+        Y = "diff_lwage",
+        G = "nr",
+        T = "year",
+        D = "diff_union", # use differenced versions of Y and D
+        type                = "fdTR",             # changed
+        D0                  = "union",            # added (req'd arg for fdTR type)
+        summary_measures    = true,
+        test_random_weights = "educ")
+
+    resultat_4 = twowayfeweights(
+        data                = wagepan,
+        Y                   = "diff_lwage",
+        G                   = "nr",
+        T                   = "year",
+        D                   = "diff_union",
+        type                = "fdS",  
+        D0                  = "union",
+        summary_measures    = true,
+        test_random_weights = "educ")
+
+    keys(resultat_4)
 
     D0 = nothing
     controls = nothing
@@ -47,7 +62,7 @@
     path = nothing
 
     RCall.@rput wagepan
-    Test.@test wagepan == RCall.rcopy(R"wagepan")
+    Test.@test isequal(wagepan, RCall.rcopy(R"wagepan"))
 
     julia_code_result = twowayfeweights(
         data = wagepan,

@@ -113,8 +113,8 @@ function twowayfeweights_transform(;
         df.weights = repeat(weights, nrow(df))
     end
 
-    df.Tfactor = CategoricalArrays.categorical(string.(df.T))
-    df.TFactorNum = Int64.(df.T)
+    df.Tfactor = CategoricalArrays.categorical(df.T)
+    df.TFactorNum = Int64.(CategoricalArrays.levelcode.(df.Tfactor))
 
     return df
 end

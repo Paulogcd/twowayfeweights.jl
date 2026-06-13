@@ -129,8 +129,6 @@ begin
 
     RCall.rcopy(R"print(data_filtered)")
 
-    @test isequal(data_filtered, RCall.rcopy(R"data_filtered"))
-
     @test isequal(data_filtered.Y, RCall.rcopy(R"data_filtered$Y")) # OK 
     @test isequal(data_filtered.G, RCall.rcopy(R"data_filtered$G")) # OK 
     @test isequal(data_filtered.T, RCall.rcopy(R"data_filtered$T")) # OK 
@@ -169,8 +167,6 @@ begin
     #
     dat_regression = data_filtered[data_filtered[:, :weights] .!= 0, :]
     RCall.rcopy(R"dat_regression = subset(data_filtered, weights != 0)")
-
-    @test isequal(dat_regression, RCall.rcopy(R"dat_regression"))
     
     @test isequal(dat_regression.Y, RCall.rcopy(R"dat_regression$Y"))
     @test isequal(dat_regression.G, RCall.rcopy(R"dat_regression$G"))
@@ -180,7 +176,7 @@ begin
     @test isequal(dat_regression.RW_educ, RCall.rcopy(R"dat_regression$RW_educ"))
     @test isequal(dat_regression.weights, RCall.rcopy(R"dat_regression$weights"))
     @test isequal(string.(Int64.(unwrap.(dat_regression.Tfactor))), RCall.rcopy(R"dat_regression$Tfactor"))
-    
+
     # So the data is the same.
 
     # And the regression seems to yield the same result.
@@ -193,7 +189,8 @@ begin
     @test resultat[:dat].D0         == RCall.rcopy(R"resultat$dat$D0") # OK 
     @test resultat[:dat].RW_educ    == RCall.rcopy(R"resultat$dat$RW_educ") # OK 
     
-    @test resultat[:dat].nat_weight ≈ RCall.rcopy(R"resultat$dat$nat_weight") # FAIL
+    @test resultat[:dat].nat_weight ≈ RCall.rcopy(R"resultat$dat$nat_weight") # Not exactlty the same value.
+    @test isequal(resultat[:dat].nat_weight, RCall.rcopy(R"resultat$dat$nat_weight")) # Not exactlty the same value.
 
     resultat[:dat].nat_weight[resultat[:dat].nat_weight .!= RCall.rcopy(R"resultat$dat$nat_weight")]
     

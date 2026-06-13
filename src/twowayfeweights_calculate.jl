@@ -1,5 +1,3 @@
-# TO BE TESTED
-
 """
 Internal funcion for calculating the twoway FE weights.
 """
@@ -34,10 +32,13 @@ function twowayfeweights_calculate(;
 
     obs = sum(dat.weights)
     gdat = DataFrames.combine(DataFrames.groupby(dat, [:G, :T]), :weights .=> (x->sum(x)) .=> :P_gt)
+    minimum(gdat.P_gt) # only ones
+    maximum(gdat.P_gt) # only ones
 
     dat = DataFrames.leftjoin(dat, gdat, on = [:G, :T])
     dat = DataFrames.transform(dat, :P_gt => (x -> x ./ obs) => :P_gt)
-    
+    mean(dat.P_gt) # 0.00026212319790301376
+        
     if type_TR
         dat = DataFrames.transform(dat, :P_gt => (x -> x .* (dat[:, Symbol(DVAR)] ./ mean_D)) => :nat_weight)
     end
@@ -85,14 +86,13 @@ function twowayfeweights_calculate(;
             ff = term(:D) ~ rhs + fe_terms
         end
 
-        dat_regression.Tfactor = collect(unwrap.(dat_regression.Tfactor))
+        # dat_regression.Tfactor = collect(unwrap.(dat_regression.Tfactor))
         
-        denom_lm = reg(dat_regression, ff, weights = :weights, save = :all)
+        denom_lm = FixedEffectModels.reg(dat_regression, ff, weights = :weights, save = :all)
 
         # After comparing some regression results, seems to not be the problem with type = "fdS".
-
-        # This can also be obtained with: 
-        # denom_lm = FixedEffectModels.reg(dat, @formula(D ~ control_1 + D0 + fe(G) + fe(Tfactor)), weights = :weights)
+        # Julia:    0.00671763300530237
+        # R:        0.006717633005233869525341
 
         # Original regression in R:
         # denom.lm = feols(D ~ .[xvars] | .[fes], data = subset(dat, weights!=0), weights = dat$weights)
@@ -202,7 +202,9 @@ function twowayfeweights_calculate(;
         # full formula
         ff = term(:Y) ~ rhs + fe_terms
 
-        beta_lm = reg(dat, ff, save = :all)
+        beta_lm = FixedEffectModels.reg(dat_regression, ff, weights = :weights, save = :all)
+        # In Julia: 0.060095972248468944
+        # In R:     0.06009597224846937452147
 
         # The original regression was: 
         # beta.lm = feols(Y ~ .[xvars] | .[fes], data = subset(dat, weights != 0), weights = dat$weights, only.coef = TRUE)
@@ -218,8 +220,7 @@ function twowayfeweights_calculate(;
         # full formula
         ff = term(:Y) ~ rhs + fe_terms
 
-        beta_lm = reg(dat, ff, save = :residuals)
-
+        beta_lm = reg(dat, ff, weights = :weights, save = :residuals)
     end
     
     # Is there a better way to select the beta of the D variable?
@@ -326,22 +327,36 @@ function twowayfeweights_calculate(;
             dat, 
             :D => (x -> ifelse.(x .> 0, 1, ifelse.(x .< 0, -1, 0))) => :s_gt,
         )
+        # mean(dat.s_gt)
+        # Julia: 0.0015727391874180866
+        # R: 0.001572739187417914819359
 
         DataFrames.transform!(
             dat, :D => (x -> abs.(x)) => :abs_delta_D
         )
+        # mean(dat.abs_delta_D) 
+        # Julia:    0.05976409f0
+        # R:        0.05976408912188731908932
 
         DataFrames.transform!(
             dat,
             [:P_gt, :abs_delta_D] => ((x, y) -> x .* y) => :nat_weight
         )
+        # mean(dat.nat_weight)
+        # Julia:    1.566555416038985e-5
+        # R:        1.566555416038984790603e-05
     
-        P_S = sum(dat.nat_weight)
+        # P_S = sum(dat.nat_weight)
+        # Julia:    0.059764089121887284
+        # R:        0.05976408912188742317273
     
         DataFrames.transform!(
             dat,
             :nat_weight => (x -> x ./ P_S) => :nat_weight,
         )
+        # mean(dat.nat_weight)
+        # Julia:  0.0002621231979030144
+        # R:      0.0002621231979030134323118
 
         # dat.nat_weight
 
@@ -349,13 +364,26 @@ function twowayfeweights_calculate(;
             dat,    
             [:s_gt, :eps_2] => ((x, y) -> x .* y) => :W
         )
+        # mean(dat.W)
+        # Julia:  0.059266776485865785
+        # R:      0.05926677648586579222334
         
         denom_W = weighted_mean(x = dat.W, w = dat.nat_weight)
+        # Julia:  0.9916787381297281
+        # R:      0.9916787381297236247946
+
+        DataFrames.transform!(
+            dat,
+            :W => (x -> x ./ denom_W) => :W
+        )
 
         DataFrames.transform!(
             dat,
             [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result
         )
+        mean(dat.weight_result)
+        # 0.0002599420021309903
+        # 0.0002621231979030147333544
 
         dat = dat[:, Not(:eps_2, :P_gt, :abs_delta_D)]
     end

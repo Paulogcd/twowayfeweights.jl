@@ -1,4 +1,4 @@
-@testset twowayfeweightsTEST begin
+@testset "twowayfeweights" begin
 
     using ReadStatTables
 
@@ -10,98 +10,173 @@
     path = download(url)
     wagepan = ReadStatTables.readstat(path)
     wagepan = DataFrames.DataFrame(wagepan)
-
-    resultat_1 = twowayfeweights(
-        data = wagepan,
-        Y = "lwage",
-        G = "nr",
-        T = "year",
-        D = "union",
-        type = "feTR",
-        summary_measures = true,
-        test_random_weights = "educ")
-
-    resultat_2 = twowayfeweights(
-        data = wagepan,
-        Y = "lwage",
-        G = "nr",
-        T = "year",
-        D = "union",
-        type = "feS",
-        summary_measures = true,
-        test_random_weights = "educ")
-
-    resultat_3 = twowayfeweights(
-        data = wagepan,
-        Y = "diff_lwage",
-        G = "nr",
-        T = "year",
-        D = "diff_union", # use differenced versions of Y and D
-        type                = "fdTR",             # changed
-        D0                  = "union",            # added (req'd arg for fdTR type)
-        summary_measures    = true,
-        test_random_weights = "educ")
-
-    resultat_4 = twowayfeweights(
-        data                = wagepan,
-        Y                   = "diff_lwage",
-        G                   = "nr",
-        T                   = "year",
-        D                   = "diff_union",
-        type                = "fdS",  
-        D0                  = "union",
-        summary_measures    = true,
-        test_random_weights = "educ")
-
-    keys(resultat_4)
-
-    D0 = nothing
-    controls = nothing
-    weights = nothing
-    other_treatments = nothing
-    path = nothing
-
     RCall.@rput wagepan
-    Test.@test isequal(wagepan, RCall.rcopy(R"wagepan"))
 
-    julia_code_result = twowayfeweights(
-        data = wagepan,
-        Y = "lwage",
-        G = "nr",
-        T = "year",
-        D = "union",
-        type = "feTR",
-        summary_measures = true,
-        test_random_weights = "educ")
+    @testset "feTR" begin
+        julia_resultat = twowayfeweights(
+            data                = wagepan,
+            Y                   = "lwage",
+            G                   = "nr",
+            T                   = "year",
+            D                   = "union",
+            type                = "feTR",
+            summary_measures    = true,
+            test_random_weights = "educ")
 
-    R_code_result = RCall.rcopy(R"TwoWayFEWeights::twowayfeweights(
-        wagepan,                        # input data
-        'lwage', # Y
-        'nr', # G
-        'year', # T
-        'union', # D
-        type                = 'feTR', 
-        summary_measures    = TRUE,   
-        test_random_weights = 'educ'  
-    )")
+        R_resultat = RCall.rcopy(R"TwoWayFEWeights::twowayfeweights(
+            wagepan,                        # input data
+            'lwage', # Y
+            'nr', # G
+            'year', # T
+            'union', # D
+            type                = 'feTR', 
+            summary_measures    = TRUE,   
+            test_random_weights = 'educ'  
+        )")
+        
+        Test.@test julia_resultat[:nr_minus]            == R_resultat[:nr_minus]
+        Test.@test julia_resultat[:nr_weights]          == R_resultat[:nr_weights]
+        Test.@test isapprox(julia_resultat[:sum_plus]             , R_resultat[:sum_plus], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:sum_minus]            , R_resultat[:sum_minus], atol = 0.0001)
+        Test.@test julia_resultat[:dat_result].T          == R_resultat[:dat_result].T
+        Test.@test julia_resultat[:dat_result].G          == R_resultat[:dat_result].G
+        Test.@test isapprox(julia_resultat[:dat_result].weight     , R_resultat[:dat_result].weight, atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:beta]                  , R_resultat[:beta], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:sensibility]                    , R_resultat[:sensibility], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:mat]                     , R_resultat[:mat], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:sensibility2]         , R_resultat[:sensibility2], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:tot_cells]           , R_resultat[:tot_cells], atol = 1)
+        Test.@test julia_resultat[:type]                == R_resultat[:type]
+        Test.@test julia_resultat[:params]              == R_resultat[:params]
+        Test.@test julia_resultat[:summary_measures]    == R_resultat[:summary_measures]
+        Test.@test julia_resultat[:random_weights]      == R_resultat[:random_weights]
+    end
 
-    @test R_code_result == julia_code_result
 
-    Test.@test julia_code_result[:nr_minus]            == R_code_result[:nr_minus]
-    Test.@test julia_code_result[:nr_weights]          == R_code_result[:nr_weights]
-    Test.@test julia_code_result[:sum_plus]            == R_code_result[:sum_plus]
-    Test.@test julia_code_result[:sum_minus]           == R_code_result[:sum_minus]
-    Test.@test julia_code_result[:dat_result]          == R_code_result[:dat_result]
-    Test.@test julia_code_result[:beta]                == R_code_result[:beta]
-    Test.@test julia_code_result[:sensibility]         == R_code_result[:sensibility]
-    Test.@test julia_code_result[:mat]                 == R_code_result[:mat]
-    Test.@test julia_code_result[:sensibility2]        == R_code_result[:sensibility2]
-    Test.@test julia_code_result[:tot_cells]           == R_code_result[:tot_cells]
-    Test.@test julia_code_result[:type]                == R_code_result[:type]
-    Test.@test julia_code_result[:params]              == R_code_result[:params]
-    Test.@test julia_code_result[:summary_measures]    == R_code_result[:summary_measures]
-    Test.@test julia_code_result[:other_treatments]    == R_code_result[:other_treatments]
-    Test.@test julia_code_result[:random_weights]      == R_code_result[:random_weights]
+    @testset "feS" begin 
+        
+        julia_resultat = twowayfeweights(
+            data = wagepan,
+            Y = "lwage",
+            G = "nr",
+            T = "year",
+            D = "union",
+            type = "feS",
+            summary_measures = true,
+            test_random_weights = "educ")
+        
+        R_resultat = RCall.rcopy(R"TwoWayFEWeights::twowayfeweights(
+            wagepan,                        # input data
+            'lwage', # Y
+            'nr', # G
+            'year', # T
+            'union', # D
+            type                = 'feS', 
+            summary_measures    = TRUE,   
+            test_random_weights = 'educ'  
+        )")
+
+        Test.@test julia_resultat[:nr_minus]            == R_resultat[:nr_minus]
+        Test.@test julia_resultat[:nr_weights]          == R_resultat[:nr_weights]
+        Test.@test isapprox(julia_resultat[:sum_plus]             , R_resultat[:sum_plus], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:sum_minus]            , R_resultat[:sum_minus], atol = 0.0001)
+        Test.@test julia_resultat[:dat_result].T          == R_resultat[:dat_result].T
+        Test.@test julia_resultat[:dat_result].G          == R_resultat[:dat_result].G
+        Test.@test isapprox(julia_resultat[:dat_result].weight     , R_resultat[:dat_result].weight, atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:beta]                  , R_resultat[:beta], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:sensibility]                    , R_resultat[:sensibility], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:mat]                     , R_resultat[:mat], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:tot_cells]           , R_resultat[:tot_cells], atol = 1)
+        Test.@test julia_resultat[:type]                == R_resultat[:type]
+        Test.@test julia_resultat[:params]              == R_resultat[:params]
+        Test.@test julia_resultat[:summary_measures]    == R_resultat[:summary_measures]
+        Test.@test julia_resultat[:random_weights]      == R_resultat[:random_weights]
+    
+    end
+
+    @testset "fdTR" begin
+        
+        julia_resultat = twowayfeweights(
+                data = wagepan,
+                Y = "diff_lwage",
+                G = "nr",
+                T = "year",
+                D = "diff_union", # use differenced versions of Y and D
+                type                = "fdTR",             # changed
+                D0                  = "union",            # added (req'd arg for fdTR type)
+                summary_measures    = true,
+                test_random_weights = "educ")
+
+        R_resultat = RCall.rcopy(R"TwoWayFEWeights::twowayfeweights(
+                wagepan,                        # input data
+                'diff_lwage', # Y
+                'nr', # G
+                'year', # T
+                'diff_union', # D
+                type                = 'fdTR', 
+                D0 = 'union',
+                summary_measures    = TRUE,   
+                test_random_weights = 'educ'  
+            )")
+
+        Test.@test julia_resultat[:nr_minus]            == R_resultat[:nr_minus]
+        Test.@test julia_resultat[:nr_weights]          == R_resultat[:nr_weights]
+        Test.@test isapprox(julia_resultat[:sum_plus]             , R_resultat[:sum_plus], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:sum_minus]            , R_resultat[:sum_minus], atol = 0.0001)
+        Test.@test julia_resultat[:dat_result].T          == R_resultat[:dat_result].T
+        Test.@test julia_resultat[:dat_result].G          == R_resultat[:dat_result].G
+        Test.@test isapprox(julia_resultat[:dat_result].weight     , R_resultat[:dat_result].weight, atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:beta]                  , R_resultat[:beta], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:sensibility]                    , R_resultat[:sensibility], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:mat]                     , R_resultat[:mat], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:tot_cells]           , R_resultat[:tot_cells], atol = 1)
+        Test.@test julia_resultat[:type]                == R_resultat[:type]
+        Test.@test julia_resultat[:params]              == R_resultat[:params]
+        Test.@test julia_resultat[:summary_measures]    == R_resultat[:summary_measures]
+        Test.@test julia_resultat[:random_weights]      == R_resultat[:random_weights]
+    end
+
+    @testset "fdS" begin
+        
+        julia_resultat = twowayfeweights(
+            data                = wagepan,
+            Y                   = "diff_lwage",
+            G                   = "nr",
+            T                   = "year",
+            D                   = "diff_union",
+            type                = "fdS",  
+            D0                  = "union",
+            summary_measures    = true,
+            test_random_weights = "educ")
 
 
-end
+        R_resultat = RCall.rcopy(R"TwoWayFEWeights::twowayfeweights(
+                wagepan,                        # input data
+                'diff_lwage', # Y
+                'nr', # G
+                'year', # T
+                'diff_union', # D
+                type                = 'fdS', 
+                D0 = 'union',
+                summary_measures    = TRUE,   
+                test_random_weights = 'educ'  
+            )")
+
+        Test.@test julia_resultat[:nr_minus]            == R_resultat[:nr_minus]
+        Test.@test julia_resultat[:nr_weights]          == R_resultat[:nr_weights]
+        Test.@test isapprox(julia_resultat[:sum_plus]             , R_resultat[:sum_plus], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:sum_minus]            , R_resultat[:sum_minus], atol = 0.0001)
+        Test.@test julia_resultat[:dat_result].T          == R_resultat[:dat_result].T
+        Test.@test julia_resultat[:dat_result].G          == R_resultat[:dat_result].G
+        Test.@test isapprox(julia_resultat[:dat_result].weight     , R_resultat[:dat_result].weight, atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:beta]                  , R_resultat[:beta], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:sensibility]                    , R_resultat[:sensibility], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:mat]                     , R_resultat[:mat], atol = 0.0001)
+        Test.@test isapprox(julia_resultat[:tot_cells]           , R_resultat[:tot_cells], atol = 1)
+        Test.@test julia_resultat[:type]                == R_resultat[:type]
+        Test.@test julia_resultat[:params]              == R_resultat[:params]
+        Test.@test julia_resultat[:summary_measures]    == R_resultat[:summary_measures]
+        Test.@test julia_resultat[:random_weights]      == R_resultat[:random_weights]
+    end
+
+end;

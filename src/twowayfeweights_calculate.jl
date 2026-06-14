@@ -32,19 +32,19 @@ function twowayfeweights_calculate(;
 
     obs = sum(dat.weights)
     gdat = DataFrames.combine(DataFrames.groupby(dat, [:G, :T]), :weights .=> (x->sum(x)) .=> :P_gt)
-    minimum(gdat.P_gt) # only ones
-    maximum(gdat.P_gt) # only ones
+    # minimum(gdat.P_gt) # only ones
+    # maximum(gdat.P_gt) # only ones
 
     dat = DataFrames.leftjoin(dat, gdat, on = [:G, :T])
     dat = DataFrames.transform(dat, :P_gt => (x -> x ./ obs) => :P_gt)
-    mean(dat.P_gt) # 0.00026212319790301376
+    # mean(dat.P_gt) # 0.00026212319790301376
         
     if type_TR
         dat = DataFrames.transform(dat, :P_gt => (x -> x .* (dat[:, Symbol(DVAR)] ./ mean_D)) => :nat_weight)
     end
 
     if (isnothing(controls))
-        controls = ConstantTerm(1)
+        controls = Any[ConstantTerm(1)]
     end
 
     fes = "Tfactor"
@@ -346,7 +346,7 @@ function twowayfeweights_calculate(;
         # Julia:    1.566555416038985e-5
         # R:        1.566555416038984790603e-05
     
-        # P_S = sum(dat.nat_weight)
+        P_S = sum(dat.nat_weight)
         # Julia:    0.059764089121887284
         # R:        0.05976408912188742317273
     
@@ -381,7 +381,7 @@ function twowayfeweights_calculate(;
             dat,
             [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result
         )
-        mean(dat.weight_result)
+        # mean(dat.weight_result)
         # 0.0002599420021309903
         # 0.0002621231979030147333544
 

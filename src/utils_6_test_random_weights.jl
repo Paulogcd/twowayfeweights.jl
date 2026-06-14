@@ -1,14 +1,15 @@
 # This file defines the twowayfeweights_test_random_weights function, which computes the test ratio based on the weights.
-# It defines several methods, one for Union, one for Vector{String}, and one for String.
-# This is to be refined.
+# It defines several methods, one for Vector{Union{Nothing, String}}, one for Vector{String}, and one for String.
 
 """
     twowayfeweights_test_random_weights
 
+    Vector{Union{Nothing, String}} method
+
 """
 function twowayfeweights_test_random_weights(;
     df::DataFrames.DataFrame,
-    random_weights::Union{Vector{String}, Nothing, String})
+    random_weights::Vector{Union{Nothing, String}})
 
     if !isnothing(random_weights)
         if(typeof(random_weights)) == Vector{String}
@@ -21,11 +22,6 @@ function twowayfeweights_test_random_weights(;
     end
     rename!(mat, ["Coef", "SE", "t-stat", "Correlation"])
     df_filtered = df[isfinite.(df[:, :W]), :]
-
-    # To check if this is an issue in Julia
-    #   df_filtered_sub <- subset(df_filtered, df_filtered$nat_weight != 0) #Modif. Diego: added extra line to solve note in R CMD Check
-
-    # random_weights = "random_weights"
 
     if !isnothing(random_weights)
         for vv in 1:length([random_weights])

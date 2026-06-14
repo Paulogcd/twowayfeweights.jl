@@ -56,12 +56,15 @@ module TwoWayFEWeights
         include("twowayfeweights_calculate.jl")
         # export(twowayfeweights_calculate)
 
-        include("twowayfeweights_f.jl")
+        # include("twowayfeweights_f.jl")
         include("twowayfeweights_result.jl")
         
         include("twowayfeweights_struct.jl")
         include("utils_print.jl")
         include("print.jl")
+
+        include("twowayfeweights_f.jl")
+        export(twowayfeweights)
     end
 
 end

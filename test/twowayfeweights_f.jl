@@ -1,18 +1,20 @@
-@testset "twowayfeweights" begin
+Test.@testset "twowayfeweights" begin
 
     using ReadStatTables
+    using Downloads
 
     # For this test, we are going to use the official / original 
     # code snipped used in the original package.
     repo = "chaisemartinPackages/twowayfeweights/main"
     file = "wagepan_twfeweights.dta"
     url = "https://raw.githubusercontent.com" * "/" * repo * "/" * file
-    path = download(url)
+    path = Downloads.download(url)
     wagepan = ReadStatTables.readstat(path)
     wagepan = DataFrames.DataFrame(wagepan)
     RCall.@rput wagepan
 
-    @testset "feTR" begin
+    Test.@testset "feTR" begin
+
         julia_resultat = twowayfeweights(
             data                = wagepan,
             Y                   = "lwage",
@@ -53,7 +55,7 @@
     end
 
 
-    @testset "feS" begin 
+    Test.@testset "feS" begin 
         
         julia_resultat = twowayfeweights(
             data = wagepan,
@@ -94,7 +96,7 @@
     
     end
 
-    @testset "fdTR" begin
+    Test.@testset "fdTR" begin
         
         julia_resultat = twowayfeweights(
                 data = wagepan,
@@ -136,7 +138,7 @@
         Test.@test julia_resultat[:random_weights]      == R_resultat[:random_weights]
     end
 
-    @testset "fdS" begin
+    Test.@testset "fdS" begin
         
         julia_resultat = twowayfeweights(
             data                = wagepan,
@@ -144,7 +146,7 @@
             G                   = "nr",
             T                   = "year",
             D                   = "diff_union",
-            type                = "fdS",  
+            type                = "fdS",
             D0                  = "union",
             summary_measures    = true,
             test_random_weights = "educ")

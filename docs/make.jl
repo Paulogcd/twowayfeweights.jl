@@ -8,9 +8,8 @@ makedocs(
     modules = [TwoWayFEWeights],
     pages = [
         "index.md",
-        "TWFE.md",
-        "guide.md",
-        "package_structure.md"
+        "package_structure.md",
+        "Documentation.md"
     ]
 )
 

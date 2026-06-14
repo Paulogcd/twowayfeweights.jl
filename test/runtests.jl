@@ -4,15 +4,14 @@ using RCall # We use RCall to compare our output to the one of the original func
 using Random 
 using DataFrames
 
-@testset "twowayfeweights.jl" begin
-    # Write your tests here.
+Test.@testset "twowayfeweights.jl" begin
 
     # include("print.jl")
-    include("initialisation.jl");
-    include("utils.jl");
-    include("twowayfeweights_calculate.jl")
+    # include("initialisation.jl");
+    # include("utils.jl");
+    # include("twowayfeweights_calculate.jl")
     include("twowayfeweights_f.jl")
-    include("twowayfeweights_normalize_var.jl")
-    include("twowayfeweights_result.jl")
+    # include("twowayfeweights_normalize_var.jl")
+    # include("twowayfeweights_result.jl")
 
 end;

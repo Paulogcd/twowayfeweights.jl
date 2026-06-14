@@ -55,11 +55,11 @@ jobs:
         run: |
           echo "LD_LIBRARY_PATH=$(R RHOME)/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
       
-      - name: Rebuild RCall
-        run: |
-          using Pkg
-          Pkg.build("RCall")
-        shell: julia --project=. {0}
+      # - name: Rebuild RCall
+      #   run: |
+      #     using Pkg
+      #     Pkg.build("RCall")
+      #   shell: julia --project=. {0}
 
       - name: Install the original R package
         run: |

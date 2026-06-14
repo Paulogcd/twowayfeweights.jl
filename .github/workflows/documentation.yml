@@ -20,11 +20,53 @@ jobs:
       pull-requests: read
       statuses: write
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1.12.6'
+          - 'pre'
+          - 'nightly'
+        R:
+          - '4.5.1'
+        os:
+          - ubuntu-latest
+        arch:
+          - x64
+
     steps:
+      
       - uses: actions/checkout@v4
+      
       - uses: julia-actions/setup-julia@v2
         with:
           version: '1'
+      
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.R }}
+
+      - name: Set LD_LIBRARY_PATH
+        run: |
+          echo "LD_LIBRARY_PATH=$(R RHOME)/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+      - name: Install the original R package
+        run: |
+
+          install.packages("forcats", repos = "https://cloud.r-project.org")
+          install.packages("readr", repos = "https://cloud.r-project.org")
+          install.packages("vctrs", repos = "https://cloud.r-project.org")
+          install.packages("glue", repos = "https://cloud.r-project.org")
+          install.packages("pillar", repos = "https://cloud.r-project.org")
+          install.packages("hms", repos = "https://cloud.r-project.org")
+          install.packages("tidyselect", repos = "https://cloud.r-project.org")
+          install.packages("tibble", repos = "https://cloud.r-project.org")
+          install.packages("haven", repos = "https://cloud.r-project.org")
+    
+          install.packages("TwoWayFEWeights", repos = "https://cloud.r-project.org")
+
+        shell: Rscript {0}
+      
       - uses: julia-actions/cache@v2
       - name: Install dependencies
         shell: julia --color=yes --project=docs {0}

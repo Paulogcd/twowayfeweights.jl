@@ -1,14 +1,53 @@
-name = "twowayfeweights"
-uuid = "7a2c1f84-c3fb-497c-8c15-a6222db6fa69"
-authors = ["Paulogcd <gugelmopaulo@gmail.com> and contributors"]
+name = "TwoWayFEWeights"
+uuid = "82ae8496-443a-4292-ae20-d7c088f3d720"
 version = "1.0.0-DEV"
+authors = ["Paulogcd <gugelmopaulo@gmail.com> and contributors"]
+
+[workspace]
+projects = ["docs"]
 
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+Crayons = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DocumenterMermaid = "a078cd44-4d9c-4618-b545-3ab9d77f9177"
+Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+FixedEffectModels = "9d5cd8c9-2029-5cab-9928-427838db53e3"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Missings = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
+OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
+PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
+RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+ReadStatTables = "52522f7a-9570-4e34-8ac6-c005c74d4b84"
+ShiftedArrays = "1277b4bf-5013-50f5-be3d-901d8477a67a"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-DataFrames = "1.8.0"
-julia = "1.6.7"
+BenchmarkTools = "1.8.0"
+CSV = "0.10.16"
+CategoricalArrays = "1.1.0"
+Crayons = "4.1.1"
+DataFrames = "1.8.2"
+DocumenterMermaid = "0.2.0"
+Downloads = "1.7.0"
+FixedEffectModels = "1.13.1"
+LinearAlgebra = "1.12.0"
+Missings = "1.2.0"
+OrderedCollections = "1.8.1"
+PrettyTables = "3.3.2"
+RCall = "0.14.13"
+Random = "1.11.0"
+ReadStatTables = "0.3.5"
+ShiftedArrays = "2.0.0"
+Statistics = "1.11.1"
+StatsBase = "0.34.10"
+Test = "1.11.0"
+julia = "1.10.10"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

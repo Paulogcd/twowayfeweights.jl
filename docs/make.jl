@@ -17,6 +17,6 @@ makedocs(
 # See "Hosting Documentation" and deploydocs() in the Documenter manual
 # for more information.
 deploydocs(
-    repo = "github.com/Paulogcd/twowayffweights.jl",
+    repo = "github.com/Paulogcd/twowayfeweights.jl",
     devbranch = "main"
 )

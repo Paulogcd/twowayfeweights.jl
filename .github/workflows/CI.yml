@@ -44,6 +44,11 @@ jobs:
           r-version: ${{ matrix.R }}
       - name: Install the original R package
         run: |
+          install.packages("methods", repos = "https://cloud.r-project.org")
+          install.packages("stats", repos = "https://cloud.r-project.org")
+          install.packages("graphics", repos = "https://cloud.r-project.org")
+          install.packages("grDevices", repos = "https://cloud.r-project.org")
+          install.packages("utils", repos = "https://cloud.r-project.org")
           install.packages("TwoWayFEWeights", repos = "https://cloud.r-project.org")
         shell: Rscript {0}
       - uses: julia-actions/cache@v2

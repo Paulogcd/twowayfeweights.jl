@@ -13,7 +13,7 @@ Internal function.
 function twowayfeweights_transform(;
     df::DataFrames.DataFrame,
     controls::Union{String, Vector{String}, Nothing},
-    weights::Union{String, Vector{String}, Nothing},
+    weights::Union{Nothing, AbstractVector{Int32}, Int32, AbstractVector{Int64}, Int64, AbstractVector{Number}, Number},
     treatments::Union{String, Vector{String}, Nothing})
 
     ret = twowayfeweights_normalize_var(df = df, varname = "D")
@@ -71,7 +71,7 @@ function twowayfeweights_transform(;
 
     if !isnothing(treatments)
         
-        if typeof(controls) == Vector{String}
+        if typeof(treatments) == Vector{String}
 
             for treatment in treatments
                 
@@ -87,7 +87,7 @@ function twowayfeweights_transform(;
                 end
             end
 
-        elseif typeof(controls) == String
+        elseif typeof(treatments) == String
             
             for treatment in [treatments]
                 
@@ -108,9 +108,7 @@ function twowayfeweights_transform(;
     if isnothing(weights)
         df.weights .= 1
     else 
-        # This is NOT what is expected?
-        # The weights variable should be a numerical vector then?
-        df.weights = repeat(weights, nrow(df))
+        df.weights .= weights # repeat(weights, nrow(df))
     end
 
     df.Tfactor = CategoricalArrays.categorical(df.T)

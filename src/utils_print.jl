@@ -1,5 +1,5 @@
 
-## Custom print print method for treatment matrix
+## Custom print method for treatment matrix
 function print_treat_matrix(;tmat, tvar, ttype, otreat = false)
 
     tmat = DataFrames.DataFrame(tmat, :auto)
@@ -7,9 +7,9 @@ function print_treat_matrix(;tmat, tvar, ttype, otreat = false)
     tmat.row_names = tmat_row_names
 
     if otreat 
-        tstring = string("Other treat.: ", replace(tvar, "^OT" => ""))
+        tstring = string("Other treat.: ", replace(tvar, "OT_" => ""))
     else
-        tstring = "Treat. var:" .* tvar
+        tstring = "Treat. var: " .* tvar
     end
 
     tmat_titles = [tstring, string(ttype, "s"), string("\U03A3", " weights")]
@@ -22,12 +22,6 @@ function print_treat_matrix(;tmat, tvar, ttype, otreat = false)
     highlighters = [
         PrettyTables.TextHighlighter((data, i, j) -> (i == 2) && (j ∈ [2, 3]) && (data[i, j] != 0), crayon"fg:red")
     ]
-    
-    # table = PrettyTables.pretty_table(tmat;
-    #     table_format,
-    #     title,
-    #     highlighters
-    # )
 
     table_str = sprint() do io
         PrettyTables.pretty_table(

@@ -184,8 +184,6 @@ function twowayfeweights(;
       random_weights = random_weight_rename,
       treatments     = treatments_rename)
 
-    # DataFrames.names(dat)
-
     # Set class and add extra features for post-processing (printing etc.)
     # class(res) = "twowayfeweights"
     
@@ -199,7 +197,7 @@ function twowayfeweights(;
   
     if !(isnothing(path))
         # write.csv(res$dat_result, path, row.names = FALSE)
-        CSV.write(path, res.dat_result)
+        CSV.write(path, res[:dat_result])
     end
   
   return res

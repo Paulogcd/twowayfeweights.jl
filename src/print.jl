@@ -20,7 +20,7 @@ function Base.show(io::IO, x::twowayfeweights)
 
     other_treats = !isnothing(x[:other_treatments])
 
-    treat = "ATT"
+    treat = "ATTs"
 
     assumption = if x[:type] ∈ ["feTR", "fdTR"]
             "Under the common trends assumption,\n"
@@ -32,12 +32,12 @@ function Base.show(io::IO, x::twowayfeweights)
 
     if other_treats
         assumption_string = string(assumption * 
-            string("the TWFE coefficient beta, equal to", x[:beta], "estimates the sum of several terms.") * 
-            string("The first term is a weighted sum of ", x[:nr_plus] + x[:nr_minus], " ", treat, ".")
+            string("the TWFE coefficient beta, equal to ", round(x[:beta], digits = 4), " estimates the sum of several terms.\n\n") * 
+            string("The first term is a weighted sum of ", x[:nr_plus] + x[:nr_minus], " ", treat, ".\n")
         )
     else 
         assumption_string = string(assumption *
-            string("the TWFE coefficient beta, equal to ", x[:beta], ", estimates a weighted sum of ", x[:nr_plus] + x[:nr_minus], " ", treat)
+            string("the TWFE coefficient beta, equal to ", round(x[:beta], digits = 4), ", estimates a weighted sum of ", x[:nr_plus] + x[:nr_minus], " ", treat)
         )
     end
 
@@ -45,7 +45,7 @@ function Base.show(io::IO, x::twowayfeweights)
         x[:nr_plus],
         " ",
         treat, 
-        "receive a positive weight, and ", 
+        " receive a positive weight, and ", 
         x[:nr_minus],
         " receive a negative weight."
     )
@@ -65,7 +65,7 @@ function Base.show(io::IO, x::twowayfeweights)
     tot_weights = x[:nr_plus] + x[:nr_minus]
     tot_sums = round(x[:sum_plus] + x[:sum_minus], digits = 4)
 
-    full_assumption_message = string("\n", assumption_string, "\n", weight_string)
+    full_assumption_message = string("\n", assumption_string, "\n", weight_string, "\n\n")
 
     tmat = Matrix{Float64}(undef, 2, 3)
     tmat[1, :] = [x[:nr_plus], x[:nr_minus], tot_weights]
@@ -76,21 +76,24 @@ function Base.show(io::IO, x::twowayfeweights)
 
     # print other treatments
     if other_treats # OTHER_TREATS BLOCK
+        assumption_string_tmat =  ""
         for otvar in x[:other_treatments]
+        
+            # otvar = x[:other_treatments][1]
 
-            ox = x[:otvar]
+            ox = x[Symbol(otvar)]
             otot_weights = ox[:nr_plus] + ox[:nr_minus]
-            otot_sums = round(ox[:sum_plus] + ox[:sum_minus], 4)
+            otot_sums = round(ox[:sum_plus] + ox[:sum_minus], digits = 4)
 
             otmat = [
                 [ox[:nr_plus], ox[:nr_minus], otot_weights], 
-                [round(ox[:sum_plus], 4), round(ox[:sum_minus], 4), otot_sums]
+                [round(ox[:sum_plus], digits = 4), round(ox[:sum_minus], digits = 4), otot_sums]
             ]
 
             oassumption_string = string("The next term is a weighted sum of ", ox[:nr_plus] + ox[:nr_minus], " ", treat)
             
             oweight_string = string(
-                ox[:r_plus] * treat * " receive a positive weight, and and " * ox[:nr_minus] * " reveive a negative weight."
+                ox[:nr_plus], " ", treat, " receive a positive weight, and ", ox[:nr_minus], " receive a negative weight.\n\n"
             )
 
             if ox[:tot_cells] > ox[:nr_plus] + ox[:nr_minus]
@@ -98,18 +101,19 @@ function Base.show(io::IO, x::twowayfeweights)
                     ox[:tot_cells],
                     "(g,t) cells receive the treatment, but the ",
                     treat,
-                    "of",
+                    " of ",
                     ox[:tot_cells] - (ox[:nr_plus] + ox[:nr_minus]),
-                    "cells receive a weight equal to zero.")
+                    " cells receive a weight equal to zero.")
             end
             
             # Je sens que cette ligne va poser problème.
-            assumption_string_tmat = string(oassumption_string, "\n", oweight_string, print_treat_matrix(tmat = otmat, tvar = otvar, ttype = treat, otreat = TRUE))
-
+            assumption_string_tmat = string(assumption_string_tmat, oassumption_string, "\n", oweight_string, "\n")
+            assumption_string_tmat = string(assumption_string_tmat, print_treat_matrix(tmat = otmat, tvar = otvar, ttype = treat, otreat = true))
+            # @info(assumption_string_tmat)
         end
     end
 
-    if x[:summary_measures]
+    if !isnothing(x[:summary_measures]) && x[:summary_measures] == true
         
         subscr = x[:type][1:2]
         summary_measures_string = "Summary Measures:\n TWFE Coefficient β_fe: " * string(x[:beta][1])
@@ -134,8 +138,8 @@ function Base.show(io::IO, x::twowayfeweights)
 
     message = """
     $full_assumption_message
-    $assumption_string_tmat
     $treat_matrix_string
+    $assumption_string_tmat
     $summary_measures_string
     
     $random_weight_message

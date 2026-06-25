@@ -3,16 +3,16 @@ url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtex
 use "wolfers2006_didtextbook.dta", clear
 twowayfeweights div_rate state year rel_time1, type(feTR) test_random_weights(year) weight(stpop) other_treatments(rel_time2-rel_time16) controls(rel_timeminus1-rel_timeminus9)
 
-    using ReadStatTables
-    using Downloads
-    using DataFrames
+using ReadStatTables
+using Downloads
+using DataFrames
 
-    # For this test, we are going to use the official / original 
-    # code snipped used in the original package.
-    url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Wolfers%202006/wolfers2006_didtextbook.dta"
-    path = Downloads.download(url)
-    data = ReadStatTables.readstat(path)
-    data = DataFrames.DataFrame(data)
+# For this test, we are going to use the official / original 
+# code snipped used in the original package.
+url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Wolfers%202006/wolfers2006_didtextbook.dta"
+path = Downloads.download(url)
+data = ReadStatTables.readstat(path)
+data = DataFrames.DataFrame(data)
 
 other_treatments = [
     "rel_time2",
@@ -55,7 +55,7 @@ weights = data.stpop
 other_treatments = other_treatments
 controls = controls
 
-    twowayfeweights(
+    test_1_stata = twowayfeweights(
         data = data,
         Y = "div_rate", 
         G = "state",
@@ -68,7 +68,7 @@ controls = controls
         controls = controls)
 
 
-
-twowayfeweights Y G T D [D0], type(string)
-  [summary_measures test_random_weights(varlist)
-  controls(varlist) other_treatments(varlist) weight(varlist) path(string)]
+# Stata syntax
+# twowayfeweights Y G T D [D0], type(string)
+#   [summary_measures test_random_weights(varlist)
+#   controls(varlist) other_treatments(varlist) weight(varlist) path(string)]

@@ -20,6 +20,7 @@ module TwoWayFEWeights
     using ReadStatTables
     using PrettyTables
     using Crayons
+    using CSV
 
     # Util functions
     begin

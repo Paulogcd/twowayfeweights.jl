@@ -15,6 +15,13 @@ function twowayfeweights_rename_var(;
     random_weights::Union{String, Vector{String}, Nothing} # Can also be nothing.
     )
 
+    # If random weights are provided, we rename and include them.
+    if !isnothing(random_weights)
+        random_weight_rename = get_random_weight_rename(random_weights)
+        random_weight_df = DataFrames.DataFrame(df[!, DataFrames.names(df, random_weights)])
+        DataFrames.rename!(random_weight_df, random_weights => random_weight_rename)
+    end
+
     # We define the original and new names.
     original_names      = [Y, G, T, D]
     new_names           = ["Y", "G", "T", "D"]
@@ -24,17 +31,17 @@ function twowayfeweights_rename_var(;
     # at the behavior of the main twowayfeweights function, this should be due to 
     # the NULL value being ignored when put in the columns argument in R. 
     # Since this is not the case in Julia, we treat the treatments = nothing separately:
-    if !isnothing(treatments)
-        original_names      = vcat(original_names, treatments)
-        treatments_rename   = get_treatments_rename(treatments)
-        new_names           = vcat(new_names, treatments_rename)
-    end
-    
     # Same for controls
-    if !isnothing(treatments)
-        original_names      = vcat(original_names, controls)
+    if !isnothing(controls)
         controls_rename     = get_controls_rename(controls)
+        original_names      = vcat(original_names, controls)
         new_names           = vcat(new_names, controls_rename)
+    end
+
+    if !isnothing(treatments)
+        treatments_rename   = get_treatments_rename(treatments)
+        original_names      = vcat(original_names, treatments)
+        new_names           = vcat(new_names, treatments_rename)
     end
 
     # If D0 is provided, we rename and include it.
@@ -42,17 +49,11 @@ function twowayfeweights_rename_var(;
         original_names  = vcat(original_names, D0)
         new_names       = vcat(new_names, "D0")
     end
-    
-    # If random weights are provided, we rename and include them.
-    if !isnothing(random_weights)
-        random_weight_rename = get_random_weight_rename(random_weights)
-        original_names  = vcat(original_names, random_weights)
-        new_names       = vcat(new_names, random_weight_rename)
-    end
 
     # We only select the original names in the dataframe, and we rename them.
-    df = DataFrames.DataFrame(df[:, original_names])    
+    df = DataFrames.DataFrame(df[:, original_names])
     DataFrames.rename!(df, new_names)
+    df = hcat(df, random_weight_df)
 
     return df
 end

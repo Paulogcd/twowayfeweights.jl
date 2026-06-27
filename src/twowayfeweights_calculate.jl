@@ -213,14 +213,15 @@ function twowayfeweights_calculate(;
         dat_regression = dat[dat[:, :weights] .!= 0, :]
 
         # Regressors in xvars
-        rhs = foldl(+, term.(Symbol.(xvars)))
+        rhs = foldl(+, term.(Symbol.(xvars[2:end])))
+        # rhs = foldl(+, term.(Symbol.(xvars)))
 
         # fixed effects
         fes_vec = isa(fes, AbstractString) ? [fes] : fes
         fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
         
         # full formula
-        ff = term(:Y) ~ rhs + fe_terms
+        ff = term(:Y) ~ ConstantTerm(1) + rhs + fe_terms
 
         beta_lm = FixedEffectModels.reg(dat_regression, ff, weights = :weights, save = :all)
         # In Julia: 0.060095972248468944
@@ -232,15 +233,18 @@ function twowayfeweights_calculate(;
     else
         
         # rhs = foldl(+, xvars)
-        rhs = foldl(+, term.(Symbol.(xvars)))
-
+        # rhs_terms = map(xvars) do x
+        #     x ∈ ["1", ConstantTerm(1)] ? ConstantTerm(1) : term(Symbol(x))
+        # end
+        
+        rhs = foldl(+, term.(Symbol.(xvars[2:end])))
 
         # fixed effects
         fes_vec = isa(fes, AbstractString) ? [fes] : fes
         fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
         
         # full formula
-        ff = term(:Y) ~ rhs + fe_terms
+        ff = term(:Y) ~ ConstantTerm(1) + rhs + fe_terms
 
         beta_lm = reg(dat, ff, weights = :weights, save = :residuals)
     end

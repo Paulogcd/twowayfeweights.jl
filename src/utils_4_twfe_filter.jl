@@ -20,9 +20,9 @@ function twowayfeweights_filter(;
 
         # In the original package, they seem to not allow for NA in the 
         # Y, G, T, D, controls, and treatments columns.
-        # We are going to use the missing value instead.
-        # columns_to_filter = ifelse(isnothing(treatments), vcat(G, T, D), vcat(G, T, D, treatments))
-        columns_to_filter = vcat(Y, G, T, D, controls, treatments)
+        columns_to_filter = ifelse(isnothing(controls), vcat(Y, G, T, D), vcat(Y, G, T, D, controls))
+        columns_to_filter = ifelse(isnothing(treatments), columns_to_filter, vcat(columns_to_filter, treatments))
+        # columns_to_filter = vcat(Y, G, T, D, controls, treatments)
         # if !isnothing(controls)
         #     vcat(columns_to_filter, controls)
         # end

@@ -15,15 +15,16 @@ Test.@testset "twowayfeweights" begin
 
     Test.@testset "feTR" begin
 
-        julia_resultat = twowayfeweights(
-            data                = wagepan,
-            Y                   = "lwage",
-            G                   = "nr",
-            T                   = "year",
-            D                   = "union",
-            type                = "feTR",
-            summary_measures    = true,
-            test_random_weights = "educ")
+        julia_resultat = TwoWayFEWeights.twowayfeweights(
+            data                = wagepan   ,
+            Y                   = "lwage"   ,
+            G                   = "nr"      ,
+            T                   = "year"    ,
+            D                   = "union"   ,
+            type                = "feTR"    ,
+            summary_measures    = true      ,
+            test_random_weights = "educ"    
+            )
 
         R_resultat = RCall.rcopy(R"TwoWayFEWeights::twowayfeweights(
             wagepan,                        # input data
@@ -57,7 +58,7 @@ Test.@testset "twowayfeweights" begin
 
     Test.@testset "feS" begin 
         
-        julia_resultat = twowayfeweights(
+        julia_resultat = TwoWayFEWeights.twowayfeweights(
             data = wagepan,
             Y = "lwage",
             G = "nr",
@@ -98,7 +99,7 @@ Test.@testset "twowayfeweights" begin
 
     Test.@testset "fdTR" begin
         
-        julia_resultat = twowayfeweights(
+        julia_resultat = TwoWayFEWeights.twowayfeweights(
                 data = wagepan,
                 Y = "diff_lwage",
                 G = "nr",
@@ -140,7 +141,7 @@ Test.@testset "twowayfeweights" begin
 
     Test.@testset "fdS" begin
         
-        julia_resultat = twowayfeweights(
+        julia_resultat = TwoWayFEWeights.twowayfeweights(
             data                = wagepan,
             Y                   = "diff_lwage",
             G                   = "nr",

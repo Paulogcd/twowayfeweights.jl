@@ -123,15 +123,15 @@ function twowayfeweights(;
     other_treatments::Union{Vector{String}, String, Nothing} = nothing,
     test_random_weights::Union{String, Nothing} = nothing,
     path::Union{String, Nothing} = nothing)
-
+    
     @assert type ∈ ["feTR", "feS", "fdTR", "fdS"] "Argument `type` must be one of `feTR`, `feS`, `fdRTR`, or `fdS`."
 
     if type == "fdTR" && isnothing(D0)
-        @error("The `D0` argument must also be provided if `type = 'fdTR'`.\n")
+      @error("The `D0` argument must also be provided if `type = 'fdTR'`.\n")
     end
 
     if !isnothing(other_treatments) && type != "feTR"
-        @error("When the `other_treatments` argument is specified, you need to specify `type = 'feTR'` too.")
+      @error("When the `other_treatments` argument is specified, you need to specify `type = 'feTR'` too.")
     end
 
     # We rename:
@@ -140,15 +140,15 @@ function twowayfeweights(;
     random_weight_rename    = get_random_weight_rename(test_random_weights)
     
     data_renamed = twowayfeweights_rename_var(
-      df = data,
-      Y = Y,
-      G = G,
-      T = T,
-      D = D,
-      D0 = D0,
-      controls = controls,
-      treatments = other_treatments,
-      random_weights = test_random_weights)
+      df              = data,
+      Y               = Y,
+      G               = G,
+      T               = T,
+      D               = D,
+      D0              = D0,
+      controls        = controls,
+      treatments      = other_treatments,
+      random_weights  = test_random_weights)
   
     # Transform
     data_transformed = twowayfeweights_transform(

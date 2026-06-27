@@ -23,6 +23,8 @@ module TwoWayFEWeights
 
     # Util functions
     begin
+        export twowayfeweights
+        
         include("utils_extra.jl")
         # export(weighted_mean)
         
@@ -64,7 +66,7 @@ module TwoWayFEWeights
         include("print.jl")
 
         include("twowayfeweights_f.jl")
-        export(twowayfeweights)
+        
     end
 
 end

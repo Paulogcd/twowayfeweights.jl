@@ -106,26 +106,25 @@ function twowayfeweights_result(;
         
         columns = ["T", "G", "weight_result"]
         ret = twowayfeweights_summarize_weights(df = dat, var_weight = "weight_result") # Error here, not all fields are included.
-        ret[:tot_cells] = sum((skipmissing(dat.nat_weight) .!= 0)) # na.rm here
+        ret[:tot_cells] = sum(skipmissing(dat.nat_weight .!= 0)) # na.rm here
         
         if !isnothing(random_weights)
             ret[:mat] = twowayfeweights_test_random_weights(df = dat, random_weights = random_weights)
         end
         
-        if !isnothing(treatments)
+        # if !isnothing(treatments)
             for treatment in treatments
                 varname = fn_treatment_weight_rename(treatment)
                 columns = vcat(columns, varname)
                 ret2 = twowayfeweights_summarize_weights(df = dat, var_weight = varname)
                 ret[Symbol(treatment)] = ret2
-                ret[Symbol(treatment)][:tot_cells] = sum(skipmissing(dat[:, Symbol(treatment)] != 0)) # na.rm here
+                ret[Symbol(treatment)][:tot_cells] = sum(skipmissing(dat[:, Symbol(treatment)] .!= 0)) # na.rm here
             end
-        end
+        # end
 
         dat_result = dat[:, Symbol.(columns)]
         dat_result = DataFrames.rename(dat_result, :weight_result => :weight)
 
-        
         ret[:beta] = beta
         ret[:dat_result] = dat_result
         

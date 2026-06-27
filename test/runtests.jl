@@ -14,4 +14,7 @@ Test.@testset "twowayfeweights.jl" begin
     # include("twowayfeweights_normalize_var.jl")
     # include("twowayfeweights_result.jl")
 
+    # Internal test with example datasets.
+    include("internal_tests_1.jl")
+
 end;

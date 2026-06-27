@@ -55,7 +55,7 @@ function twowayfeweights_calculate(;
   
     # Add non-NULL treatment vars
     if !isnothing(treatments)
-        xvars = [controls, treatments]
+        xvars = vcat(controls, treatments)
     else
         xvars = Any[ConstantTerm(1)]
     end
@@ -152,15 +152,32 @@ function twowayfeweights_calculate(;
         dat[:, :weight_result] = dat[:, :W] .* dat[:, :nat_weight]
 
         if !isnothing(treatments)
-            for treatment in [treatments]
-                varname = fn_treatment_weight_rename(treatment)
-                dat[:, Symbol(varname)] = dat[:, :W] .* dat[:, :P_gt] .* dat[:, Symbol(treatment)] ./ mean_D
+            
+            if (length(treatments) > 1)
+                
+                for treatment in treatments
+                    # treatment = treatments[1]
+                    varname = fn_treatment_weight_rename(treatment)
+                    dat[:, Symbol(varname)] = dat[:, :W] .* dat[:, :P_gt] .* dat[:, Symbol(treatment)] ./ mean_D
+                end
+
+            else
+
+                for treatment in [treatments]
+                    
+                    varname = fn_treatment_weight_rename(treatment)
+                    dat[:, Symbol(varname)] = dat[:, :W] .* dat[:, :P_gt] .* dat[:, Symbol(treatment)] ./ mean_D
+                
+                end
+
             end
+
         end
 
         if "P_gt" in names(dat)
             dat = dat[:, Not(Symbol(EPS_VAR), "P_gt")]
         end
+
         if Symbol(EPS_VAR) in names(dat)
             dat = dat[:, Not(Symbol(EPS_VAR))]
         end
@@ -181,19 +198,22 @@ function twowayfeweights_calculate(;
         transform!(gdat, [:E_eps_1_g_ge_aux, :weights_aux] => ((x, y) -> (x ./ y)) => :E_eps_1_g_ge)
     
     elseif type == "fdTR"
+        
         dat[:, :eps_2] = ifelse.(.!ismissing(dat[:, Symbol(EPS_VAR)]), dat[:, Symbol(EPS_VAR)], 0)
         # dat.eps_2 .= ifelse(.!ismissing(dat[:, Symbol(EPS_VAR)]))
+    
     end
 
     # New regression
-    push!(xvars, Term(Symbol("D")))
+    # push!(xvars, Term(Symbol("D")))
+    xvars = vcat(xvars, Term(Symbol("D")))
 
     if type == "fdS"
         
         dat_regression = dat[dat[:, :weights] .!= 0, :]
 
         # Regressors in xvars
-        rhs = foldl(+, xvars)
+        rhs = foldl(+, term.(Symbol.(xvars)))
 
         # fixed effects
         fes_vec = isa(fes, AbstractString) ? [fes] : fes
@@ -211,7 +231,9 @@ function twowayfeweights_calculate(;
 
     else
         
-        rhs = foldl(+, xvars)
+        # rhs = foldl(+, xvars)
+        rhs = foldl(+, term.(Symbol.(xvars)))
+
 
         # fixed effects
         fes_vec = isa(fes, AbstractString) ? [fes] : fes

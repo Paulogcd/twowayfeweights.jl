@@ -22,12 +22,6 @@ function print_treat_matrix(;tmat, tvar, ttype, otreat = false)
     highlighters = [
         PrettyTables.TextHighlighter((data, i, j) -> (i == 2) && (j ∈ [2, 3]) && (data[i, j] != 0), crayon"fg:red")
     ]
-    
-    # table = PrettyTables.pretty_table(tmat;
-    #     table_format,
-    #     title,
-    #     highlighters
-    # )
 
     table_str = sprint() do io
         PrettyTables.pretty_table(

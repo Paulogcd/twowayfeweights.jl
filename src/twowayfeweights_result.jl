@@ -89,12 +89,19 @@ function twowayfeweights_result(;
         ret[:tot_cells] = sum(skipmissing(dat.nat_weight) .!= 0) # na.rm here
     
     else
+        
         limit_sensitivity = 10^(-10)
         
-        for v in ["result", treatments]
+        for v in vcat("result", treatments)
+
+            # v = treatments[1]
+        
             if !isnothing(v)
+            
                 dat[:, Symbol("weight_", v)] = ifelse.(dat[:, Symbol("weight_", v)] .< limit_sensitivity .&& dat[:, Symbol("weight_", v)] .> -limit_sensitivity, 0, dat[:, Symbol("weight_", v)])
+            
             end
+
         end
         
         columns = ["T", "G", "weight_result"]
@@ -108,14 +115,14 @@ function twowayfeweights_result(;
         if !isnothing(treatments)
             for treatment in treatments
                 varname = fn_treatment_weight_rename(treatment)
-                columns = [columns, varname]
-                ret2 = twowayfeweights_summarize_weights(df = dat, var_weights = varname)
-                ret[:treatment] = ret2
-                ret[:treatment][:tot_cells] = sum(skipmissing(dat.treatment != 0)) # na.rm here
+                columns = vcat(columns, varname)
+                ret2 = twowayfeweights_summarize_weights(df = dat, var_weight = varname)
+                ret[Symbol(treatment)] = ret2
+                ret[Symbol(treatment)][:tot_cells] = sum(skipmissing(dat[:, Symbol(treatment)] != 0)) # na.rm here
             end
         end
 
-        dat_result = dat[:, columns]
+        dat_result = dat[:, Symbol.(columns)]
         dat_result = DataFrames.rename(dat_result, :weight_result => :weight)
 
         

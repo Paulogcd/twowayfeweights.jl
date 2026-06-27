@@ -20,7 +20,7 @@ function Base.show(io::IO, x::twowayfeweights)
 
     other_treats = !isnothing(x[:other_treatments])
 
-    treat = "ATT"
+    treat = "ATTs"
 
     assumption = if x[:type] ∈ ["feTR", "fdTR"]
             "Under the common trends assumption,\n"
@@ -72,25 +72,30 @@ function Base.show(io::IO, x::twowayfeweights)
     tmat[2, :] = [round(x[:sum_plus], digits = 4), round(x[:sum_minus], digits = 4), tot_sums]
     tmat = permutedims(tmat)
 
-    treat_matrix_string = print_treat_matrix(tmat = tmat, tvar = x[:params][:D], ttype = treat)
+    treat_matrix_string = string(print_treat_matrix(tmat = tmat, tvar = x[:params][:D], ttype = treat))
 
     # print other treatments
     if other_treats # OTHER_TREATS BLOCK
+        
+        assumption_string_tmat = ""
+
         for otvar in x[:other_treatments]
 
-            ox = x[:otvar]
+            # otvar = x[:other_treatments][1]
+
+            ox = x[Symbol(otvar)]
             otot_weights = ox[:nr_plus] + ox[:nr_minus]
-            otot_sums = round(ox[:sum_plus] + ox[:sum_minus], 4)
+            otot_sums = round(ox[:sum_plus] + ox[:sum_minus], digits = 4)
 
             otmat = [
                 [ox[:nr_plus], ox[:nr_minus], otot_weights], 
-                [round(ox[:sum_plus], 4), round(ox[:sum_minus], 4), otot_sums]
+                [round(ox[:sum_plus], digits = 4), round(ox[:sum_minus], digits = 4), otot_sums]
             ]
 
             oassumption_string = string("The next term is a weighted sum of ", ox[:nr_plus] + ox[:nr_minus], " ", treat)
             
             oweight_string = string(
-                ox[:r_plus] * treat * " receive a positive weight, and and " * ox[:nr_minus] * " reveive a negative weight."
+                ox[:nr_plus], treat, " receive a positive weight, and and ", ox[:nr_minus], " receive a negative weight."
             )
 
             if ox[:tot_cells] > ox[:nr_plus] + ox[:nr_minus]
@@ -104,8 +109,18 @@ function Base.show(io::IO, x::twowayfeweights)
             end
             
             # Je sens que cette ligne va poser problème.
-            assumption_string_tmat = string(oassumption_string, "\n", oweight_string, print_treat_matrix(tmat = otmat, tvar = otvar, ttype = treat, otreat = TRUE))
-
+            assumption_string_tmat = string(
+                assumption_string_tmat,
+                oassumption_string,
+                "\n",
+                oweight_string,
+                "\n\n",
+                print_treat_matrix(
+                    tmat = otmat,
+                    tvar = otvar,
+                    ttype = treat,
+                    otreat = true)
+                )
         end
     end
 
@@ -134,8 +149,8 @@ function Base.show(io::IO, x::twowayfeweights)
 
     message = """
     $full_assumption_message
-    $assumption_string_tmat
     $treat_matrix_string
+    $assumption_string_tmat
     $summary_measures_string
     
     $random_weight_message

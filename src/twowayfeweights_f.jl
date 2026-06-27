@@ -118,9 +118,9 @@ function twowayfeweights(;
     type::String = "feTR",
     D0::Union{String, Nothing} = nothing,
     summary_measures::Bool = false,
-    controls::Union{String, Nothing} = nothing,
-    weights::Union{String, Nothing} = nothing,
-    other_treatments::Union{String, Nothing} = nothing,
+    controls::Union{Vector{String}, String, Nothing} = nothing,
+    weights::Union{Vector{Int32}, AbstractVector{Number}, String, Nothing} = nothing,
+    other_treatments::Union{Vector{String}, String, Nothing} = nothing,
     test_random_weights::Union{String, Nothing} = nothing,
     path::Union{String, Nothing} = nothing)
 
@@ -140,49 +140,49 @@ function twowayfeweights(;
     random_weight_rename    = get_random_weight_rename(test_random_weights)
     
     data_renamed = twowayfeweights_rename_var(
-        df = data,
-        Y = Y,
-        G = G,
-        T = T,
-        D = D,
-        D0 = D0,
-        controls = controls,
-        treatments = other_treatments,
-        random_weights = test_random_weights)
+      df = data,
+      Y = Y,
+      G = G,
+      T = T,
+      D = D,
+      D0 = D0,
+      controls = controls,
+      treatments = other_treatments,
+      random_weights = test_random_weights)
   
     # Transform
     data_transformed = twowayfeweights_transform(
-        df          = data_renamed,
-        controls    = controls_rename,
-        weights     = weights,
-        treatments  = test_random_weights)
+      df          = data_renamed,
+      controls    = controls_rename,
+      weights     = weights,
+      treatments  = treatments_rename)
     
     # Filter
     data_filtered = twowayfeweights_filter(
-        df = data_transformed,
-        Y = "Y",
-        G = "G",
-        T = "T",
-        D = "D",
-        D0 = "D0",
-        cmd_type = type,
-        controls = controls_rename,
-        treatments = treatments_rename)
+      df = data_transformed,
+      Y = "Y",
+      G = "G",
+      T = "T",
+      D = "D",
+      D0 = "D0",
+      cmd_type = type,
+      controls = controls_rename,
+      treatments = treatments_rename)
 
     # Calculate the weights
     res = twowayfeweights_calculate(
-        dat        = data_filtered,
-        type       = type,
-        controls   = controls_rename,
-        treatments = treatments_rename
+      dat        = data_filtered,
+      type       = type,
+      controls   = controls_rename,
+      treatments = treatments_rename
     )
   
     # Create main return object list
     res = twowayfeweights_result(
-        dat            = res[:dat],
-        beta           = res[:beta],
-        random_weights = random_weight_rename,
-        treatments     = treatments_rename
+      dat            = res[:dat],
+      beta           = res[:beta],
+      random_weights = random_weight_rename,
+      treatments     = treatments_rename
     )
 
     # Set class and add extra features for post-processing (printing etc.)
@@ -194,7 +194,7 @@ function twowayfeweights(;
     res[:other_treatments]  = treatments_rename
     res[:random_weights]    = random_weight_rename
 
-    res = twowayfeweights(res)
+    res_2 = twowayfeweights(res)
   
     if !(isnothing(path))
         # write.csv(res$dat_result, path, row.names = FALSE)

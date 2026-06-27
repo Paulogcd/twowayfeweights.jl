@@ -13,7 +13,7 @@ Internal function.
 function twowayfeweights_transform(;
     df::DataFrames.DataFrame,
     controls::Union{String, Vector{String}, Nothing},
-    weights::Union{String, Vector{String}, Nothing},
+    weights::Union{AbstractVector, String, Vector{String}, Nothing},
     treatments::Union{String, Vector{String}, Nothing})
 
     ret = twowayfeweights_normalize_var(df = df, varname = "D")
@@ -27,7 +27,6 @@ function twowayfeweights_transform(;
         @info("The command will replace the treatment by its average value in each group * period.")
         @info("The results below apply to the two-way fixed effects regression with that treatment variable.")
     end
-
 
     if !isnothing(controls)
 
@@ -71,7 +70,7 @@ function twowayfeweights_transform(;
 
     if !isnothing(treatments)
         
-        if typeof(controls) == Vector{String}
+        if typeof(treatments) == Vector{String}
 
             for treatment in treatments
                 
@@ -85,9 +84,10 @@ function twowayfeweights_transform(;
                     @info("The command will replace replace other treatment variable %s by its average value in each group * period.", treatment)
                     @info("The results below apply to the regression with other treatment variable %s averaged at the group * period level.", treatment)
                 end
+
             end
 
-        elseif typeof(controls) == String
+        elseif typeof(treatments) == String
             
             for treatment in [treatments]
                 
@@ -101,8 +101,11 @@ function twowayfeweights_transform(;
                     @info("The command will replace replace other treatment variable %s by its average value in each group * period.", treatment)
                     @info("The results below apply to the regression with other treatment variable %s averaged at the group * period level.", treatment)
                 end
+        
             end
+        
         end
+
     end
 
     if isnothing(weights)
@@ -110,11 +113,11 @@ function twowayfeweights_transform(;
     else 
         # This is NOT what is expected?
         # The weights variable should be a numerical vector then?
-        df.weights = repeat(weights, nrow(df))
+        df.weights = weights
     end
 
-    df.Tfactor = CategoricalArrays.categorical(df.T)
-    df.TFactorNum = Int64.(CategoricalArrays.levelcode.(df.Tfactor))
+    df.Tfactor      = CategoricalArrays.categorical(df.T)
+    df.TFactorNum   = Int64.(CategoricalArrays.levelcode.(df.Tfactor))
 
     return df
 end

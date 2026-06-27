@@ -32,7 +32,7 @@ function Base.show(io::IO, x::twowayfeweights)
 
     if other_treats
         assumption_string = string(assumption * 
-            string("the TWFE coefficient beta, equal to", x[:beta], "estimates the sum of several terms.") * 
+            string("the TWFE coefficient beta, equal to ", round(x[:beta], digits = 4), " estimates the sum of several terms.") * 
             string("The first term is a weighted sum of ", x[:nr_plus] + x[:nr_minus], " ", treat, ".")
         )
     else 
@@ -45,7 +45,7 @@ function Base.show(io::IO, x::twowayfeweights)
         x[:nr_plus],
         " ",
         treat, 
-        "receive a positive weight, and ", 
+        " receive a positive weight, and ", 
         x[:nr_minus],
         " receive a negative weight."
     )
@@ -95,7 +95,7 @@ function Base.show(io::IO, x::twowayfeweights)
             oassumption_string = string("The next term is a weighted sum of ", ox[:nr_plus] + ox[:nr_minus], " ", treat)
             
             oweight_string = string(
-                ox[:nr_plus], treat, " receive a positive weight, and and ", ox[:nr_minus], " receive a negative weight."
+                ox[:nr_plus], " ", treat, " receive a positive weight, and and ", ox[:nr_minus], " receive a negative weight."
             )
 
             if ox[:tot_cells] > ox[:nr_plus] + ox[:nr_minus]
@@ -141,7 +141,11 @@ function Base.show(io::IO, x::twowayfeweights)
     end
 
     if !isnothing(x[:random_weights])
-        random_weight_message = string("Regression of variables possibly correlated with the treatment effect on the weights:\n",  sprint(io -> PrettyTables.pretty_table(io, x[:mat])))
+        # x_mat_row_names = test_random_weights
+        x_mat_with_row_names = x[:mat]
+        x_mat_with_row_names.Variable .= test_random_weights
+        x_mat_with_row_names = DataFrames.select(x_mat_with_row_names, "Variable", "Coef", "SE", "t-stat", "Correlation")
+        random_weight_message = string("Regression of variables possibly correlated with the treatment effect on the weights:\n",  sprint(io -> PrettyTables.pretty_table(io, x_mat_with_row_names)))
     end
 
     message_ERC = string(

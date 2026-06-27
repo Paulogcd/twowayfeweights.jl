@@ -7,12 +7,12 @@ function print_treat_matrix(;tmat, tvar, ttype, otreat = false)
     tmat.row_names = tmat_row_names
 
     if otreat 
-        tstring = string("Other treat.: ", replace(tvar, "^OT" => ""))
+        tstring = string("Other treat.: ", replace(tvar, "OT_" => ""))
     else
-        tstring = "Treat. var:" .* tvar
+        tstring = "Treat. var: " .* tvar
     end
 
-    tmat_titles = [tstring, string(ttype, "s"), string("\U03A3", " weights")]
+    tmat_titles = [string(ttype), string("\U03A3", " weights"), tstring]
     tmat = rename(tmat, tmat_titles)
     tmat = select(tmat, tmat_titles[3], tmat_titles[1], tmat_titles[2])
     

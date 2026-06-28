@@ -159,21 +159,21 @@ function twowayfeweights(;
     
     # Filter
     data_filtered = twowayfeweights_filter(
-      df = data_transformed,
-      Y = "Y",
-      G = "G",
-      T = "T",
-      D = "D",
-      D0 = "D0",
-      cmd_type = type,
-      controls = controls_rename,
-      treatments = treatments_rename)
+      df          = data_transformed,
+      Y           = "Y",
+      G           = "G",
+      T           = "T",
+      D           = "D",
+      D0          = "D0",
+      cmd_type    = type,
+      controls    = controls_rename,
+      treatments  = treatments_rename)
 
     # Calculate the weights
     res = twowayfeweights_calculate(
-      dat        = data_filtered,
-      type       = type,
-      controls   = controls_rename,
+      dat        = data_filtered      ,
+      type       = type               ,
+      controls   = controls_rename    ,
       treatments = treatments_rename
     )
   
@@ -194,7 +194,7 @@ function twowayfeweights(;
     res[:other_treatments]  = treatments_rename
     res[:random_weights]    = random_weight_rename
 
-    res_2 = twowayfeweights(res)
+    res = twowayfeweights(res)
   
     if !(isnothing(path))
         # write.csv(res$dat_result, path, row.names = FALSE)

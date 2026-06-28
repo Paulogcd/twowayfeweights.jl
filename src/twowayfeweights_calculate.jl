@@ -37,7 +37,7 @@ function twowayfeweights_calculate(;
 
     dat = DataFrames.leftjoin(dat, gdat, on = [:G, :T])
     dat = DataFrames.transform(dat, :P_gt => (x -> x ./ obs) => :P_gt)
-    # mean(dat.P_gt) # 0.00026212319790301376
+    # mean(dat.P_gt) # 0.0006131207847946045
         
     if type_TR
         dat = DataFrames.transform(dat, :P_gt => (x -> x .* (dat[:, Symbol(DVAR)] ./ mean_D)) => :nat_weight)
@@ -50,7 +50,7 @@ function twowayfeweights_calculate(;
     fes = "Tfactor"
 
     if type_fe
-        fes = ["G", fes]
+        fes = vcat("G", fes)
     end
   
     # Add non-NULL treatment vars
@@ -141,6 +141,7 @@ function twowayfeweights_calculate(;
     if type == "feTR"
     
         dat[:, "eps_1_E_D_gt"] = dat[:, Symbol(EPS_VAR)] .* dat[:, Symbol(DVAR)]
+        # mean(dat[:, "eps_1_E_D_gt"])
     
         if isnothing(treatments)
             denom_W = weighted_mean(x = dat[:, :eps_1_E_D_gt], w = dat[:, :weights])
@@ -175,7 +176,7 @@ function twowayfeweights_calculate(;
         end
 
         if "P_gt" in names(dat)
-            dat = dat[:, Not(Symbol(EPS_VAR), "P_gt")]
+            dat = dat[:, Not("P_gt")]
         end
 
         if Symbol(EPS_VAR) in names(dat)
@@ -206,15 +207,19 @@ function twowayfeweights_calculate(;
 
     # New regression
     # push!(xvars, Term(Symbol("D")))
-    xvars = vcat(xvars, Term(Symbol("D")))
+    xvars = vcat(Term(Symbol("D")), xvars)
 
     if type == "fdS"
         
         dat_regression = dat[dat[:, :weights] .!= 0, :]
 
         # Regressors in xvars
-        rhs = foldl(+, term.(Symbol.(xvars[2:end])))
+        # rhs = foldl(+, term.(Symbol.(xvars[2:end])))
         # rhs = foldl(+, term.(Symbol.(xvars)))
+        rhs_terms = map(xvars) do x
+            x ∈ ["1", ConstantTerm(1)] ? ConstantTerm(1) : term(Symbol(x))
+        end
+        rhs = foldl(+, rhs_terms)
 
         # fixed effects
         fes_vec = isa(fes, AbstractString) ? [fes] : fes
@@ -233,18 +238,25 @@ function twowayfeweights_calculate(;
     else
         
         # rhs = foldl(+, xvars)
-        # rhs_terms = map(xvars) do x
+        rhs_terms = map(xvars) do x
+            x ∈ ["1", ConstantTerm(1)] ? ConstantTerm(1) : term(Symbol(x))
+        end
+        
+        # rhs = foldl(+, term.(Symbol.(xvars[2:end]))) 
+        # This syntax cannot be a solution to the issue of the constant term.
+        # rhs = foldl(+, term.(Symbol.(rhs_terms)))
+        rhs = foldl(+, rhs_terms)
+        # rhs_terms 
+        # rhs = map(rhs_terms) do x
         #     x ∈ ["1", ConstantTerm(1)] ? ConstantTerm(1) : term(Symbol(x))
         # end
-        
-        rhs = foldl(+, term.(Symbol.(xvars[2:end])))
 
         # fixed effects
         fes_vec = isa(fes, AbstractString) ? [fes] : fes
         fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
         
         # full formula
-        ff = term(:Y) ~ ConstantTerm(1) + rhs + fe_terms
+        ff = term(:Y) ~ rhs + fe_terms
 
         beta_lm = reg(dat, ff, weights = :weights, save = :residuals)
     end

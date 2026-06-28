@@ -1,6 +1,6 @@
-Test.@testset "Internal_test_1" begin
+Test.@testset "Internal_test_2" begin
 
-    @info("1st internal test.")
+    @info("2nd internal test.")
 
     using ReadStatTables
     using Downloads
@@ -10,9 +10,16 @@ Test.@testset "Internal_test_1" begin
     Test.@testset "Initialisation" begin
 
         @info("Testing setup...")
+
+        global controls = nothing
+        global other_treatments = nothing
+        global test_random_weights = nothing
+        RCall.rcopy(R"controls = NULL")
+        RCall.rcopy(R"other_treatments = NULL")
+        RCall.rcopy(R"test_random_weights = NULL")
         
         # Julia
-        global url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Wolfers%202006/wolfers2006_didtextbook.dta"
+        global url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Pierce%20and%20Schott%202016/pierce_schott_didtextbook.dta"
         global tmp = Downloads.download(url)
         global data = ReadStatTables.readstat(tmp)
         global data = DataFrames.DataFrame(data)
@@ -22,82 +29,22 @@ Test.@testset "Internal_test_1" begin
         RCall.rcopy(R"data = haven::read_dta(url)")
 
         # Julia:
-        global other_treatments = [
-            "rel_time2",
-            "rel_time3",
-            "rel_time4",
-            "rel_time5",
-            "rel_time6",
-            "rel_time7",
-            "rel_time8",
-            "rel_time9",
-            "rel_time10",
-            "rel_time11",
-            "rel_time12",
-            "rel_time13",
-            "rel_time14",
-            "rel_time15",
-            "rel_time16"
-        ]
-
-        global controls = [
-            "rel_timeminus1", 
-            "rel_timeminus2", 
-            "rel_timeminus3", 
-            "rel_timeminus4", 
-            "rel_timeminus5", 
-            "rel_timeminus6", 
-            "rel_timeminus7", 
-            "rel_timeminus8", 
-            "rel_timeminus9"
-        ]
-
-        global Y       = "div_rate"
-        global G       = "state"
-        global T       = "year"
-        global D       = "rel_time1"
-        global D0      = nothing
+        global Y       = "delta2001"
+        global G       = "indusid"
+        global T       = "cons"
+        global D       = "ntrgap"
+        global D0      = "ntrgap"
         global summary_measures = true
-        global type    = "feTR"
-        global test_random_weights = "year"
-        global weights             = data.stpop
+        global type    = "fdTR"
 
         # R
-        RCall.rcopy(R"Y = 'div_rate'")
-        RCall.rcopy(R"G = 'state'")
-        RCall.rcopy(R"T = 'year'")
-        RCall.rcopy(R"D = 'rel_time1'")
-        RCall.rcopy(R"type = 'feTR'")
-        RCall.rcopy(R"D0 = NULL")
+        RCall.rcopy(R"Y = 'delta2001'")
+        RCall.rcopy(R"G = 'indusid'")
+        RCall.rcopy(R"T = 'cons'")
+        RCall.rcopy(R"D = 'ntrgap'")
+        RCall.rcopy(R"type = 'fdTR'")
+        RCall.rcopy(R"D0 = 'ntrgap'")
         RCall.rcopy(R"summary_measures = TRUE")
-        RCall.rcopy(R"test_random_weights = 'year'")
-        RCall.rcopy(R"controls = c(
-            'rel_timeminus1', 
-            'rel_timeminus2', 
-            'rel_timeminus3', 
-            'rel_timeminus4', 
-            'rel_timeminus5', 
-            'rel_timeminus6', 
-            'rel_timeminus7', 
-            'rel_timeminus8', 
-            'rel_timeminus9')")
-        RCall.rcopy(R"weights = data$stpop")
-        RCall.rcopy(R"other_treatments = c(
-            'rel_time2',
-            'rel_time3',
-            'rel_time4',
-            'rel_time5',
-            'rel_time6',
-            'rel_time7',
-            'rel_time8',
-            'rel_time9',
-            'rel_time10',
-            'rel_time11',
-            'rel_time12',
-            'rel_time13',
-            'rel_time14',
-            'rel_time15',
-            'rel_time16')")
 
         Test.@test Y                   == RCall.rcopy(R"Y                   ")
         Test.@test G                   == RCall.rcopy(R"G                   ")
@@ -106,10 +53,6 @@ Test.@testset "Internal_test_1" begin
         Test.@test type                == RCall.rcopy(R"type                ")
         Test.@test D0                  == RCall.rcopy(R"D0                  ")
         Test.@test summary_measures    == RCall.rcopy(R"summary_measures    ")
-        Test.@test test_random_weights == RCall.rcopy(R"test_random_weights ")
-        Test.@test controls            == RCall.rcopy(R"controls            ")
-        Test.@test weights             == RCall.rcopy(R"weights             ")
-        Test.@test other_treatments    == RCall.rcopy(R"other_treatments    ")
     end;
 
     ## I - Renaming:

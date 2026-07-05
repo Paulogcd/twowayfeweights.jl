@@ -12,6 +12,12 @@ Base.keys(x::twowayfeweights)                       = keys(x.data)
 Base.iterate(twfew::twowayfeweights)                = iterate(twfew.data)
 Base.iterate(twfew::twowayfeweights, state)         = iterate(twfew.data, state)
 
+# More class-specific functions:
+# StatsAPI.coef(twfew::twowayfeweights)             = twfew[:beta]
+type(twfew::twowayfeweights) = twfew[:type]
+
+
+# test_2_stata[:beta]
 # Maybe to define:  ############################################
 
 # Empty initialisator.

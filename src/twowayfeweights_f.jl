@@ -156,6 +156,7 @@ function twowayfeweights(;
       controls    = controls_rename,
       weights     = weights,
       treatments  = treatments_rename)
+    # Note: "data_renamed" is modified by this function.
     
     # Filter
     data_filtered = twowayfeweights_filter(

@@ -17,12 +17,12 @@ function twowayfeweights_transform(;
     treatments::Union{String, Vector{String}, Nothing})
 
     # df_res = copy(df) # For testing purposes.
-    df_res = df
-    ret = twowayfeweights_normalize_var(df = df_res, varname = "D")
+    # df = df
+    ret = twowayfeweights_normalize_var(df = df, varname = "D")
 
     if ret[:retcode]
         # To do : make it prettier.
-        df_res = ret[:df]
+        df = ret[:df]
         @info("The treatment variable in the regression varies within some group * period cells.")
         @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
         @info("with a group * period level treatment.")
@@ -36,10 +36,10 @@ function twowayfeweights_transform(;
 
             for control in controls
                 
-                ret = twowayfeweights_normalize_var(df = df_res, varname = control)
+                ret = twowayfeweights_normalize_var(df = df, varname = control)
 
                 if ret[:retcode]
-                    df_res = ret[:df]
+                    df = ret[:df]
                     @info("The control variable %s in the regression varies within some group * period cells.", control)
                     @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
                     @info("with controls apply to group * period level controls.")
@@ -51,10 +51,10 @@ function twowayfeweights_transform(;
 
         elseif typeof(controls) == String
                 
-            ret = twowayfeweights_normalize_var(df = df_res, varname = controls)
+            ret = twowayfeweights_normalize_var(df = df, varname = controls)
 
             if ret[:retcode]
-                df_res = ret[:df]
+                df = ret[:df]
                 @info("The control variable %s in the regression varies within some group * period cells.", control)
                 @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
                 @info("with controls apply to group * period level controls.")
@@ -72,10 +72,10 @@ function twowayfeweights_transform(;
 
             for treatment in treatments
                 
-                df_res = twowayfeweights_normalize_var(df = df_res, varname = treatment)
+                ret = twowayfeweights_normalize_var(df = df, varname = treatment)
                 
                 if ret[:retcode]
-                    df_res = ret[:df]
+                    df = ret[:df]
                     @info("The other treatment variable %s in the regression varies within some group * period cells.", treatment)
                     @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
                     @info("with several treatments apply to group * period level controls.")
@@ -89,10 +89,10 @@ function twowayfeweights_transform(;
             
             for treatment in [treatments]
                 
-                ret = twowayfeweights_normalize_var(df = df_res, varname = treatment)
+                ret = twowayfeweights_normalize_var(df = df, varname = treatment)
                 
                 if ret[:retcode]
-                    df_res = ret[:df]
+                    df = ret[:df]
                     @info("The other treatment variable %s in the regression varies within some group * period cells.", treatment)
                     @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
                     @info("with several treatments apply to group * period level controls.")
@@ -107,15 +107,15 @@ function twowayfeweights_transform(;
     end
 
     if isnothing(weights)
-        df_res[!, :weights] .= 1
+        df[!, :weights] .= 1
     else 
         # This is NOT what is expected?
         # The weights variable should be a numerical vector then?
-        df_res[!, :weights] = weights
+        df[!, :weights] = weights
     end
 
-    df_res[!, :Tfactor]         = CategoricalArrays.categorical(df_res[!, :T])
-    df_res[!, :TFactorNum]      = Int64.(CategoricalArrays.levelcode.(df_res[!, :Tfactor]))
+    df[!, :Tfactor]         = CategoricalArrays.categorical(df[!, :T])
+    df[!, :TFactorNum]      = Int64.(CategoricalArrays.levelcode.(df[!, :Tfactor]))
 
-    return df_res
+    return df
 end

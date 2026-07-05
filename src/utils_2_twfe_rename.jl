@@ -20,6 +20,8 @@ function twowayfeweights_rename_var(;
         random_weight_rename = get_random_weight_rename(random_weights)
         random_weight_df = DataFrames.DataFrame(df[!, DataFrames.names(df, random_weights)])
         DataFrames.rename!(random_weight_df, random_weights => random_weight_rename)
+    else 
+        random_weight_df = nothing
     end
 
     # We define the original and new names.
@@ -46,14 +48,22 @@ function twowayfeweights_rename_var(;
 
     # If D0 is provided, we rename and include it.
     if !isnothing(D0)
-        original_names  = vcat(original_names, D0)
-        new_names       = vcat(new_names, "D0")
+        original_names_of_D0    = D0
+        new_names_of_D0         = D0
+        D0_df = DataFrames.DataFrame(df[!, DataFrames.names(df, D0)])
+        DataFrames.rename!(D0_df, Symbol(D0) => :D0)
     end
 
     # We only select the original names in the dataframe, and we rename them.
     df = DataFrames.DataFrame(df[:, original_names])
     DataFrames.rename!(df, new_names)
-    df = hcat(df, random_weight_df)
+
+    if !isnothing(random_weight_df)
+        df = hcat(df, random_weight_df)
+    end
+    if !isnothing(D0)
+        df = hcat(df, D0_df)
+    end
 
     return df
 end

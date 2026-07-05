@@ -197,8 +197,7 @@ function twowayfeweights(;
     res = twowayfeweights(res)
   
     if !(isnothing(path))
-        # write.csv(res$dat_result, path, row.names = FALSE)
-        CSV.write(path, res.dat_result)
+      CSV.write(path, res.dat_result)
     end
   
   return res

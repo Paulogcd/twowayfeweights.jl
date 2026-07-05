@@ -1,6 +1,6 @@
-Test.@testset "Internal_test_1" begin
+Test.@testset "Internal_test_4" begin
 
-    @info("1st internal test.")
+    @info("4th internal test.")
 
     using ReadStatTables
     using Downloads
@@ -10,9 +10,21 @@ Test.@testset "Internal_test_1" begin
     Test.@testset "Initialisation" begin
 
         @info("Testing setup...")
+
+        global controls             = nothing
+        global other_treatments     = nothing
+        global test_random_weights  = nothing
+        global D0                   = nothing
+        global weights              = nothing
+
+        RCall.rcopy(R"controls = NULL")
+        RCall.rcopy(R"other_treatments = NULL")
+        RCall.rcopy(R"test_random_weights = NULL")
+        RCall.rcopy(R"D0 = NULL")
+        RCall.rcopy(R"weights = NULL")
         
         # Julia
-        global url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Wolfers%202006/wolfers2006_didtextbook.dta"
+        global url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Gentzkow%20et%20al%202011/gentzkowetal_didtextbook.dta"
         global tmp = Downloads.download(url)
         global data = ReadStatTables.readstat(tmp)
         global data = DataFrames.DataFrame(data)
@@ -22,94 +34,30 @@ Test.@testset "Internal_test_1" begin
         RCall.rcopy(R"data = haven::read_dta(url)")
 
         # Julia:
-        global other_treatments = [
-            "rel_time2",
-            "rel_time3",
-            "rel_time4",
-            "rel_time5",
-            "rel_time6",
-            "rel_time7",
-            "rel_time8",
-            "rel_time9",
-            "rel_time10",
-            "rel_time11",
-            "rel_time12",
-            "rel_time13",
-            "rel_time14",
-            "rel_time15",
-            "rel_time16"
-        ]
-
-        global controls = [
-            "rel_timeminus1", 
-            "rel_timeminus2", 
-            "rel_timeminus3", 
-            "rel_timeminus4", 
-            "rel_timeminus5", 
-            "rel_timeminus6", 
-            "rel_timeminus7", 
-            "rel_timeminus8", 
-            "rel_timeminus9"
-        ]
-
-        global Y       = "div_rate"
-        global G       = "state"
-        global T       = "year"
-        global D       = "rel_time1"
-        global D0      = nothing
-        global summary_measures = true
-        global type    = "feTR"
-        global test_random_weights = "year"
-        global weights             = data.stpop
+        global Y                   = "prestout"
+        global G                   = "cnty90"
+        global T                   = "year"
+        global D                   = "numdailies"
+        global summary_measures    = true
+        global type                = "feTR"
+        global controls            = "styr"
 
         # R
-        RCall.rcopy(R"Y = 'div_rate'")
-        RCall.rcopy(R"G = 'state'")
+        RCall.rcopy(R"Y = 'prestout'")
+        RCall.rcopy(R"G = 'cnty90'")
         RCall.rcopy(R"T = 'year'")
-        RCall.rcopy(R"D = 'rel_time1'")
+        RCall.rcopy(R"D = 'numdailies'")
         RCall.rcopy(R"type = 'feTR'")
-        RCall.rcopy(R"D0 = NULL")
         RCall.rcopy(R"summary_measures = TRUE")
-        RCall.rcopy(R"test_random_weights = 'year'")
-        RCall.rcopy(R"controls = c(
-            'rel_timeminus1', 
-            'rel_timeminus2', 
-            'rel_timeminus3', 
-            'rel_timeminus4', 
-            'rel_timeminus5', 
-            'rel_timeminus6', 
-            'rel_timeminus7', 
-            'rel_timeminus8', 
-            'rel_timeminus9')")
-        RCall.rcopy(R"weights = data$stpop")
-        RCall.rcopy(R"other_treatments = c(
-            'rel_time2',
-            'rel_time3',
-            'rel_time4',
-            'rel_time5',
-            'rel_time6',
-            'rel_time7',
-            'rel_time8',
-            'rel_time9',
-            'rel_time10',
-            'rel_time11',
-            'rel_time12',
-            'rel_time13',
-            'rel_time14',
-            'rel_time15',
-            'rel_time16')")
+        RCall.rcopy(R"controls = 'styr'")
 
         Test.@test Y                   == RCall.rcopy(R"Y                   ")
         Test.@test G                   == RCall.rcopy(R"G                   ")
         Test.@test T                   == RCall.rcopy(R"T                   ")
         Test.@test D                   == RCall.rcopy(R"D                   ")
         Test.@test type                == RCall.rcopy(R"type                ")
-        Test.@test D0                  == RCall.rcopy(R"D0                  ")
         Test.@test summary_measures    == RCall.rcopy(R"summary_measures    ")
-        Test.@test test_random_weights == RCall.rcopy(R"test_random_weights ")
-        Test.@test controls            == RCall.rcopy(R"controls            ")
-        Test.@test weights             == RCall.rcopy(R"weights             ")
-        Test.@test other_treatments    == RCall.rcopy(R"other_treatments    ")
+        Test.@test weights             == RCall.rcopy(R"weights    ")
     end;
 
     ## I - Renaming:
@@ -131,7 +79,13 @@ Test.@testset "Internal_test_1" begin
         RCall.rcopy(R"controls_rename           = TwoWayFEWeights:::get_controls_rename(controls)")
         RCall.rcopy(R"treatments_rename         = TwoWayFEWeights:::get_treatments_rename(other_treatments)")
         RCall.rcopy(R"random_weight_rename      = TwoWayFEWeights:::get_random_weight_rename(test_random_weights)")
-        RCall.rcopy(R"data_renamed = TwoWayFEWeights:::twowayfeweights_rename_var(data, Y, G, T, D, D0, controls, other_treatments, test_random_weights)")
+        RCall.rcopy(R"data_renamed = TwoWayFEWeights:::twowayfeweights_rename_var(
+            df = data,
+            Y, G, T, D,
+            D0 = D0,
+            controls = controls,
+            treatments = other_treatments,
+            random_weights = test_random_weights)")
 
         # TEST
         Test.@test isequal(controls_rename,         RCall.rcopy(R"controls_rename"))
@@ -151,18 +105,20 @@ Test.@testset "Internal_test_1" begin
             controls    = controls_rename,
             weights     = weights,
             treatments  = treatments_rename)
-        # global data_transformed = twowayfeweights_transform(
-        #     df          = data_renamed,
-        #     controls    = controls_rename,
-        #     weights     = weights,
-        #     treatments  = treatments_rename)
+        global data_transformed = twowayfeweights_transform(
+            df          = data_renamed,
+            controls    = controls_rename,
+            weights     = weights,
+            treatments  = treatments_rename)
         
         # R 
-        RCall.rcopy(R"data_transformed = TwoWayFEWeights:::twowayfeweights_transform(data_renamed, controls_rename, weights, treatments_rename)")
-        
+        RCall.rcopy(R"data_transformed = TwoWayFEWeights:::twowayfeweights_transform(
+            df          = data_renamed,
+            controls    = controls_rename,
+            weights     = weights,
+            treatments  = treatments_rename)")
+
         # test
-        # @test isequal(data_transformed, RCall.rcopy(R"data_transformed")) # PROBLEM HERE
-        
         for colonne in names(data_transformed)[names(data_transformed) .!= "Tfactor"]
             RCall.@rput colonne
             # @info(@test isequal(data_transformed[!, Symbol(colonne)], RCall.rcopy(R"data_transformed |> dplyr::pull(colonne)")))
@@ -334,66 +290,43 @@ Test.@testset "Internal_test_1" begin
 
         @info("Testing full workflow")
 
-        url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Wolfers%202006/wolfers2006_didtextbook.dta"
-        tmp = Downloads.download(url)
-        data = ReadStatTables.readstat(tmp)
-        data = DataFrames.DataFrame(data)
+        url     = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Gentzkow%20et%20al%202011/gentzkowetal_didtextbook.dta"
+        tmp     = Downloads.download(url)
+        data    = ReadStatTables.readstat(tmp)
+        data    = DataFrames.DataFrame(data)
 
+        Y                   = "prestout"
+        G                   = "cnty90"
+        T                   = "year"
+        D                   = "numdailies"
+        summary_measures    = true
+        type                = "feTR"
+        controls            = "styr"
 
-        other_treatments = [
-            "rel_time2",
-            "rel_time3",
-            "rel_time4",
-            "rel_time5",
-            "rel_time6",
-            "rel_time7",
-            "rel_time8",
-            "rel_time9",
-            "rel_time10",
-            "rel_time11",
-            "rel_time12",
-            "rel_time13",
-            "rel_time14",
-            "rel_time15",
-            "rel_time16"
-        ]
-
-        controls = [
-            "rel_timeminus1", 
-            "rel_timeminus2", 
-            "rel_timeminus3", 
-            "rel_timeminus4", 
-            "rel_timeminus5", 
-            "rel_timeminus6", 
-            "rel_timeminus7", 
-            "rel_timeminus8", 
-            "rel_timeminus9"
-        ]
-
-        Y       = "div_rate"
-        G       = "state"
-        T       = "year"
-        D       = "rel_time1"
-        D0      = nothing
-        summary_measures = true
-        type    = "feTR"
-        test_random_weights = "year"
-        weights             = data.stpop
-
-        test_1_stata = TwoWayFEWeights.twowayfeweights(
+        test_4_stata = TwoWayFEWeights.twowayfeweights(
             data                = data              ,
-            Y                   = "div_rate"        ,
-            G                   = "state"           ,
-            T                   = "year"            ,
-            D                   = "rel_time1"       ,
+            Y                   = Y                 ,
+            G                   = G                 ,
+            T                   = T                 ,
+            D                   = D                 ,
             type                = "feTR"            ,
             test_random_weights = "year"            ,
-            weights             = data.stpop        ,
             other_treatments    = other_treatments  ,
             controls            = controls          
             )
+        # test_4_stata = twowayfeweights(
+        #     data                = data              ,
+        #     Y                   = Y                 ,
+        #     G                   = G                 ,
+        #     T                   = T                 ,
+        #     D                   = D                 ,
+        #     type                = "feTR"            ,
+        #     test_random_weights = "year"            ,
+        #     other_treatments    = other_treatments  ,
+        #     controls            = controls          
+        #     )
 
-        RCall.rcopy(R"test_1_stata = TwoWayFEWeights:::twowayfeweights(
+        RCall.rcopy(R"test_4_stata = TwoWayFEWeights:::twowayfeweights(
             data                = data,
             Y                   = 'div_rate' ,
             G                   = 'state',
@@ -405,7 +338,7 @@ Test.@testset "Internal_test_1" begin
             other_treatments    = other_treatments,
             controls            = controls)")
 
-        Test.@test length(test_1_stata) == RCall.rcopy(R"length(test_1_stata)")
+        Test.@test length(test_4_stata) == RCall.rcopy(R"length(test_4_stata)")
     end;
 
 end;

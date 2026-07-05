@@ -17,5 +17,7 @@ Test.@testset "twowayfeweights.jl" begin
     # Internal test with example datasets.
     include("internal_tests_1.jl")
     include("internal_tests_2.jl")
+    include("internal_tests_3.jl")
+    include("internal_tests_4.jl")
 
 end;

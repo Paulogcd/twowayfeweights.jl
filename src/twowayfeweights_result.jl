@@ -70,7 +70,10 @@ function twowayfeweights_result(;
             dat_sens.T_k = cumsum(dat_sens.Wsq)
             
             dat_sens = DataFrames.sort(dat_sens, [order(:W, rev = true), order(:G), order(:T)])
-            dat_sens.sens_measure2 = (abs.(beta) ./ sqrt.(dat_sens.T_k + ((dat_sens.S_k.^2) ./ (1 .- dat_sens.P_k))))
+            # We introduce this tmp variable due to a rounding that leads to negative values, and therefore to sqrt domain error.
+            tmp = ((dat_sens.S_k.^2) ./ (1 .- dat_sens.P_k))
+            tmp .= ifelse.(tmp .< 0 .&& tmp .< 1e10, 0, tmp)
+            dat_sens.sens_measure2 = (abs.(beta) ./ sqrt.(dat_sens.T_k + tmp))
 
             dat_sens.indicator .= dat_sens.W .<  (.-(dat_sens.S_k)) ./ (1 .- dat_sens.P_k)
             

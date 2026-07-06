@@ -7,9 +7,9 @@ Test.@testset "Internal_test_3" begin
 
         @info("Testing setup...")
 
-        global other_treatments = nothing
-        global test_random_weights = nothing
-        global weights = nothing
+        global other_treatments     = nothing
+        global test_random_weights  = nothing
+        global weights              = nothing
         RCall.rcopy(R"controls = NULL")
         RCall.rcopy(R"other_treatments = NULL")
         RCall.rcopy(R"test_random_weights = NULL")
@@ -100,7 +100,11 @@ Test.@testset "Internal_test_3" begin
         #     treatments  = treatments_rename)
         
         # R 
-        RCall.rcopy(R"data_transformed = TwoWayFEWeights:::twowayfeweights_transform(data_renamed, controls_rename, weights, treatments_rename)")
+        RCall.rcopy(R"data_transformed = TwoWayFEWeights:::twowayfeweights_transform(
+            data_renamed,
+            controls_rename,
+            weights,
+            treatments_rename)")
         
         # test
         # @test isequal(data_transformed, RCall.rcopy(R"data_transformed")) # PROBLEM HERE
@@ -233,11 +237,11 @@ Test.@testset "Internal_test_3" begin
             beta           = res[:beta],
             random_weights = random_weight_rename,
             treatments     = treatments_rename)
-        global res_final = twowayfeweights_result(
-            dat            = res[:dat],
-            beta           = res[:beta],
-            random_weights = random_weight_rename,
-            treatments     = treatments_rename)
+        # global res_final = twowayfeweights_result(
+        #     dat            = res[:dat],
+        #     beta           = res[:beta],
+        #     random_weights = random_weight_rename,
+        #     treatments     = treatments_rename)
 
         ## R
         RCall.rcopy(R"res_final = TwoWayFEWeights:::twowayfeweights_result(
@@ -336,14 +340,14 @@ Test.@testset "Internal_test_3" begin
 
         RCall.rcopy(R"test_3_stata = TwoWayFEWeights:::twowayfeweights(
             data                = data,
-            Y                   = 'div_rate' ,
-            G                   = 'state',
+            Y                   = 'changeprestout' ,
+            G                   = 'cnty90',
             T                   = 'year',
-            D                   = 'rel_time1',
-            type                = 'feTR',
-            test_random_weights = 'year',
-            other_treatments    = other_treatments,
-            controls            = controls)")
+            D                   = 'changedailies',
+            D0                  = 'numdailies',
+            type                = 'fdTR',
+            summary_measures    = TRUE,
+            controls            = 'styr')")
 
         Test.@test length(test_3_stata) == RCall.rcopy(R"length(test_3_stata)")
     end;

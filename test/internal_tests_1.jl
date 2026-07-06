@@ -2,10 +2,6 @@ Test.@testset "Internal_test_1" begin
 
     @info("1st internal test.")
 
-    using ReadStatTables
-    using Downloads
-    using DataFrames
-
     # Sanity check
     Test.@testset "Initialisation" begin
 

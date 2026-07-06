@@ -8,8 +8,13 @@ It provides a set of functions to compute the two way fixed effects (TWFE) estim
 
 # Features that are still to implement
 
+- Internal tests: 
+    - Test 2: Fix the tests (waiting for original R package).
+    - Test 3: Fix the "full workflow" test.
+    - Test 4: Fix intermediate steps.
+    - Have a local version of the data to perform the tests.
+
 - Fix Struct / function of twowayfeweights.
-- Fix the different methods errors of `twowayfeweights_test_random_weights`
 - Harmonize all intermediate tests.
 - Harmonize documentation for utils (internal functions).
 - Harmonize the display of message in the Julia REPL.

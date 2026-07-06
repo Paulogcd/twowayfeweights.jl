@@ -14,7 +14,7 @@ Base.iterate(twfew::twowayfeweights, state)         = iterate(twfew.data, state)
 
 # More class-specific functions:
 # StatsAPI.coef(twfew::twowayfeweights)             = twfew[:beta]
-type(twfew::twowayfeweights) = twfew[:type]
+# type(twfew::twowayfeweights) = twfew[:type]
 
 
 # test_2_stata[:beta]

@@ -2,10 +2,6 @@ Test.@testset "Internal_test_4" begin
 
     @info("4th internal test.")
 
-    using ReadStatTables
-    using Downloads
-    using DataFrames
-
     # Sanity check
     Test.@testset "Initialisation" begin
 
@@ -105,11 +101,11 @@ Test.@testset "Internal_test_4" begin
             controls    = controls_rename,
             weights     = weights,
             treatments  = treatments_rename)
-        global data_transformed = twowayfeweights_transform(
-            df          = data_renamed,
-            controls    = controls_rename,
-            weights     = weights,
-            treatments  = treatments_rename)
+        # global data_transformed = twowayfeweights_transform(
+        #     df          = data_renamed,
+        #     controls    = controls_rename,
+        #     weights     = weights,
+        #     treatments  = treatments_rename)
         
         # R 
         RCall.rcopy(R"data_transformed = TwoWayFEWeights:::twowayfeweights_transform(
@@ -328,15 +324,13 @@ Test.@testset "Internal_test_4" begin
 
         RCall.rcopy(R"test_4_stata = TwoWayFEWeights:::twowayfeweights(
             data                = data,
-            Y                   = 'div_rate' ,
-            G                   = 'state',
+            Y                   = 'prestout' ,
+            G                   = 'cnty90',
             T                   = 'year',
-            D                   = 'rel_time1',
+            D                   = 'numdailies',
             type                = 'feTR',
             test_random_weights = 'year',
-            weights             = data$stpop,
-            other_treatments    = other_treatments,
-            controls            = controls)")
+            controls            = 'styr')")
 
         Test.@test length(test_4_stata) == RCall.rcopy(R"length(test_4_stata)")
     end;

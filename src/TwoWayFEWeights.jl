@@ -22,8 +22,8 @@ module TwoWayFEWeights
     using Crayons
     using CSV
 
-    # Util functions
     begin
+        # Util functions
         include("utils_extra.jl")
         # export(weighted_mean)
         
@@ -64,7 +64,7 @@ module TwoWayFEWeights
         include("utils_print.jl")
         include("print.jl")
 
-        include("twowayfeweights_f.jl")
+        include("twowayfeweights_function.jl")
         export(twowayfeweights)
     end
 

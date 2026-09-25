@@ -13,7 +13,7 @@ Internal function.
 function twowayfeweights_transform(;
     df::DataFrames.DataFrame,
     controls::Union{String, Vector{String}, Nothing},
-    weights::Union{Nothing, AbstractVector{Int32}, Int32, AbstractVector{Int64}, Int64, AbstractVector{Number}, Number},
+    weights::Union{Nothing, AbstractVector{Int32}, Int32, AbstractVector{Int64}, Int64, AbstractVector{Float64}, AbstractVector{Number}, Number},
     treatments::Union{String, Vector{String}, Nothing})
 
     ret = twowayfeweights_normalize_var(df = df, varname = "D")

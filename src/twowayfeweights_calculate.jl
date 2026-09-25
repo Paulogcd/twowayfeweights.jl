@@ -4,7 +4,7 @@ Internal funcion for calculating the twoway FE weights.
 function twowayfeweights_calculate(;
     dat::DataFrames.DataFrame,
     type::String,
-    controls::Union{String, Vector{String}, Nothing},
+    controls::Union{String, Vector{String}, Vector{Any}, Nothing},
     treatments::Union{String, Vector{String}, Nothing})
 
     if (!isnothing(treatments) && type != "feTR")
@@ -212,7 +212,10 @@ function twowayfeweights_calculate(;
 
     else
         
-        rhs = foldl(+, Term.(Symbol.(xvars)))
+        rhs_terms = map(xvars) do x
+            x == ConstantTerm(1) ? ConstantTerm(1) : term(Symbol(x))
+        end
+        rhs = foldl(+, rhs_terms)
 
         # fixed effects
         fes_vec = isa(fes, AbstractString) ? [fes] : fes

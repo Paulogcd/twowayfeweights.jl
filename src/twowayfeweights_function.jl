@@ -118,7 +118,7 @@ function twowayfeweights(;
     type::String = "feTR",
     D0::Union{String, Nothing} = nothing,
     summary_measures::Bool = false,
-    controls::Union{Vector{String}, String, Nothing} = nothing,
+    controls::Union{Vector{Any}, Vector{String}, String, Nothing} = nothing,
     weights::Union{AbstractVector{Float32}, Float32, AbstractVector{Int32}, Int32, AbstractVector{Int64}, Int64, String, Nothing} = nothing,
     other_treatments::Union{Vector{String}, String, Nothing} = nothing,
     test_random_weights::Union{String, Nothing} = nothing,
@@ -175,7 +175,6 @@ function twowayfeweights(;
       type       = type,
       controls   = controls_rename,
       treatments = treatments_rename)
-    # DataFrames.names(res[:dat])
   
     # Create main return object list
     res = twowayfeweights_result(

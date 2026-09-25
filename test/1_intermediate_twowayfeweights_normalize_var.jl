@@ -62,7 +62,7 @@
     RCall.@rput random_data_frame_test
     Test.@test random_data_frame_test == RCall.rcopy(R"random_data_frame_test")
 
-    julia_code_result = twowayfeweights_normalize_var(
+    julia_code_result = TwoWayFEWeights.twowayfeweights_normalize_var(
         df = random_data_frame_test,
         varname = "Y")
 

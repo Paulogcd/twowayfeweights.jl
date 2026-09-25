@@ -7,7 +7,7 @@
     # For each group, we are then going to generate randomly 
     # the values and add them to the data frame that we 
     # just initialized:
-    random_data_frame_test = DataFrames.DataFrame()        
+    random_data_frame_test = DataFrames.DataFrame()
     for g in 1:G
         
         random_Y_test               = Random.rand(T)
@@ -38,9 +38,9 @@
     RCall.@rput random_data_frame_test
     Test.@test random_data_frame_test == RCall.rcopy(R"random_data_frame_test")
 
-    julia_code_result = twowayfeweights_test_random_weights(
+    julia_code_result = TwoWayFEWeights.twowayfeweights_test_random_weights(
         df = random_data_frame_test,
-        random_weights = ["random_weights"])
+        random_weights = "random_weights")
 
     R_code_result = rcopy(R"TwoWayFEWeights:::twowayfeweights_test_random_weights(
         df = random_data_frame_test,

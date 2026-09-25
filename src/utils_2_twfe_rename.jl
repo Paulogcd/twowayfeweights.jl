@@ -9,7 +9,7 @@ function twowayfeweights_rename_var(;
     G::Union{String, Vector{String}},
     T::Union{String, Vector{String}},
     D::Union{String, Vector{String}},
-    D0::Union{String, Vector{String}, Nothing}, # Can be nothing. To do : check all the possible types of each parameter.
+    D0::Union{String, Vector{String}, Nothing}, # Can be nothing. To do: check all the possible types of each parameter.
     controls::Union{String, Vector{String}, Nothing},
     treatments::Union{String, Vector{String}, Nothing},
     random_weights::Union{String, Vector{String}, Nothing})
@@ -25,8 +25,18 @@ function twowayfeweights_rename_var(;
     end
     
     # We define the original and new names.
-    original_names      = vcat(Y, G, T, D, controls, treatments)
-    new_names           = vcat("Y", "G", "T", "D", controls_rename, treatments_rename)
+    original_names      = vcat(Y, G, T, D)
+    new_names           = vcat("Y", "G", "T", "D")
+
+    if !isnothing(controls)
+        original_names = vcat(original_names, controls)
+        new_names = vcat(new_names, controls_rename)
+    end
+
+    if !isnothing(treatments)
+        original_names = vcat(original_names, treatments)
+        new_names = vcat(new_names, treatments_rename)
+    end
 
     # If D0 is provided, we rename and include it.
     if !isnothing(D0)

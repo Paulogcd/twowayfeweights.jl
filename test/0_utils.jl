@@ -17,10 +17,10 @@
     # To get all the functions from the original package.
     # R"ls(getNamespace('TwoWayFEWeights'))"
 
-    include("utils_1.jl");
-    include("utils_2.jl");
-    include("utils_3.jl");
-    include("utils_4.jl");
-    include("utils_5.jl");
-    include("utils_6.jl");
+    include("./0_utils_1.jl");
+    include("./0_utils_2.jl");
+    include("./0_utils_3.jl");
+    include("./0_utils_4.jl");
+    include("./0_utils_5.jl");
+    include("./0_utils_6.jl");
 end;

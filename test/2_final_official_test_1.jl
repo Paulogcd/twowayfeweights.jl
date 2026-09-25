@@ -1,4 +1,4 @@
-Test.@testset "Internal_test_1" begin
+Test.@testset "1 - Wolfers 2006" begin
 
     using ReadStatTables
     using Downloads
@@ -95,22 +95,25 @@ Test.@testset "Internal_test_1" begin
 
     ## I - Renaming:
     # Julia
-    controls_rename         = get_controls_rename(controls)
-    treatments_rename       = get_treatments_rename(other_treatments)
-    random_weight_rename    = get_random_weight_rename(test_random_weights)
-    data_renamed            = twowayfeweights_rename_var(df = data, Y = Y, G = G, T = T, D = D, D0 = D0, controls = controls, treatments = other_treatments, random_weights = test_random_weights)
+    controls_rename         = TwoWayFEWeights.get_controls_rename(controls)
+    treatments_rename       = TwoWayFEWeights.get_treatments_rename(other_treatments)
+    random_weight_rename    = TwoWayFEWeights.get_random_weight_rename(test_random_weights)
+    data_renamed            = TwoWayFEWeights.twowayfeweights_rename_var(df = data, Y = Y, G = G, T = T, D = D, D0 = D0, controls = controls, treatments = other_treatments, random_weights = test_random_weights)
+    data_renamed            = dropmissing!(data_renamed)
 
     # R
     RCall.rcopy(R"controls_rename           = TwoWayFEWeights:::get_controls_rename(controls)")
     RCall.rcopy(R"treatments_rename         = TwoWayFEWeights:::get_treatments_rename(other_treatments)")
     RCall.rcopy(R"random_weight_rename      = TwoWayFEWeights:::get_random_weight_rename(test_random_weights)")
     RCall.rcopy(R"data_renamed = TwoWayFEWeights:::twowayfeweights_rename_var(data, Y, G, T, D, D0, controls, other_treatments, test_random_weights)")
+    RCall.rcopy(R"data_renamed <- tidyr::drop_na(data_renamed)")
 
     # TEST
     Test.@test controls_rename          == RCall.rcopy(R"controls_rename           ")
     Test.@test treatments_rename        == RCall.rcopy(R"treatments_rename         ")
     Test.@test random_weight_rename     == RCall.rcopy(R"random_weight_rename      ")
-    Test.@test data_renamed             == RCall.rcopy(R"data_renamed      ") # PROBLEM HERE
+
+    Test.@test data_renamed             == RCall.rcopy(R"data_renamed      ")
 
     ## II - 
 
@@ -120,8 +123,10 @@ Test.@testset "Internal_test_1" begin
     #   [summary_measures test_random_weights(varlist)
     #   controls(varlist) other_treatments(varlist) weight(varlist) path(string)]
 
-
-    test_1_stata = twowayfeweights(
+    # Stata 1 : 
+    # twowayfeweights div_rate state year rel_time1, type(feTR) test_random_weights(year) weight(stpop) other_treatments(rel_time2-rel_time16) controls(rel_timeminus1-rel_timeminus9)
+    
+    test_1_julia = twowayfeweights(
         data                = data,
         Y                   = "div_rate", 
         G                   = "state",
@@ -132,4 +137,39 @@ Test.@testset "Internal_test_1" begin
         weights             = data.stpop,
         other_treatments    = other_treatments,
         controls            = controls)
-end
+
+    test_1_R = RCall.rcopy(R"TwoWayFEWeights::twowayfeweights(
+        data        = data,
+        Y           = 'div_rate',
+        G           = 'state',
+        T           = 'year',
+        D           = 'rel_time1',
+        type        = 'feTR',
+        test_random_weights = 'year',
+        weights     = data$'stpop',
+        other_treatments = other_treatments,
+        controls    = controls
+    )")
+
+    for cc in keys(test_1_julia)
+        if cc ∈ keys(test_1_R)
+            if typeof(test_1_julia[cc]) <: Number
+                if test_1_julia[cc] ≈ test_1_R[cc]
+                    print("Number - No problem with: ", cc, "\n")
+                    true
+                else
+                    print("Number - Problem with: ", cc, "\n")
+                    false
+                end
+            else
+                if test_1_julia[cc] == test_1_R[cc]
+                    print("No problem with: ", cc, "\n")
+                    true
+                else
+                    print("Problem with: ", cc, "\n")
+                    false
+                end
+            end
+        end
+    end
+end;

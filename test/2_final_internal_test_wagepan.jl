@@ -1,4 +1,4 @@
-Test.@testset "twowayfeweights" begin
+Test.@testset "final_internal_test.jl" begin
 
     using ReadStatTables
     using Downloads
@@ -52,7 +52,7 @@ Test.@testset "twowayfeweights" begin
         Test.@test julia_resultat[:params]              == R_resultat[:params]
         Test.@test julia_resultat[:summary_measures]    == R_resultat[:summary_measures]
         Test.@test julia_resultat[:random_weights]      == R_resultat[:random_weights]
-    end
+    end;
 
 
     Test.@testset "feS" begin 
@@ -94,7 +94,7 @@ Test.@testset "twowayfeweights" begin
         Test.@test julia_resultat[:summary_measures]    == R_resultat[:summary_measures]
         Test.@test julia_resultat[:random_weights]      == R_resultat[:random_weights]
     
-    end
+    end;
 
     Test.@testset "fdTR" begin
         
@@ -136,7 +136,7 @@ Test.@testset "twowayfeweights" begin
         Test.@test julia_resultat[:params]              == R_resultat[:params]
         Test.@test julia_resultat[:summary_measures]    == R_resultat[:summary_measures]
         Test.@test julia_resultat[:random_weights]      == R_resultat[:random_weights]
-    end
+    end;
 
     Test.@testset "fdS" begin
         

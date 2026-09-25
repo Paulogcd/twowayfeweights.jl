@@ -115,9 +115,6 @@ Test.@testset "1 - Wolfers 2006" begin
 
     Test.@test data_renamed             == RCall.rcopy(R"data_renamed      ")
 
-    ## II - 
-
-
     # Stata syntax
     # twowayfeweights Y G T D [D0], type(string)
     #   [summary_measures test_random_weights(varlist)
@@ -172,4 +169,6 @@ Test.@testset "1 - Wolfers 2006" begin
             end
         end
     end
+
+    test_result(test_1_R, test_1_julia)
 end;

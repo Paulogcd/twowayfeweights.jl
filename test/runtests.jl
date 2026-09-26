@@ -11,9 +11,9 @@ Test.@testset "TwoWayFEWeights.jl" begin
     include("./test_helper.jl")
     
     # Basic tests
-    # include("print.jl")
-    # include("./0_initialisation.jl");
-    # include("./0_utils.jl");
+    include("print.jl")
+    include("./0_initialisation.jl");
+    include("./0_utils.jl");
     
     # Intermediate function tests
     # include("intermediate_twowayfeweights_calculate.jl");

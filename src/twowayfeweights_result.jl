@@ -48,7 +48,9 @@ function twowayfeweights_result(;
 
         if !isnothing(random_weights)
         
-            ret[:mat] = twowayfeweights_test_random_weights(df = dat, random_weights = random_weights)
+            # Previously
+            # ret[:mat] = twowayfeweights_test_random_weights(df = dat, random_weights = random_weights)
+            ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights)
         
         end
         
@@ -105,7 +107,8 @@ function twowayfeweights_result(;
         ret[:tot_cells] = sum((skipmissing(dat.nat_weight) .!= 0)) # na.rm here
         
         if !isnothing(random_weights)
-            ret[:mat] = twowayfeweights_test_random_weights(df = dat, random_weights = random_weights)
+            # ret[:mat] = twowayfeweights_test_random_weights(df = dat, random_weights = random_weights)
+            ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights)
         end
         
         if !isnothing(treatments)

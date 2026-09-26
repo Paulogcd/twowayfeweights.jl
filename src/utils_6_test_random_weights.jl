@@ -7,7 +7,7 @@
     Vector{Union{Nothing, String}} method
 
 """
-function twowayfeweights_test_random_weights(;
+function twowayfeweights_test_random_weights(
     df::DataFrames.DataFrame,
     random_weights::Vector{Union{Nothing, String}})
 
@@ -62,7 +62,7 @@ end
     Vector{String} method
 
 """
-function twowayfeweights_test_random_weights(;
+function twowayfeweights_test_random_weights(
     df::DataFrames.DataFrame,
     random_weights::Vector{String})
 
@@ -108,7 +108,7 @@ end
     String method
 
 """
-function twowayfeweights_test_random_weights(;
+function twowayfeweights_test_random_weights(
     df::DataFrames.DataFrame,
     random_weights::String)
 

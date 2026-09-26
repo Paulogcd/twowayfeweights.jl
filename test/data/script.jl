@@ -34,15 +34,13 @@ function original_data_official_test_3_download()
                 remove_first_dummy = FALSE,
                 remove_selected_columns = FALSE)
         
-                # Crear dummies
+        # Crear dummies
         styr_dummies <- model.matrix(~factor(df$styr) - 1)
         colnames(styr_dummies) <- paste0('styr_', levels(factor(df$styr)))
-        styr_cols<- paste0('styr_', levels(factor(df$styr)))
+        styr_cols <- paste0('styr_', levels(factor(df$styr)))
         
         # Unirlas al dataframe original
         df <- cbind(df, styr_dummies)
-        # arrow::write_parquet('./test/data/2_official_test_3_data_original.parquet', arrow::as_arrow_table(df))
-        # arrow::write_csv(df, file.path('.', 'test', 'data', '2_official_test_3_data_original.csv'))
         utils::write.csv(df, file.path('.', 'test', 'data', '2_official_test_3_data_original.csv'), row.names = FALSE)
     ")
 end
@@ -55,14 +53,46 @@ function alternative_data_official_test_3_download()
     data = DataFrames.DataFrame(data)
     RCall.@rput data
 
-    sort!(data, [:styr])
-    
-    for xx in unique(data[:, :styr])
-        DataFrames.transform!(data, :styr => ((x) -> x == xx ? 1 : 0) => string("styr_", Int64(xx)))
-    end
-    data = data[!, Not("styr")]
+    RCall.rcopy(R"
+        df <- data
+        df <- cbind(
+        df,
+        model.matrix(~ factor(styr) - 1, data = df) |>
+            as.data.frame() |>
+            setNames(paste0(\"styr_\", levels(factor(df$styr))))
+        )
 
+        utils::write.csv(
+            df,
+            \"./test/data/2_official_test_3_data_original.csv\",
+            row.names = FALSE
+        )
+    ")
+    data = RCall.rcopy(R"df")
     CSV.write("./test/data/2_official_test_3_data_alternative.csv", data)
+end
+
+# Work in progress...
+function test_3_comparison()
+    original = CSV.read("./test/data/2_official_test_3_data_original.csv", DataFrames.DataFrame)
+    alternative = CSV.read("./test/data/2_official_test_3_data_alternative.csv", DataFrames.DataFrame)
+
+    test_result(original, alternative)
+
+    for col in names(original)
+        test_resultat = original[!, col] == alternative[!, col]
+        if test_resultat
+            print("No problem with ", col, "\n")
+        else
+            print("Problem wit ", col, "\n")
+        end
+    end
+
+    original[!, :prestout]
+    alternative[!, :prestout]
+
+    names(original) == names(alternative)
+
 end
 
 function test_data_prepare()

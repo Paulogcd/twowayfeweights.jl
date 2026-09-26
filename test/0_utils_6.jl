@@ -39,8 +39,8 @@
     Test.@test random_data_frame_test == RCall.rcopy(R"random_data_frame_test")
 
     julia_code_result = TwoWayFEWeights.twowayfeweights_test_random_weights(
-        df = random_data_frame_test,
-        random_weights = "random_weights")
+        random_data_frame_test,
+        "random_weights")
 
     R_code_result = rcopy(R"TwoWayFEWeights:::twowayfeweights_test_random_weights(
         df = random_data_frame_test,

@@ -7,13 +7,23 @@ Test.@testset "3 - Gentzkow et al. 2011" begin
     using ReadStatTables
     using Downloads
     using DataFrames
+    using CSV
 
-    # Julia
-    data = CSV.read("./test/data/2_official_test_3_data_original.csv", DataFrame)
+    # Data loading
+    data = CSV.read(joinpath(@__DIR__,"data", "2_official_test_3_data_original.csv"), DataFrames.DataFrame)
     RCall.@rput data
-    RCall.rcopy(R"test_3_R <- TwoWayFEWeights::twowayfeweights(df, 'changeprestout', 'cnty90', 'year',
-                            'changedailies', D0 = 'numdailies',
-                            type = 'fdTR', controls = styr_cols)")
+    RCall.rcopy(R"styr_cols<- paste0(\"styr_\", levels(factor(data$styr)))")
+    styr_cols = RCall.rcopy(R"styr_cols")
+
+    RCall.rcopy(R"test_3_R <- TwoWayFEWeights::twowayfeweights(
+                    data        = data,
+                    Y           = 'changeprestout',
+                    G           = 'cnty90',
+                    T           = 'year',
+                    D           = 'changedailies',
+                    D0          = 'numdailies',
+                    type        = 'fdTR',
+                    controls    = styr_cols)")
     test_3_R = RCall.rcopy(R"test_3_R")
 
     test_3_julia = twowayfeweights(data = data,
@@ -34,14 +44,14 @@ Test.@testset "3 - Gentzkow et al. 2011" begin
     # Stata 3 : 
     # twowayfeweights changeprestout cnty90 year changedailies numdailies, type(fdTR) controls(styr1-styr683)
     
-    for cc in keys(test_3_julia)
-        if cc ∈ keys(test_3_R)
-            if test_3_julia[cc] == test_3_R[cc]
-                print("No problem with: ", cc, "\n")
-            else
-                print("Problem with: ", cc, "\n")
-            end
-        end
-    end
+    # for cc in keys(test_3_julia)
+    #     if cc ∈ keys(test_3_R)
+    #         if test_3_julia[cc] == test_3_R[cc]
+    #             print("No problem with: ", cc, "\n")
+    #         else
+    #             print("Problem with: ", cc, "\n")
+    #         end
+    #     end
+    # end
     test_result(test_3_R, test_3_julia)
 end;

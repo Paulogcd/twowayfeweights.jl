@@ -4,6 +4,7 @@ version = "1.0.0-DEV"
 authors = ["Paulogcd <gugelmopaulo@gmail.com> and contributors"]
 
 [deps]
+Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 Crayons = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
@@ -24,6 +25,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+Arrow = "2.8.1"
 Downloads = "1.7.0"
 RCall = "0.14.13"
 RData = "1.1.0"

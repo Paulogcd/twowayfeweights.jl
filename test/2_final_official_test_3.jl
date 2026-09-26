@@ -1,49 +1,32 @@
 Test.@testset "3 - Gentzkow et al. 2011" begin
 
-    # THIS TEST IS FAILING DUE TO A BUG IN THE ORIGINAL PACKAGE.
+    # Initially, this test was failing due a discrepancy between the R and the Stata
+    # package. Now, the Really Credible Team (Anzony Quispe) provided me with a code
+    # to replicate the Stata code in R.
     
     using ReadStatTables
     using Downloads
     using DataFrames
+    using CSV
 
-    # Julia
-    # url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Gentzkow%20et%20al%202011/gentzkowetal_didtextbook.dta"
-    url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Gentzkow%20et%20al%202011/gentzkowetal_didtextbook.RData"
-    tmp = Downloads.download(url)
-    obj = RData.load(tmp)
-    data = obj["df"]
-    data = DataFrames.DataFrame(data)
-
-    # This test requires a little adjustement regarding the controls "styr":
-
-    # R
+    # Data loading
+    data = CSV.read(joinpath(@__DIR__,"data", "2_official_test_3_data_original.csv"), DataFrames.DataFrame)
     RCall.@rput data
-    RCall.rcopy(R"
-
-        df <- fastDummies::dummy_cols(data, select_columns = 'styr', remove_first_dummy = FALSE)
-        df <- fastDummies::dummy_cols(df, select_columns = 'styr',
-                 remove_first_dummy = FALSE,
-                 remove_selected_columns = FALSE)
-    
-        # Crear dummies
-        styr_dummies <- model.matrix(~factor(df$styr) - 1)
-        colnames(styr_dummies) <- paste0('styr_', levels(factor(df$styr)))
-        styr_cols<- paste0('styr_', levels(factor(df$styr)))
-        # Unirlas al dataframe original
-        df <- cbind(df, styr_dummies)
-
-        decomp3 <- TwoWayFEWeights::twowayfeweights(df, 'changeprestout', 'cnty90', 'year',
-                                'changedailies', D0 = 'numdailies',
-                                type = 'fdTR', controls = styr_cols)")
-    test_3_R = RCall.rcopy(R"decomp3")
+    RCall.rcopy(R"styr_cols<- paste0(\"styr_\", levels(factor(data$styr)))")
     styr_cols = RCall.rcopy(R"styr_cols")
-    
-    data_copy = copy(data)
-    for xx in unique(data[:, :styr])
-        DataFrames.transform!(data_copy, :styr => ((x) -> x == xx ? 1 : 0) => string("styr_", Int64(xx)))
-    end
 
-    test_3_julia = twowayfeweights(data = data_copy,
+    RCall.rcopy(R"test_3_R <- TwoWayFEWeights::twowayfeweights(
+                    data        = data,
+                    Y           = 'changeprestout',
+                    G           = 'cnty90',
+                    T           = 'year',
+                    D           = 'changedailies',
+                    D0          = 'numdailies',
+                    type        = 'fdTR',
+                    controls    = styr_cols)")
+    test_3_R = RCall.rcopy(R"test_3_R")
+
+    test_3_julia = twowayfeweights(data = data,
         Y = "changeprestout",
         G = "cnty90",
         T = "year",
@@ -61,13 +44,14 @@ Test.@testset "3 - Gentzkow et al. 2011" begin
     # Stata 3 : 
     # twowayfeweights changeprestout cnty90 year changedailies numdailies, type(fdTR) controls(styr1-styr683)
     
-    for cc in keys(test_3_julia)
-        if cc ∈ keys(test_3_R)
-            if test_3_julia[cc] == test_3_R[cc]
-                print("No problem with: ", cc, "\n")
-            else
-                print("Problem with: ", cc, "\n")
-            end
-        end
-    end
+    # for cc in keys(test_3_julia)
+    #     if cc ∈ keys(test_3_R)
+    #         if test_3_julia[cc] == test_3_R[cc]
+    #             print("No problem with: ", cc, "\n")
+    #         else
+    #             print("Problem with: ", cc, "\n")
+    #         end
+    #     end
+    # end
+    test_result(test_3_R, test_3_julia)
 end;

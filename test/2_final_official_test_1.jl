@@ -115,9 +115,6 @@ Test.@testset "1 - Wolfers 2006" begin
 
     Test.@test data_renamed             == RCall.rcopy(R"data_renamed      ")
 
-    ## II - 
-
-
     # Stata syntax
     # twowayfeweights Y G T D [D0], type(string)
     #   [summary_measures test_random_weights(varlist)
@@ -151,25 +148,27 @@ Test.@testset "1 - Wolfers 2006" begin
         controls    = controls
     )")
 
-    for cc in keys(test_1_julia)
-        if cc ∈ keys(test_1_R)
-            if typeof(test_1_julia[cc]) <: Number
-                if test_1_julia[cc] ≈ test_1_R[cc]
-                    print("Number - No problem with: ", cc, "\n")
-                    true
-                else
-                    print("Number - Problem with: ", cc, "\n")
-                    false
-                end
-            else
-                if test_1_julia[cc] == test_1_R[cc]
-                    print("No problem with: ", cc, "\n")
-                    true
-                else
-                    print("Problem with: ", cc, "\n")
-                    false
-                end
-            end
-        end
-    end
+    # for cc in keys(test_1_julia)
+    #     if cc ∈ keys(test_1_R)
+    #         if typeof(test_1_julia[cc]) <: Number
+    #             if test_1_julia[cc] ≈ test_1_R[cc]
+    #                 print("Number - No problem with: ", cc, "\n")
+    #                 true
+    #             else
+    #                 print("Number - Problem with: ", cc, "\n")
+    #                 false
+    #             end
+    #         else
+    #             if test_1_julia[cc] == test_1_R[cc]
+    #                 print("No problem with: ", cc, "\n")
+    #                 true
+    #             else
+    #                 print("Problem with: ", cc, "\n")
+    #                 false
+    #             end
+    #         end
+    #     end
+    # end
+
+    test_result(test_1_R, test_1_julia)
 end;

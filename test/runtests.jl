@@ -4,11 +4,13 @@ using RCall # We use RCall to compare our output to the one of the original func
 using Random 
 using DataFrames
 using Downloads
+using OrderedCollections
 
 Test.@testset "TwoWayFEWeights.jl" begin
 
     # Helper: 
-    include("./test_helper.jl")
+    include(joinpath(@__DIR__, "3_0_utils_test_helper.jl"))
+    include(joinpath(@__DIR__, "3_1_test_helper_main.jl"))
     
     # Basic tests
     include("print.jl")
@@ -20,7 +22,7 @@ Test.@testset "TwoWayFEWeights.jl" begin
     # include("./1_intermediate_twowayfeweights_normalize_var.jl");
     
     # Final results tests
-    # include("./2_final_internal_test_wagepan.jl");
+    include(joinpath(@__DIR__, "2_final_internal_test_wagepan.jl"));
     include("./2_final_official_test.jl");
 
 end;

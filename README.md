@@ -13,6 +13,7 @@ It provides a set of functions to compute the two way fixed effects (TWFE) estim
 - Harmonize all intermediate tests.
 - Harmonize documentation for utils (internal functions).
 - Harmonize the display of message in the Julia REPL.
+- Harmonize the use of the "weights" argument.
 
 Website-Documentation: 
 - Internal process

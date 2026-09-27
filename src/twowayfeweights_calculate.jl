@@ -147,6 +147,10 @@ function twowayfeweights_calculate(;
         else
             denom_W = mean(skipmissing(dat[:, :eps_1_E_D_gt]))
         end
+        # denom_W = weighted_mean(
+        #         x = dat[:, :eps_1_E_D_gt],
+        #         w = dat[:, :weights]
+        #     )
 
         dat[:, :W] = dat[:, Symbol(EPS_VAR)] .* mean_D / denom_W
         dat[:, :weight_result] = dat[:, :W] .* dat[:, :nat_weight]
@@ -241,6 +245,12 @@ function twowayfeweights_calculate(;
         dat = combine(gdat) do sdf
             sdf[argmin(sdf.D), :] # This seems off, as we are already using a dataframe with only one observation per G * T
         end
+        # gdat = groupby(dat, [:G, :Tfactor])
+        # dat = combine(gdat) do sdf
+        #     sdf[1, :]
+        # end
+        # dat = combine(groupby(dat, [:G, :Tfactor]), first)
+
 
     elseif type == "fdTR"
         
@@ -391,6 +401,12 @@ function twowayfeweights_calculate(;
 
         dat = dat[:, Not(:eps_2, :P_gt, :abs_delta_D)]
     end
+    
+    # Reordering
+    main_columns = ["Y", "G", "T", "D"]
+    other_columns = filter(c -> c ∉ main_columns, names(dat))
+    dat = dat[:, vcat(main_columns, other_columns)]
+    # dat = dat[:, Not(:eps_1_E_D_gt)]
 
     return OrderedCollections.OrderedDict(:dat => dat, :beta => beta)
 

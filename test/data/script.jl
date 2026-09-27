@@ -1,9 +1,7 @@
 function data_official_test_1_download()
     url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Wolfers%202006/wolfers2006_didtextbook.dta"
-    tmp = Downloads.download(url)
-    data = ReadStatTables.readstat(tmp)
-    data = DataFrames.DataFrame(data)
-    CSV.write("./test/data/2_official_test_1_data.csv", data)
+    destination = joinpath(@__DIR__, "2_official_test_1_data.dta")
+    Downloads.download(url, destination)
 end
 
 function data_official_test_2_download()

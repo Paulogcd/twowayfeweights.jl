@@ -38,7 +38,7 @@
     julia_code_result = TwoWayFEWeights.twowayfeweights_filter(
         df = random_data_frame_test,
         Y = "Y",
-        D = "traitement",
+        D = "D",
         D0 = "D0",
         G = "G",
         T = "T",
@@ -49,7 +49,7 @@
     R_code_result = rcopy(R"TwoWayFEWeights:::twowayfeweights_filter(
         df = random_data_frame_test,
         Y = 'Y',
-        D = 'traitement',
+        D = 'D',
         D0 = 'D0',
         G = 'G',
         T = 'T',

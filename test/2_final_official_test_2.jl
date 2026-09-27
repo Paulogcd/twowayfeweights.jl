@@ -23,16 +23,22 @@ Test.@testset "2 - Pierce Schott 2016" begin
     )
 
     test_2_R = RCall.rcopy(R"
-    TwoWayFEWeights::twowayfeweights(
-        data        = data,
-        Y           = \"Y\",
-        G           = \"indusid\",
-        T           = \"time\",
-        D           = \"D\",
-        type        = \"feTR\",
-        summary_measures = TRUE
-    )")
+        TwoWayFEWeights::twowayfeweights(
+            data        = data,
+            Y           = \"Y\",
+            G           = \"indusid\",
+            T           = \"time\",
+            D           = \"D\",
+            type        = \"feTR\",
+            summary_measures = TRUE
+        )"
+    )
 
     @test isequal(test_2_R, test_2_julia)
+    keys(test_2_R)
+    keys(test_2_julia)
+    for k in intersect(keys(test_2_R), keys(test_2_julia))
+        print(k, " : ", test_2_R[k] == test_2_julia[k], "\n")
+    end
 
 end;

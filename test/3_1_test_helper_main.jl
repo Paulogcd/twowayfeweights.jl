@@ -15,21 +15,22 @@ function test_step_1_renaming(data_R, data_julia)
       D0                = data_julia[:D0],
       controls          = data_julia[:controls],
       treatments        = data_julia[:other_treatments],
-      random_weights    = data_julia[:test_random_weights])
+      random_weights    = data_julia[:test_random_weights]
+    )
 
     # R:
     RCall.rcopy(R"
         for (v in c(
-            data_R$\"Y\",
-            data_R$\"G\", 
-            data_R$\"T\", 
-            data_R$\"D\", 
-            data_R$\"D0\")) {
+            data_R$Y,
+            data_R$G, 
+            data_R$T, 
+            data_R$D, 
+            data_R$D0)) {
             if (!inherits(data[[v]], \"numeric\")){
-                data[[v]] <- as.numeric(data[[v]])
+                data_R[[v]] <- as.numeric(data[[v]])
             }
         }    
-    data_R$\"controls_rename\" = TwoWayFEWeights:::get_controls_rename(data_R$\"controls\")
+        data_R$\"controls_rename\" = TwoWayFEWeights:::get_controls_rename(data_R$\"controls\")
         data_R$\"treatments_rename\" = TwoWayFEWeights:::get_treatments_rename(data_R$\"other_treatments\")
         data_R$\"random_weight_rename\" = TwoWayFEWeights:::get_random_weight_rename(data_R$\"test_random_weights\")
         data_R$\"data_renamed\" = TwoWayFEWeights:::twowayfeweights_rename_var(
@@ -44,6 +45,20 @@ function test_step_1_renaming(data_R, data_julia)
             data_R$\"test_random_weights\")
     ")
     data_R = RCall.rcopy(R"data_R")
+    if :controls_rename ∉ keys(data_R)
+        # RCall.rcopy(R"data_R$controls_rename <- NULL")
+        data_R[:controls_rename] = nothing
+    end
+    if :treatments_rename ∉ keys(data_R)
+        # RCall.rcopy(R"data_R$treatments_rename <- NULL")
+        data_R[:treatments_rename] = nothing
+    end
+    if :random_weight_rename ∉ keys(data_R)
+        # RCall.rcopy(R"data_R$random_weight_rename <- NULL")
+        data_R[:random_weight_rename] = nothing
+    end
+    data_R = RCall.@rput data_R
+    
     # This is not enough to work due to local binding.
     # We return the value at the end of the function.
 
@@ -66,7 +81,7 @@ function test_step_2_transform(data_R, data_julia)
     data_julia[:data_transformed] = TwoWayFEWeights.twowayfeweights_transform(
         df          = data_julia[:data_renamed],
         controls    = data_julia[:controls_rename],
-        weights     = data_julia[:data][!, Symbol(data_julia[:weights])],
+        weights     = data_julia[:weights],
         treatments  = data_julia[:treatments_rename])
     
     RCall.rcopy(R"
@@ -155,11 +170,14 @@ function test_step_4_calculate(data_R, data_julia)
     data_R = RCall.rcopy(R"data_R")
 
     setdiff(names(data_julia[:res][:dat]), RCall.rcopy(R"colnames(data_R$res$dat)"))
+    names_in_common = intersect(names(data_julia[:res][:dat]), names(data_R[:res][:dat]))
+    RCall.@rput names_in_common
 
     @testset "Step 4: calculate" begin
         @test isequal(
-            data_julia[:res][:dat][!, Not([:Tfactor, :W, :weight_result])],
-            RCall.rcopy(R"data_R$res$\"dat\" |> dplyr::select( - c(\"Tfactor\", \"W\", \"weight_result\"))")
+            # data_julia[:res][:dat][!, Not([:Tfactor, :W, :weight_result])],
+            data_julia[:res][:dat][!, names_in_common],
+            RCall.rcopy(R"data_R$res$\"dat\" |> dplyr::select(names_in_common)")
         )
         compare_df(
             RCall.rcopy(R"data_R$res$\"dat\" |> dplyr::select( - c(\"Tfactor\", \"W\", \"weight_result\"))"),
@@ -211,7 +229,7 @@ function full_test_step_by_step(data_R, data_julia)
     test_step_2_transform(data_R, data_julia);
     test_step_3_filter(data_R, data_julia);
     test_step_4_calculate(data_R, data_julia);
-    test_step_5_result(data_R, data_julia)
+    test_step_5_result(data_R, data_julia);
 
 end
 

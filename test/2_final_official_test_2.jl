@@ -33,6 +33,6 @@ Test.@testset "2 - Pierce Schott 2016" begin
         summary_measures = TRUE
     )")
 
-    test_result(test_2_R, test_2_julia)
+    @test isequal(test_2_R, test_2_julia)
 
 end;

@@ -7,3 +7,41 @@ To call the R package from julia, we use the package `RCall`.
 For example to test the `fn_ctrl_rename()` function, we will call it from the R package with RCall, apply it to an object, and compare this R object with the obtained julia object.
 
 
+# Updates about testing 
+
+Since late September 2026, several new features were added to the testing section of the package.
+
+A step-by-step testing process is now prioritized: 
+
+- test_step_1_renaming
+- test_step_2_transform
+- test_step_3_filter
+- test_step_4_calculate
+- test_step_5_result
+
+Moreover, for each new step computed, the julia and R data is saved in /test/data/output in the following way: 
+
+```
+JLD2.@save joinpath(@__DIR__, "data", "output", "data_julia.jld2") data_julia;
+RCall.rcopy(R"
+        base::saveRDS(
+            object = data_R,
+            file = file.path(getwd(), \"test\", \"data\", \"output\", \"data_R.rds\")
+        )");
+```
+
+
+This allows an easier testing process from an external R environment.
+In R, we can indeed load the data as: 
+
+```
+    # Load the whole list:
+    data_R <- base::readRDS(file = file.path("/", "Users", "paulogcd", "twowayfeweights.jl", "test", "data", "output", "data_R.rds"))
+    
+    # And then each item of data_R:
+    dt <- data_R$dt
+    type <- data_R$type
+    controls <- data_R$controls
+    treatments <- data_R$treatments
+```
+

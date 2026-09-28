@@ -5,6 +5,7 @@ using Random
 using DataFrames
 using Downloads
 using OrderedCollections
+using JLD2
 
 Test.@testset "TwoWayFEWeights.jl" begin
 
@@ -13,9 +14,9 @@ Test.@testset "TwoWayFEWeights.jl" begin
     include(joinpath(@__DIR__, "3_1_test_helper_main.jl"))
     
     # Basic tests
-    include("print.jl")
-    include("./0_initialisation.jl");
-    include("./0_utils.jl");
+    include(joinpath(@__DIR__, "print.jl"));
+    include(joinpath(@__DIR__, "./0_initialisation.jl"));
+    include(joinpath(@__DIR__, "./0_utils.jl"));
     
     # Intermediate function tests
     # include("intermediate_twowayfeweights_calculate.jl");
@@ -23,6 +24,6 @@ Test.@testset "TwoWayFEWeights.jl" begin
     
     # Final results tests
     include(joinpath(@__DIR__, "2_final_internal_test_wagepan.jl"));
-    include("./2_final_official_test.jl");
+    include(joinpath(@__DIR__, "./2_final_official_test.jl"));
 
 end;

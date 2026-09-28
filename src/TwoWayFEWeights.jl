@@ -24,10 +24,10 @@ module TwoWayFEWeights
 
     begin
         # Util functions
-        include("utils_extra.jl")
+        include(joinpath(@__DIR__, "utils_extra.jl"))
         # export(weighted_mean)
         
-        include("utils_1_renames.jl")
+        include(joinpath(@__DIR__, "utils_1_renames.jl"))
         # export(fn_ctrl_rename)
         # export(get_controls_rename)
         # export(fn_treatment_rename)
@@ -36,35 +36,35 @@ module TwoWayFEWeights
         # export(fn_random_weight_rename)
         # export(get_random_weight_rename)
     
-        include("utils_2_twfe_rename.jl")
+        include(joinpath(@__DIR__, "utils_2_twfe_rename.jl"));
         # export(twowayfeweights_rename_var)
 
-        include("twowayfeweights_normalize_var.jl")
+        include(joinpath(@__DIR__, "twowayfeweights_normalize_var.jl"));
         # export(twowayfeweights_transform)
 
-        include("utils_3_twfe_transform.jl")
+        include(joinpath(@__DIR__, "utils_3_twfe_transform.jl"));
         # export(twowayfeweights_filter)
 
-        include("utils_4_twfe_filter.jl")
+        include(joinpath(@__DIR__, "utils_4_twfe_filter.jl"));
         # export(twowayfeweights_summarize_weights)
 
-        include("utils_5_twfe_summarize_weights.jl")
+        include(joinpath(@__DIR__, "utils_5_twfe_summarize_weights.jl"));
         # export(twowayfeweights_summarize_weights)
         
-        include("utils_6_test_random_weights.jl")
+        include(joinpath(@__DIR__, "utils_6_test_random_weights.jl"));
         # export(twowayfeweights_test_random_weights)
 
-        include("twowayfeweights_calculate.jl")
+        include(joinpath(@__DIR__, "twowayfeweights_calculate.jl"));
         # export(twowayfeweights_calculate)
 
         # include("twowayfeweights_f.jl")
-        include("twowayfeweights_result.jl")
+        include(joinpath(@__DIR__, "twowayfeweights_result.jl"));
         
-        include("twowayfeweights_struct.jl")
-        include("utils_print.jl")
-        include("print.jl")
+        include(joinpath(@__DIR__, "twowayfeweights_struct.jl"));
+        include(joinpath(@__DIR__, "utils_print.jl"));
+        include(joinpath(@__DIR__, "print.jl"));
 
-        include("twowayfeweights_function.jl")
+        include(joinpath(@__DIR__, "twowayfeweights_function.jl"));
         export(twowayfeweights)
     end
 

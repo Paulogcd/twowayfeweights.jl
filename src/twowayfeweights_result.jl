@@ -32,7 +32,7 @@ function twowayfeweights_result(;
         dat.weight_result = ifelse.(dat.weight_result .< limit_sensitivity .&& dat.weight_result .> -limit_sensitivity, 0, dat.weight_result)
         ret = twowayfeweights_summarize_weights(df = dat, var_weight = "weight_result")
         
-        W_mean = weighted_mean(x = dat.W, w = dat.nat_weight) # Check: is this the one I use, or not?
+        W_mean = weighted_mean(dat.W, dat.nat_weight)
         # Original comment: 
         # Modif. Diego: DoF adjustment to the sd of w_gt
         M           = sum((dat.nat_weight .!= 0)) # Number of non null values.

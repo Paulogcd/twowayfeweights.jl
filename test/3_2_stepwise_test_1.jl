@@ -14,7 +14,7 @@ data_julia = Dict(
     :D0                     => nothing,
     :summary_measures       => true,
     :controls               => ["rel_timeminus$(i)" for i in 1:9],
-    :weights                => :stpop,
+    :weights                => data[!, :stpop],
     :other_treatments       => ["rel_time$(i)" for i in 2:16],
     :test_random_weights    => "year",
     :path                   => nothing,
@@ -42,5 +42,7 @@ data_R = RCall.rcopy(R"data_R")
 data_R, data_julia = test_step_1_renaming(data_R, data_julia);
 data_R, data_julia = test_step_2_transform(data_R, data_julia);
 data_R, data_julia = test_step_3_filter(data_R, data_julia);
+
+
 data_R, data_julia = test_step_4_calculate(data_R, data_julia); # dat is different.
 data_R, data_julia = test_step_5_result(data_R, data_julia); 

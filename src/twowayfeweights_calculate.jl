@@ -47,7 +47,7 @@ function twowayfeweights_calculate(;
         term.(Symbol.(treatments))
 
     # RHS: controls + treatments
-    rhs_terms = vcat(controls_terms, treatment_terms)
+    rhs_terms = vcat(controls_terms, treatment_terms) # xvars in R code
 
     # Fixed effects
     fe_names = type_fe ? [:G, :Tfactor] : [:Tfactor]
@@ -59,43 +59,36 @@ function twowayfeweights_calculate(;
     # Add fixed effects as part of the RHS
     fml = term(:D) ~ rhs + sum(fe_terms)
 
-
     if type == "fdS"
         dat_regression = dat[dat[:, :weights] .!= 0,:]
         denom_lm = FixedEffectModels.reg(dat_regression, fml, weights = :weights, save = :all)
     else 
 
+        denom_lm = FixedEffectModels.reg(dat, fml, weights = :weights, save = :all)
+
         # Earlier version:
-        rhs_terms = map(xvars) do x
-            x == "1" ? ConstantTerm(1) : term(Symbol(x))
-        end
-        
-        if length(xvars) == 1
-            rhs = rhs_terms
-        else
-            rhs = foldl(+, rhs_terms)
-        end
-
-        # fixed effects
-        fes_vec = isa(fes, AbstractString) ? [fes] : fes
-        fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
-        
-        # full formula
-        if rhs == [term(Symbol(1))]
-            ff = term(:D) ~ ConstantTerm(1) + fe_terms
-        else
-            ff = term(:D) ~ rhs + fe_terms
-        end
-
-        denom_lm = reg(dat, ff, weights = :weights, save = :residuals)
+        # rhs_terms = map(xvars) do x
+        #     x == "1" ? ConstantTerm(1) : term(Symbol(x))
+        # end
+        # if length(xvars) == 1
+        #     rhs = rhs_terms
+        # else
+        #     rhs = foldl(+, rhs_terms)
+        # end
+        # # fixed effects
+        # fes_vec = isa(fes, AbstractString) ? [fes] : fes
+        # fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
+        # # full formula
+        # if rhs == [term(Symbol(1))]
+        #     ff = term(:D) ~ ConstantTerm(1) + fe_terms
+        # else
+        #     ff = term(:D) ~ rhs + fe_terms
+        # end
+        # denom_lm = reg(dat, ff, weights = :weights, save = :residuals)
     
     end
 
-    if type_fe
-        EPS_VAR = "eps_1"
-    else
-        EPS_VAR = "eps_2"
-    end
+    EPS_VAR = type_fe ? "eps_1" : "eps_2"
 
     if type_fe || type == "fdS"
         dat[:, Symbol(EPS_VAR)] = residuals(denom_lm)
@@ -105,23 +98,30 @@ function twowayfeweights_calculate(;
     end
     
     # Beta regression ----
-    if type == "feTR"
-    
-        dat[:, "eps_1_E_D_gt"] = dat[:, Symbol(EPS_VAR)] .* dat[:, Symbol(DVAR)]
-    
-        if isnothing(treatments)
-            # denom_W = weighted_mean(x = dat[:, :eps_1_E_D_gt], w = dat[:, :weights])
-            denom_W = weighted_mean(dat[:, :eps_1_E_D_gt], dat[:, :weights])
-        else
-            denom_W = mean(skipmissing(dat[:, :eps_1_E_D_gt]))
-        end
-        # denom_W = weighted_mean(
-        #         x = dat[:, :eps_1_E_D_gt],
-        #         w = dat[:, :weights]
-        #     )
+    xvars_beta = vcat(term(:D), rhs_terms)
+    rhs_beta = isempty(xvars_beta) ? ConstantTerm(1) : sum(xvars_beta)
+    fml_beta = term(:Y) ~ rhs_beta + sum(fe_terms)
 
-        dat[:, :W] = dat[:, Symbol(EPS_VAR)] .* mean_D / denom_W
-        dat[:, :weight_result] = dat[:, :W] .* dat[:, :nat_weight]
+    if type == "fdS"
+        dat_regression_beta = dat[dat[:, :weights] .!= 0, :]
+        beta_lm = FixedEffectModels.reg(dat_regression_beta, fml_beta, weights = :weights, save = :none)
+    else
+        beta_lm = FixedEffectModels.reg(dat, fml_beta, weights = :weights)
+    end
+    beta = coef(beta_lm)[coefnames(beta_lm) .== "D"]
+
+    # Type-specific weight calculations
+
+    if type == "feTR"
+
+        eps_vec = dat[!, EPS_VAR]
+        D_vec = dat[!, DVAR]
+        denom_W = weighted_mean(eps_vec .* D_vec, dat[!, :weights])
+    
+        DataFrames.transform!(
+            dat,
+            EPS_VAR => ((x) -> x * mean_D / denom_W) => :W
+        )
 
         if !isnothing(treatments)
             for treatment in vcat(treatments)
@@ -130,32 +130,31 @@ function twowayfeweights_calculate(;
             end
         end
 
-        if "P_gt" in DataFrames.names(dat)
-            dat = dat[:, Not(Symbol(EPS_VAR), "P_gt")]
-        end
-
-        if Symbol(EPS_VAR) in DataFrames.names(dat)
-            dat = dat[:, Not(Symbol(EPS_VAR))]
-        end
+        # Cleanup
+        dat = dat[:, Not(Symbol(EPS_VAR), "P_gt")]
+        
+        # Only keeping one observation per group:
+        dat = combine(groupby(dat, [:G, :Tfactor]), first)
         
     elseif type == "feS"
 
-        dat[:, :eps_1_weight] = dat[:, Symbol(EPS_VAR)] .* dat[:, :weights]
-        sort!(dat, [:G, :Tfactor])
-        gdat = DataFrames.groupby(dat, [:G])
-
-        # Here, there is a (classic?) problem with operations on grouped dataframe.
-        # We cannot modify them as we would for a standard dataframe, so we use the transform! function 
-        # (note the !) to modify gdat.
-        transform!(gdat, :eps_1_weight => (x -> reverse(cumsum(reverse(x)))) => :E_eps_1_g_ge_aux)
+        DataFrames.sort!(dat, [:G, :Tfactor])
+        eps_w = dat[:, EPS_VAR] .* dat[:, :weights]
+        g_int = Int.(dat[!, :G])
         
-        transform!(gdat, :weights => (x -> reverse(cumsum(reverse(x)))) => :weights_aux)
-        
-        transform!(gdat, [:E_eps_1_g_ge_aux, :weights_aux] => ((x, y) -> (x ./ y)) => :E_eps_1_g_ge)
+        # To implement
+        E_eps_1_g_ge_aux        = rev_cumsum_by_group(g_int, eps_w) 
+        weights_aux             = rev_cumsum_by_group(g_int, dat[:, :weights])
+        E_eps_1_g_ge            = E_eps_1_g_ge_aux / weights_aux
+        dat[:, :E_eps_1_g_ge]   .= E_eps_1_g_ge
     
     elseif type == "fdTR"
+        
         dat[:, :eps_2] = ifelse.(.!ismissing(dat[:, Symbol(EPS_VAR)]), dat[:, Symbol(EPS_VAR)], 0)
+    
     end
+
+    # Post-beta calculations per type
 
     # New regression
     # push!(xvars, Term(Symbol("D")))

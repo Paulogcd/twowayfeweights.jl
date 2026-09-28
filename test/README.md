@@ -22,12 +22,15 @@ A step-by-step testing process is now prioritized:
 Moreover, for each new step computed, the julia and R data is saved in /test/data/output in the following way: 
 
 ```
-JLD2.@save joinpath(@__DIR__, "data", "output", "data_julia.jld2") data_julia;
-RCall.rcopy(R"
+function save_test_data(data_R, data_julia)
+    RCall.@rput data_R
+    RCall.rcopy(R"
         base::saveRDS(
             object = data_R,
             file = file.path(getwd(), \"test\", \"data\", \"output\", \"data_R.rds\")
-        )");
+        )")
+    JLD2.@save joinpath(@__DIR__, "data", "output", "data_julia.jld2") data_julia;
+end
 ```
 
 
@@ -36,12 +39,13 @@ In R, we can indeed load the data as:
 
 ```
     # Load the whole list:
-    data_R <- base::readRDS(file = file.path("/", "Users", "paulogcd", "twowayfeweights.jl", "test", "data", "output", "data_R.rds"))
+    data_R <- base::readRDS(
+        file = file.path("/", "Users", "paulogcd", "twowayfeweights.jl", "test", "data", "output", "data_R.rds"))
     
     # And then each item of data_R:
-    dt <- data_R$dt
+    dt <- data_R$data_filtered
     type <- data_R$type
-    controls <- data_R$controls
-    treatments <- data_R$treatments
+    controls <- data_R$controls_rename
+    treatments <- data_R$treatments_rename
 ```
 

@@ -39,18 +39,5 @@
     RCall.@rput random_data_frame_test
     Test.@test random_data_frame_test == RCall.rcopy(R"random_data_frame_test")
 
-    julia_code_result = TwoWayFEWeights.
-    julia_code_result = twowayfeweights_calculate(
-        dat = random_data_frame_test,
-        type = "fdS",
-        controls = nothing,
-        treatments = nothing)
-
-    R_code_result = rcopy(R"TwoWayFEWeights:::twowayfeweights_calculate(
-        dt = random_data_frame_test,
-        type = 'fdTR',
-        controls = 'control_1',
-        treatments = NULL)")
-
     @test R_code_result == julia_code_result
 end;

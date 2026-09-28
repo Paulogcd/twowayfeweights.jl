@@ -71,3 +71,4 @@ end
 # weighted_mean(x, y)
 # weighted_mean(x, y)
 # weighted_mean([1, 2, 3], [1, 2, 3])
+# weighted_mean([1, 2, 3], [1, missing, 3])

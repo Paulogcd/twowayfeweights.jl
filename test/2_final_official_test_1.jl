@@ -49,7 +49,7 @@ Test.@testset "1 - Wolfers 2006" begin
     # Stata 1 : 
     # twowayfeweights div_rate state year rel_time1, type(feTR) test_random_weights(year) weight(stpop) other_treatments(rel_time2-rel_time16) controls(rel_timeminus1-rel_timeminus9)
     
-    test_1_julia = twowayfeweights(
+    test_1_julia = TwoWayFEWeights.twowayfeweights(
         data                = data,
         Y                   = "div_rate", 
         G                   = "state",

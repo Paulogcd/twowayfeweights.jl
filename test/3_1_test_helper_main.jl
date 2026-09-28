@@ -58,7 +58,6 @@ function test_step_1_renaming(data_R, data_julia)
         data_R[:random_weight_rename] = nothing
     end
     data_R = RCall.@rput data_R
-    
     # This is not enough to work due to local binding.
     # We return the value at the end of the function.
 
@@ -68,6 +67,9 @@ function test_step_1_renaming(data_R, data_julia)
             RCall.rcopy(R"data_R$data_renamed")
         )
     end
+
+    JLD2.@save joinpath(@__DIR__, "data", "output", "data_R.jld2") data_R;
+    JLD2.@save joinpath(@__DIR__, "data", "output", "data_julia.jld2") data_julia;
 
     return(data_R, data_julia)
 
@@ -101,6 +103,9 @@ function test_step_2_transform(data_R, data_julia)
         @test isequal(data_julia[:data_transformed][:, Not(:Tfactor)], RCall.rcopy(R"data_R$data_transformed |> dplyr::select(- Tfactor)"))
         @test data_julia_for_test == RCall.rcopy(R"data_R$data_transformed |> dplyr::pull(Tfactor)")
     end
+
+    JLD2.@save joinpath(@__DIR__, "data", "output", "data_R.jld2") data_R;
+    JLD2.@save joinpath(@__DIR__, "data", "output", "data_julia.jld2") data_julia;
 
     return(data_R, data_julia)
 end
@@ -139,6 +144,9 @@ function test_step_3_filter(data_R, data_julia)
     @testset "Step 3: filtering" begin
         @test isequal(data_julia[:data_transformed][:, Not(:Tfactor)], RCall.rcopy(R"data_R$data_transformed |> dplyr::select(- Tfactor)"))
     end
+
+    JLD2.@save joinpath(@__DIR__, "data", "output", "data_R.jld2") data_R;
+    JLD2.@save joinpath(@__DIR__, "data", "output", "data_julia.jld2") data_julia;
 
     return(data_R, data_julia)
 
@@ -186,6 +194,9 @@ function test_step_4_calculate(data_R, data_julia)
         @test isapprox(data_julia[:res][:beta], RCall.rcopy(R"data_R$res$\"beta\""))
     end
 
+    JLD2.@save joinpath(@__DIR__, "data", "output", "data_R.jld2") data_R;
+    JLD2.@save joinpath(@__DIR__, "data", "output", "data_julia.jld2") data_julia;
+
     return(data_R, data_julia)
 
 end
@@ -216,6 +227,13 @@ function test_step_5_result(data_R, data_julia)
             RCall.rcopy(R"data_R$res")
         )
     end
+
+    RCall.rcopy(R"
+        base::saveRDS(
+            object = data_R,
+            file = file.path(getwd(), \"test\", \"data\", \"output\", \"data_R.rds\")
+        )")
+    JLD2.@save joinpath(@__DIR__, "data", "output", "data_julia.jld2") data_julia;
 
     return(data_R, data_julia)
 

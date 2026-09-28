@@ -15,90 +15,57 @@ function twowayfeweights_calculate(;
     type_fe = (type in ["feTR", "feS"])
 
     if type_TR
-        DVAR = type == "feTR" ? "D" : "D0"
-
-        # Here, the original R package uses the function weighted.mean, which specifies: 
-          # Missing values in w are not handled specially and give a missing value as the result.
-          # However, zero weights are handled specially and the corresponding x values are omitted from the sum.
-        # Also, I discovered this thread:
-        # https://discourse.julialang.org/t/re-weighted-statistics-with-missings/107502/20
-        # And this issue: 
-        # https://github.com/JuliaStats/Statistics.jl/issues/88
-        # This seems like a *major* issue?
-        # To reproduce the behavior of the original R package, I will define a function in the extra_utils file.
-        # mean_D = weighted_mean(x = dat[:, Symbol(DVAR)], w  = dat[:, :weights])
-        mean_D = weighted_mean(x = dat[:, Symbol(DVAR)], w  = dat[:, :weights])
+        DVAR = type == "feTR" ? :D : :D0
+        mean_D = weighted_mean(dat[:, DVAR], dat[:, :weights])
     end
 
     obs = sum(dat.weights)
-    gdat = DataFrames.combine(DataFrames.groupby(dat, [:G, :T]), :weights .=> (x->sum(x)) .=> :P_gt)
-    # minimum(gdat.P_gt) # only ones
-    # maximum(gdat.P_gt) # only ones
-
+    gdat = DataFrames.combine(
+        DataFrames.groupby(dat, [:G, :T]),
+        :weights .=> (x->sum(x)) .=> :P_gt
+    )
     dat = DataFrames.leftjoin(dat, gdat, on = [:G, :T])
     dat = DataFrames.transform(dat, :P_gt => (x -> x ./ obs) => :P_gt)
-    # mean(dat.P_gt) # 0.00026212319790301376
         
     if type_TR
-        dat = DataFrames.transform(dat, :P_gt => (x -> x .* (dat[:, Symbol(DVAR)] ./ mean_D)) => :nat_weight)
+        dat = DataFrames.transform(
+            dat, 
+            :P_gt => (x -> x .* (dat[:, DVAR] ./ mean_D)) => :nat_weight
+        )
     end
 
-    if (isnothing(controls))
-        controls = Any[ConstantTerm(1)]
-    end
+    # Denominator regression
 
-    fes = "Tfactor"
+    # Controls
+    controls_terms = isnothing(controls) ?
+        Term[] :
+        term.(Symbol.(controls))
 
-    if type_fe
-        fes = ["G", fes]
-    end
-  
-    # Add non-NULL treatment vars
-    if !isnothing(treatments)
-        xvars = vcat(controls, treatments)
-    else
-        xvars = Any[ConstantTerm(1)]
-    end
+    # Treatments
+    treatment_terms = isnothing(treatments) ?
+        Term[] :
+        term.(Symbol.(treatments))
+
+    # RHS: controls + treatments
+    rhs_terms = vcat(controls_terms, treatment_terms)
+
+    # Fixed effects
+    fe_names = type_fe ? [:G, :Tfactor] : [:Tfactor]
+    fe_terms = fe.(term.(fe_names))
+
+    # Construct RHS
+    rhs = isempty(rhs_terms) ? ConstantTerm(1) : sum(rhs_terms)
+
+    # Add fixed effects as part of the RHS
+    fml = term(:D) ~ rhs + sum(fe_terms)
+
 
     if type == "fdS"
-        
         dat_regression = dat[dat[:, :weights] .!= 0,:]
-
-        # regressors in xvar
-        rhs_terms = map(xvars) do x
-            x == "1" ? ConstantTerm(1) : term(Symbol(x))
-        end
-
-        if length(xvars) == 1
-            rhs = rhs_terms
-        else
-            rhs = foldl(+, rhs_terms)
-        end
-        
-        # fixed effects
-        fes_vec = isa(fes, AbstractString) ? [fes] : fes
-        fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
-        
-        # full formula
-        if rhs == [term(Symbol(1))]
-            ff = term(:D) ~ ConstantTerm(1) + fe_terms
-        else
-            ff = term(:D) ~ rhs + fe_terms
-        end
-
-        # dat_regression.Tfactor = collect(unwrap.(dat_regression.Tfactor))
-        
-        denom_lm = FixedEffectModels.reg(dat_regression, ff, weights = :weights, save = :all)
-
-        # After comparing some regression results, seems to not be the problem with type = "fdS".
-        # Julia:    0.00671763300530237
-        # R:        0.006717633005233869525341
-
-        # Original regression in R:
-        # denom.lm = feols(D ~ .[xvars] | .[fes], data = subset(dat, weights!=0), weights = dat$weights)
+        denom_lm = FixedEffectModels.reg(dat_regression, fml, weights = :weights, save = :all)
     else 
 
-        # regressors in xvars
+        # Earlier version:
         rhs_terms = map(xvars) do x
             x == "1" ? ConstantTerm(1) : term(Symbol(x))
         end
@@ -143,7 +110,8 @@ function twowayfeweights_calculate(;
         dat[:, "eps_1_E_D_gt"] = dat[:, Symbol(EPS_VAR)] .* dat[:, Symbol(DVAR)]
     
         if isnothing(treatments)
-            denom_W = weighted_mean(x = dat[:, :eps_1_E_D_gt], w = dat[:, :weights])
+            # denom_W = weighted_mean(x = dat[:, :eps_1_E_D_gt], w = dat[:, :weights])
+            denom_W = weighted_mean(dat[:, :eps_1_E_D_gt], dat[:, :weights])
         else
             denom_W = mean(skipmissing(dat[:, :eps_1_E_D_gt]))
         end
@@ -274,7 +242,8 @@ function twowayfeweights_calculate(;
             [:w_tilde_2, :D0] => ((x, y) -> x .* y) => :w_tilde_2_E_D_gt
         )
 
-        denom_W = weighted_mean(x = dat.w_tilde_2_E_D_gt, w = dat.P_gt)
+        # denom_W = weighted_mean(x = dat.w_tilde_2_E_D_gt, w = dat.P_gt)
+        denom_W = weighted_mean(dat.w_tilde_2_E_D_gt, dat.P_gt)
         DataFrames.transform!(
             dat,
             :w_tilde_2 => (x -> (x .* mean_D ./ denom_W)) => :W
@@ -328,7 +297,8 @@ function twowayfeweights_calculate(;
         DataFrames.transform!(dat, [:nat_weight, :P_S] => ((x, y) -> x ./ y) => :nat_weight)
         DataFrames.transform!(dat, [:s_gt, :E_eps_1_g_ge, :P_gt] => ((x, y, z) -> x .* y ./ z) => :om_tilde_1)
  
-        denom_W = weighted_mean(x = dat.om_tilde_1, w = dat.nat_weight)
+        # denom_W = weighted_mean(x = dat.om_tilde_1, w = dat.nat_weight)
+        denom_W = weighted_mean(dat.om_tilde_1, dat.nat_weight)
 
         DataFrames.transform!(dat, :om_tilde_1 => (x -> x ./ denom_W) => :W)
         DataFrames.transform!(dat, [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result)
@@ -382,7 +352,8 @@ function twowayfeweights_calculate(;
         # Julia:  0.059266776485865785
         # R:      0.05926677648586579222334
         
-        denom_W = weighted_mean(x = dat.W, w = dat.nat_weight)
+        # denom_W = weighted_mean(x = dat.W, w = dat.nat_weight)
+        denom_W = weighted_mean(dat.W, dat.nat_weight)
         # Julia:  0.9916787381297281
         # R:      0.9916787381297236247946
 

@@ -1,54 +1,52 @@
-# Initialisation : 
-url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Wolfers%202006/wolfers2006_didtextbook.dta"
-RCall.@rput url
-RCall.rcopy(R"data = haven::read_dta(url)")
-data = RCall.rcopy(R"data")
+function stepwise_test_1()
 
-data_julia = Dict(
-    :data                   => data,
-    :Y                      => "div_rate",
-    :G                      => "state",
-    :T                      => "year",
-    :D                      => "rel_time1",
-    :type                   => "feTR",
-    :D0                     => nothing,
-    :summary_measures       => true,
-    :controls               => ["rel_timeminus$(i)" for i in 1:9],
-    :weights                => data[!, :stpop],
-    :other_treatments       => ["rel_time$(i)" for i in 2:16],
-    :test_random_weights    => "year",
-    :path                   => nothing,
-)
+    # Initialisation :
+    url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Wolfers%202006/wolfers2006_didtextbook.dta"
+    RCall.@rput url
+    RCall.rcopy(R"data = haven::read_dta(url)")
+    data = RCall.rcopy(R"data")
 
-RCall.rcopy(R"
-    data_R = list(
-        data                   = data,
-        Y                      = \"div_rate\",
-        G                      = \"state\",
-        T                      = \"year\",
-        D                      = \"rel_time1\",
-        type                   = \"feTR\",
-        D0                     = NULL,
-        summary_measures       = TRUE,
-        controls               = paste0(\"rel_timeminus\", 1:9),
-        weights                = data$\"stpop\",
-        other_treatments       = paste0(\"rel_time\", 2:16),
-        test_random_weights    = \"year\",
-        path                   = NULL
+    data_julia = Dict(
+        :data                   => data,
+        :Y                      => "div_rate",
+        :G                      => "state",
+        :T                      => "year",
+        :D                      => "rel_time1",
+        :type                   => "feTR",
+        :D0                     => nothing,
+        :summary_measures       => true,
+        :controls               => ["rel_timeminus$(i)" for i in 1:9],
+        :weights                => data[!, :stpop],
+        :other_treatments       => ["rel_time$(i)" for i in 2:16],
+        :test_random_weights    => "year",
+        :path                   => nothing,
     )
-")
-data_R = RCall.rcopy(R"data_R")
 
-data_R, data_julia = test_step_1_renaming(data_R, data_julia);
-data_R, data_julia = test_step_2_transform(data_R, data_julia);
-data_R, data_julia = test_step_3_filter(data_R, data_julia);
-data_R, data_julia = test_step_4_calculate(data_R, data_julia); # dat is different, but approximately the same.
+    RCall.rcopy(R"
+        data_R = list(
+            data                   = data,
+            Y                      = \"div_rate\",
+            G                      = \"state\",
+            T                      = \"year\",
+            D                      = \"rel_time1\",
+            type                   = \"feTR\",
+            D0                     = NULL,
+            summary_measures       = TRUE,
+            controls               = paste0(\"rel_timeminus\", 1:9),
+            weights                = data$\"stpop\",
+            other_treatments       = paste0(\"rel_time\", 2:16),
+            test_random_weights    = \"year\",
+            path                   = NULL
+        )
+    ")
+    data_R = RCall.rcopy(R"data_R")
 
-# data_julia = JLD2.load(joinpath(@__DIR__, "data", "output", "data_julia_4.jld2"))["data_julia"]
-# data_R = RCall.rcopy(R"base::readRDS(file.path('/Users/paulogcd/twowayfeweights.jl/test', 'data', 'output', 'data_R_4.rds'))")
-# dat             = data_julia[:res][:dat];
-# beta            = data_julia[:res][:beta];
-# random_weights  = data_julia[:random_weight_rename];
-# treatments      = data_julia[:treatments_rename];
-
-data_R, data_julia = test_step_5_result(data_R, data_julia);
+    Test.@testset "Stepwise official test 2" begin
+        data_R, data_julia = test_step_1_renaming(data_R, data_julia);
+        data_R, data_julia = test_step_2_transform(data_R, data_julia);
+        data_R, data_julia = test_step_3_filter(data_R, data_julia);
+        data_R, data_julia = test_step_4_calculate(data_R, data_julia); # dat is different, but approximately the same.
+        data_R, data_julia = test_step_5_result(data_R, data_julia);
+    end
+end;
+stepwise_test_1();

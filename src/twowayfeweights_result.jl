@@ -52,7 +52,7 @@ function twowayfeweights_result(;
             
             dat_sens = dat[dat[: , :weight_result] .!= 0, :]
             DataFrames.sort!(dat_sens, [:W, :G, :T], rev = [false, true, true])
-            dat_sens.Wsq = dat_sens.nat_weight * (dat_sens.W .^ 2)
+            dat_sens.Wsq = dat_sens.nat_weight .* (dat_sens.W .^ 2)
             dat_sens.P_k .= cumsum(dat_sens.nat_weight)
             dat_sens.S_k .= cumsum(dat_sens.weight_result)
             dat_sens.T_k .= cumsum(dat_sens.Wsq)

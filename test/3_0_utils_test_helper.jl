@@ -130,6 +130,6 @@ function compare_df(df1, df2; atol=1e-8, rtol=1e-8)
             end
         end
     end
-
+    
     return nothing
 end

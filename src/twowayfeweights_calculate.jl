@@ -63,29 +63,7 @@ function twowayfeweights_calculate(;
         dat_regression = dat[dat[:, :weights] .!= 0,:]
         denom_lm = FixedEffectModels.reg(dat_regression, fml, weights = :weights, save = :all)
     else 
-
         denom_lm = FixedEffectModels.reg(dat, fml, weights = :weights, save = :all)
-
-        # Earlier version:
-        # rhs_terms = map(xvars) do x
-        #     x == "1" ? ConstantTerm(1) : term(Symbol(x))
-        # end
-        # if length(xvars) == 1
-        #     rhs = rhs_terms
-        # else
-        #     rhs = foldl(+, rhs_terms)
-        # end
-        # # fixed effects
-        # fes_vec = isa(fes, AbstractString) ? [fes] : fes
-        # fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
-        # # full formula
-        # if rhs == [term(Symbol(1))]
-        #     ff = term(:D) ~ ConstantTerm(1) + fe_terms
-        # else
-        #     ff = term(:D) ~ rhs + fe_terms
-        # end
-        # denom_lm = reg(dat, ff, weights = :weights, save = :residuals)
-    
     end
 
     EPS_VAR = type_fe ? "eps_1" : "eps_2"
@@ -108,7 +86,7 @@ function twowayfeweights_calculate(;
     else
         beta_lm = FixedEffectModels.reg(dat, fml_beta, weights = :weights)
     end
-    beta = coef(beta_lm)[coefnames(beta_lm) .== "D"]
+    beta = coef(beta_lm)[coefnames(beta_lm) .== "D"][1]
 
     # Type-specific weight calculations
 
@@ -118,10 +96,8 @@ function twowayfeweights_calculate(;
         D_vec = dat[!, DVAR]
         denom_W = weighted_mean(eps_vec .* D_vec, dat[!, :weights])
     
-        DataFrames.transform!(
-            dat,
-            EPS_VAR => ((x) -> x * mean_D / denom_W) => :W
-        )
+        DataFrames.transform!(dat, EPS_VAR => ((x) -> x .* mean_D / denom_W) => :W)
+        DataFrames.transform!(dat, [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result)
 
         if !isnothing(treatments)
             for treatment in vcat(treatments)
@@ -156,218 +132,76 @@ function twowayfeweights_calculate(;
 
     # Post-beta calculations per type
 
-    # New regression
-    # push!(xvars, Term(Symbol("D")))
-    xvars = vcat(xvars, Term(Symbol("D")))
-
-    if type == "fdS"
-        
-        dat_regression = dat[dat[:, :weights] .!= 0, :]
-
-        # Regressors in xvars
-        rhs = foldl(+, xvars)
-
-        # fixed effects
-        fes_vec = isa(fes, AbstractString) ? [fes] : fes
-        fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
-        
-        # full formula
-        ff = term(:Y) ~ rhs + fe_terms
-
-        beta_lm = FixedEffectModels.reg(dat_regression, ff, weights = :weights, save = :all)
-        # In Julia: 0.060095972248468944
-        # In R:     0.06009597224846937452147
-
-        # The original regression was: 
-        # beta.lm = feols(Y ~ .[xvars] | .[fes], data = subset(dat, weights != 0), weights = dat$weights, only.coef = TRUE)
-
-    else
-        
-        rhs_terms = map(xvars) do x
-            x == ConstantTerm(1) ? ConstantTerm(1) : term(Symbol(x))
-        end
-        rhs = foldl(+, rhs_terms)
-
-        # fixed effects
-        fes_vec = isa(fes, AbstractString) ? [fes] : fes
-        fe_terms = foldl(+, fe.(term.(Symbol.(fes_vec))))
-        
-        # full formula
-        ff = term(:Y) ~ rhs + fe_terms
-
-        beta_lm = reg(dat, ff, weights = :weights, save = :residuals)
-    end
-    
-    # Is there a better way to select the beta of the D variable?
-    beta = only(coef(beta_lm)[coefnames(beta_lm) .== "D"])
-    
-    if type == "feTR"
-        # Original comment:
-        # * Keeping only one observation in each group * period cell
-        # This should be done after this function
-        # bys `group' `time': gen group_period_unit=(_n==1)	
-        # 	drop if group_period_unit==0
-        # 	drop group_period_unit
-        gdat = DataFrames.groupby(dat, [:G, :Tfactor])
-        dat = combine(gdat) do sdf
-            sdf[argmin(sdf.D), :] # This seems off, as we are already using a dataframe with only one observation per G * T
-        end
-        # gdat = groupby(dat, [:G, :Tfactor])
-        # dat = combine(gdat) do sdf
-        #     sdf[1, :]
-        # end
-        # dat = combine(groupby(dat, [:G, :Tfactor]), first)
-
-
-    elseif type == "fdTR"
-        
-        dat = DataFrames.sort(dat, [:G, :TFactorNum])
-        gdat = DataFrames.groupby(dat, [:G])
-        
-        DataFrames.transform!(
-            dat,
-            [:TFactorNum, :eps_2, :P_gt] => ((x, y, z) -> (ifelse.(ifelse.(ismissing.(x .+ 1 .== lead(x)), false, x .+ 1 .== lead(x)), (y - lead(y) .* lead(z) ./ z), missing))) => :w_tilde_2
-        )
+    if type == "fdTR"
+        DataFrames.sort!(dat, [:G, :TfactorNum])
+        g_int = Int.(dat[!, :G])
+        # To implement
+        w_tilde_2 = fdtr_wtilde2(
+            d_int,
+            dat[!, :TFactorNum],
+            eps_2 = dat[!, :eps_2],
+            P_gt = dat[!, :P_gt])
+        dat[:, :w_tilde_2] .= w_tilde_2
 
         DataFrames.transform!(
             dat,
-            [:w_tilde_2, :eps_2] =>
-                ((x, y) -> map((a, b) -> (!ismissing(a) && isfinite(a)) ? a : b, x, y)) =>
-                :w_tilde_2
-        )
-
-        DataFrames.transform!(
-            dat,
-            [:w_tilde_2, :D0] => ((x, y) -> x .* y) => :w_tilde_2_E_D_gt
-        )
-
-        # denom_W = weighted_mean(x = dat.w_tilde_2_E_D_gt, w = dat.P_gt)
+            [:w_tilde_2 :D0] => ((x, y) -> x .* y) => :w_tilde_2_E_D_gt)
         denom_W = weighted_mean(dat.w_tilde_2_E_D_gt, dat.P_gt)
-        DataFrames.transform!(
-            dat,
-            :w_tilde_2 => (x -> (x .* mean_D ./ denom_W)) => :W
-        )
-        DataFrames.transform!(
-            dat,
-            [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result)
-    
-        dat = dat[:, Not(:eps_2, :P_gt, :w_tilde_2, :w_tilde_2_E_D_gt)]
+        DataFrames.transform!(dat, [:w_tilde_2, :mean_D] => ((x, y) -> x .* y / denom_W) => :W)
+        DataFrames.transform!(dat, [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result)
+
+        # Cleanup
+        dat = dat[:, Not(:eps_2, :P_gt, :w_tilde_2, :w_tilde_2_ED_gt)]
     
     elseif type == "feS"
 
-        # To test with a dataframe that supports the operation, with the correct columns.
-        # Also, re-write so that it uses transform(groupby.., col1, col2, etc...)
-
-        dat = DataFrames.sort(dat, [:G, :Tfactor])
-        gdat = DataFrames.groupby(dat, [:G])
-        
-        DataFrames.transform!(gdat,
-            [:TFactorNum, :D] =>
-                ((t, d) ->
-                    ifelse.(
-                        coalesce.(t .- 1 .== ShiftedArrays.lag(t), false), # Make the TFactorNum correct to test this.
-                        d .- ShiftedArrays.lag(d),
-                        missing
-                    )
-                ) => :delta_D,
-        )
+        DataFrames.sort!(dat, [:G, :TfactorNum])
+        g_int = Int.(dat[!, :G])
+        # To implement
+        delta_res = feS_delta(g_int, dat[!, :TFactorNum], dat[!, :D], P_gt = dat[!, :P_gt])
         
         # Here are some notes for future references: 
         # DataFrames.filter((x -> !ismissing(x.delta_D)), gdat) # Runs, but does not eliminate the missing values rows.
         # This is because the !ismissing function runs on groups, and not on rows.
-        # We can just change the underlying dat dataframe, s.t.:        
-        dropmissing!(dat, :delta_D)
+        # We can just change the underlying dat dataframe, s.t.:
+        # dropmissing!(dat, :delta_D)
+        keep    = delta_res[!, :keep]
+        dat     = dat[!, keep]
+        delta_D         = delta_res[keep, :delta_D]
+        s_gt            = delta_res[keep, :s_gt]
+        abs_delta_D     = delta_res[keep, :abs_delta_D]
+        nat_w           = delta_res[keep, :nat_weight]
 
-        # dat = gdat[(.!ismissing.(gdat.delta_D)), :]
-        DataFrames.transform!(dat, :delta_D => (x -> abs.(x)) => :abs_delta_D)
-        # dat.abs_delta_D = abs.(dat.delta_D)
+        delta_res[!, :delta_D]      = delta_D
+        delta_res[!, :s_gt]         = s_gt
+        delta_res[!, :abs_delta_D]  = abs_delta_D
+        delta_res[!, :nat_w]        = nat_w
         
-        # The dplyr::case_when function can be replicated using the ternary syntax, mentioned here: 
-        # https://bkamins.github.io/julialang/2020/12/18/casewhen.html
-        # For the whole thread, see: 
-        # https://discourse.julialang.org/t/case-when-style-operation-on-dataframes/63414/7
-        # One could also think of the ifelse solution proposed by Nils HG.
-        # In fact, refer to: 
-        # https://discourse.julialang.org/t/ternary-operator-on-a-dataframe/102798/8
-        dat.s_gt = ifelse.(dat.delta_D .> 0, 1, ifelse.(dat.delta_D .< 0, -1, 0))
-        dat.nat_weight = dat.P_gt .* dat.abs_delta_D
-        
-        dat.P_S .= sum(dat.nat_weight)
+        P_S = sum(skipmissing(nat_w))        
         DataFrames.transform!(dat, [:nat_weight, :P_S] => ((x, y) -> x ./ y) => :nat_weight)
         DataFrames.transform!(dat, [:s_gt, :E_eps_1_g_ge, :P_gt] => ((x, y, z) -> x .* y ./ z) => :om_tilde_1)
- 
-        # denom_W = weighted_mean(x = dat.om_tilde_1, w = dat.nat_weight)
-        denom_W = weighted_mean(dat.om_tilde_1, dat.nat_weight)
 
+        denom_W = weighted_mean(dat.om_tilde_1, dat.nat_weight)
         DataFrames.transform!(dat, :om_tilde_1 => (x -> x ./ denom_W) => :W)
         DataFrames.transform!(dat, [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result)
 
-        dat = dat[:, Not(:eps_1, :P_gt, :om_tilde_1, :E_eps_1_g_ge, :E_eps_1_g_ge_aux, :weights_aux, :abs_delta_D, :delta_D)]
+        dat = dat[:, Not(:eps_1, :P_gt, :om_tilde_1, :E_eps_1_g_ge, :abs_delta_D, :delta_D)]
     
     elseif type =="fdS"
 
-        DataFrames.transform!(
-            dat, 
-            :D => (x -> ifelse.(x .> 0, 1, ifelse.(x .< 0, -1, 0))) => :s_gt,
-        )
-        # mean(dat.s_gt)
-        # Julia: 0.0015727391874180866
-        # R: 0.001572739187417914819359
-
-        DataFrames.transform!(
-            dat, :D => (x -> abs.(x)) => :abs_delta_D
-        )
-        # mean(dat.abs_delta_D) 
-        # Julia:    0.05976409f0
-        # R:        0.05976408912188731908932
-
-        DataFrames.transform!(
-            dat,
-            [:P_gt, :abs_delta_D] => ((x, y) -> x .* y) => :nat_weight
-        )
-        # mean(dat.nat_weight)
-        # Julia:    1.566555416038985e-5
-        # R:        1.566555416038984790603e-05
+        DataFrames.transform!(dat, :D => (x -> ifelse.(x .> 0, 1, ifelse.(x .< 0, -1, 0))) => :s_gt)
+        DataFrames.transform!(dat, :D => (x -> abs.(x)) => :abs_delta_D)
+        DataFrames.transform!(dat, [:P_gt, :abs_delta_D] => ((x, y) -> x .* y) => :nat_weight)
     
         P_S = sum(dat.nat_weight)
-        # Julia:    0.059764089121887284
-        # R:        0.05976408912188742317273
-    
-        DataFrames.transform!(
-            dat,
-            :nat_weight => (x -> x ./ P_S) => :nat_weight,
-        )
-        # mean(dat.nat_weight)
-        # Julia:  0.0002621231979030144
-        # R:      0.0002621231979030134323118
-
-        # dat.nat_weight
-
-        DataFrames.transform!(
-            dat,    
-            [:s_gt, :eps_2] => ((x, y) -> x .* y) => :W
-        )
-        # mean(dat.W)
-        # Julia:  0.059266776485865785
-        # R:      0.05926677648586579222334
         
-        # denom_W = weighted_mean(x = dat.W, w = dat.nat_weight)
+        DataFrames.transform!(dat, :nat_weight => (x -> x ./ P_S) => :nat_weight)
+        DataFrames.transform!(dat, [:s_gt, :eps_2] => ((x, y) -> x .* y) => :W)
+        
         denom_W = weighted_mean(dat.W, dat.nat_weight)
-        # Julia:  0.9916787381297281
-        # R:      0.9916787381297236247946
 
-        DataFrames.transform!(
-            dat,
-            :W => (x -> x ./ denom_W) => :W
-        )
-
-        DataFrames.transform!(
-            dat,
-            [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result
-        )
-        # mean(dat.weight_result)
-        # 0.0002599420021309903
-        # 0.0002621231979030147333544
+        DataFrames.transform!(dat, :W => (x -> x ./ denom_W) => :W)
+        DataFrames.transform!(dat, [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result)
 
         dat = dat[:, Not(:eps_2, :P_gt, :abs_delta_D)]
     end
@@ -376,7 +210,6 @@ function twowayfeweights_calculate(;
     main_columns = ["Y", "G", "T", "D"]
     other_columns = filter(c -> c ∉ main_columns, names(dat))
     dat = dat[:, vcat(main_columns, other_columns)]
-    # dat = dat[:, Not(:eps_1_E_D_gt)]
 
     return OrderedCollections.OrderedDict(:dat => dat, :beta => beta)
 

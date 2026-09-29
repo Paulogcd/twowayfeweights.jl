@@ -15,27 +15,25 @@ Internal workhorse function for creating the return object of a
 @noRd
 """
 function twowayfeweights_result(;
-    dat,
-    beta,
+    dat::DataFrames.DataFrame,
+    beta::Real,
     random_weights,
     treatments = nothing)
 
-    # Original comment:
-    # Two distinct cases/workflows:
-    #  1) No other treatments,
-    #  2) With other treatments
-  
+    limit_sensitivity = 1e-10
+
+    zero_below_eps = function(x)
+        ifelse.(.!ismissing.(x) .& (abs.(x) .< limit_sensitivity), 0, x)
+    end
+
+    dat[!, :weight_result] = zero_below_eps(dat[!, :weight_result])
+    
     if isnothing(treatments)
     
-        # Avoid overcounting of positive and negative weights close to 0
-        limit_sensitivity = 10^(-10)
-        dat.weight_result = ifelse.(dat.weight_result .< limit_sensitivity .&& dat.weight_result .> -limit_sensitivity, 0, dat.weight_result)
         ret = twowayfeweights_summarize_weights(df = dat, var_weight = "weight_result")
         
         W_mean = weighted_mean(dat.W, dat.nat_weight)
-        # Original comment: 
-        # Modif. Diego: DoF adjustment to the sd of w_gt
-        M           = sum((dat.nat_weight .!= 0)) # Number of non null values.
+        M           = sum(skipmissing(dat.nat_weight .!= 0))
         W_sd        = sqrt(sum(skipmissing(dat.nat_weight .* (dat.W .- W_mean).^2))) * sqrt(M/(M - 1)) # na.rm here
         sensibility = abs.(beta) ./ W_sd
         
@@ -47,38 +45,25 @@ function twowayfeweights_result(;
         ret[:sensibility] = sensibility
 
         if !isnothing(random_weights)
-        
-            # Previously
-            # ret[:mat] = twowayfeweights_test_random_weights(df = dat, random_weights = random_weights)
             ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights)
-        
         end
         
         if ret[:sum_minus] < 0
             
             dat_sens = dat[dat[: , :weight_result] .!= 0, :]
-            dat_sens = DataFrames.sort(dat_sens, [order(:W, rev = true)])
-            dat_sens.P_k .= 0
-            dat_sens.S_k .= 0
-            dat_sens.T_k .= 0
+            DataFrames.sort!(dat_sens, [:W, :G, :T], rev = [false, true, true])
+            dat_sens.Wsq = dat_sens.nat_weight * (dat_sens.W .^ 2)
+            dat_sens.P_k .= cumsum(dat_sens.nat_weight)
+            dat_sens.S_k .= cumsum(dat_sens.weight_result)
+            dat_sens.T_k .= cumsum(dat_sens.Wsq)
+            DataFrames.sort!(dat_sens, [:W, :G, :T], rev = [true, false, false])
 
-            # To do:
-            # # Modif. Diego: Replaced the previous two loops with build-in routines
             N = nrow(dat_sens)
-            dat_sens = DataFrames.sort(dat_sens, [order(:W), order(:G, rev = true), order(:T, rev = true)])
-            dat_sens.Wsq = dat_sens.nat_weight .* (dat_sens.W .^ 2)
-            dat_sens.P_k = cumsum(dat_sens.nat_weight)
-            dat_sens.S_k = cumsum(dat_sens.weight_result)
-            dat_sens.T_k = cumsum(dat_sens.Wsq)
-            
-            dat_sens = DataFrames.sort(dat_sens, [order(:W, rev = true), order(:G), order(:T)])
             dat_sens.sens_measure2 = (abs.(beta) ./ sqrt.(dat_sens.T_k + ((dat_sens.S_k.^2) ./ (1 .- dat_sens.P_k))))
-
-            dat_sens.indicator .= dat_sens.W .<  (.-(dat_sens.S_k)) ./ (1 .- dat_sens.P_k)
+            dat_sens.indicator .= dat_sens.W .<  (.-(dat_sens.S_k)) ./ (1 .- dat_sens.P_k) # Quel ordre ? Même priorité des opérations que dans R ?
             
             dat_sens.indicator[1] = 0
             dat_sens.indicator_l = lag(dat_sens.indicator, default = -1)
-            
             dat_sens.indicator .= max.(dat_sens.indicator, dat_sens.indicator_l)
 
             total_indicator = sum(dat_sens.indicator)
@@ -88,38 +73,30 @@ function twowayfeweights_result(;
 
         # Since, with one treatment, we could have either D or D0 as the main treatment, 
         # the row below computes the number of cells such that their treatment is different than 0
-        ret[:tot_cells] = sum(skipmissing(dat.nat_weight) .!= 0) # na.rm here
+        ret[:tot_cells] = sum(skipmissing(dat.nat_weight) .!= 0)
     
     else
-
-        limit_sensitivity = 10^(-10)
         
         for v in vcat("result", treatments)
-            # v = "result"
             if !isnothing(v)
-                dat[:, Symbol("weight_", v)] = ifelse.(dat[:, Symbol("weight_", v)] .< limit_sensitivity .&& dat[:, Symbol("weight_", v)] .> -limit_sensitivity, 0, dat[:, Symbol("weight_", v)])
+                dat[:, Symbol("weight_", v)] = zero_below_eps(dat[:, Symbol("weight_", v)])
             end
         end
-        # dat[:, :weight_OT_rel_time2]
 
         columns = ["T", "G", "weight_result"]
         ret = twowayfeweights_summarize_weights(df = dat, var_weight = "weight_result") # Error here, not all fields are included.
-        ret[:tot_cells] = sum((skipmissing(dat.nat_weight) .!= 0)) # na.rm here
+        ret[:tot_cells] = sum((skipmissing(dat.nat_weight) .!= 0))
         
         if !isnothing(random_weights)
-            # ret[:mat] = twowayfeweights_test_random_weights(df = dat, random_weights = random_weights)
             ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights)
         end
         
-        if !isnothing(treatments)
-            for treatment in treatments
-                # treatment = treatments[1]
-                varname = fn_treatment_weight_rename(treatment)
-                columns = vcat(columns, varname)
-                ret2 = twowayfeweights_summarize_weights(df = dat, var_weight = varname)
-                ret[Symbol(treatment)] = ret2
-                ret[Symbol(treatment)][:tot_cells] = sum(skipmissing(dat[:, Symbol(treatment)] .!= 0)) # na.rm here
-            end
+        for treatment in treatments
+            varname = fn_treatment_weight_rename(treatment)
+            columns = vcat(columns, varname)
+            ret2 = twowayfeweights_summarize_weights(df = dat, var_weight = varname)
+            ret[Symbol(treatment)] = ret2
+            ret[Symbol(treatment)][:tot_cells] = sum(skipmissing(dat[:, Symbol(treatment)] .!= 0))
         end
 
         dat_result = dat[:, columns]

@@ -6,12 +6,13 @@ using DataFrames
 using Downloads
 using OrderedCollections
 using JLD2
+using CSV
 
 Test.@testset "TwoWayFEWeights.jl" begin
 
     # Helper: 
     include(joinpath(@__DIR__, "3_0_utils_test_helper.jl"))
-    include(joinpath(@__DIR__, "3_1_test_helper_main.jl"))
+    include(joinpath(@__DIR__, "3_1_utils_test_stepwise.jl"))
     
     # Basic tests
     include(joinpath(@__DIR__, "print.jl"));
@@ -25,5 +26,8 @@ Test.@testset "TwoWayFEWeights.jl" begin
     # Final results tests
     include(joinpath(@__DIR__, "2_final_internal_test_wagepan.jl"));
     include(joinpath(@__DIR__, "./2_final_official_test.jl"));
+    
+    # Stepwise tests
+    include(joinpath(@__DIR__, "./3_final_stepwise_official_test.jl"));
 
 end;

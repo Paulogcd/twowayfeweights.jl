@@ -40,5 +40,5 @@ data_R = RCall.rcopy(R"data_R")
 data_R, data_julia = test_step_1_renaming(data_R, data_julia);
 data_R, data_julia = test_step_2_transform(data_R, data_julia);
 data_R, data_julia = test_step_3_filter(data_R, data_julia);
-data_R, data_julia = test_step_4_calculate(data_R, data_julia); # dat is different.
-data_R, data_julia = test_step_5_result(data_R, data_julia); 
+data_R, data_julia = test_step_4_calculate(data_R, data_julia);
+data_R, data_julia = test_step_5_result(data_R, data_julia);

@@ -42,8 +42,13 @@ data_R = RCall.rcopy(R"data_R")
 data_R, data_julia = test_step_1_renaming(data_R, data_julia);
 data_R, data_julia = test_step_2_transform(data_R, data_julia);
 data_R, data_julia = test_step_3_filter(data_R, data_julia);
+data_R, data_julia = test_step_4_calculate(data_R, data_julia); # dat is different, but approximately the same.
 
-data_julia = JLD2.load(joinpath(@__DIR__, "data", "output", "data_julia.jld2"))["data_julia"]
+# data_julia = JLD2.load(joinpath(@__DIR__, "data", "output", "data_julia_4.jld2"))["data_julia"]
+# data_R = RCall.rcopy(R"base::readRDS(file.path('/Users/paulogcd/twowayfeweights.jl/test', 'data', 'output', 'data_R_4.rds'))")
+# dat             = data_julia[:res][:dat];
+# beta            = data_julia[:res][:beta];
+# random_weights  = data_julia[:random_weight_rename];
+# treatments      = data_julia[:treatments_rename];
 
-data_R, data_julia = test_step_4_calculate(data_R, data_julia); # dat is different.
-data_R, data_julia = test_step_5_result(data_R, data_julia); 
+data_R, data_julia = test_step_5_result(data_R, data_julia);

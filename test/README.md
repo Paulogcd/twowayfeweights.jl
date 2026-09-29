@@ -40,7 +40,7 @@ In R, we can indeed load the data as:
 ```
     # Load the whole list:
     data_R <- base::readRDS(
-        file = file.path("/", "Users", "paulogcd", "twowayfeweights.jl", "test", "data", "output", "data_R.rds"))
+        file = file.path("/", "Users", "paulogcd", "twowayfeweights.jl", "test", "data", "output", "data_R_4.rds"))
     
     # And then each item of data_R:
     dt <- data_R$data_filtered

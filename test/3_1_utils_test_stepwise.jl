@@ -34,15 +34,15 @@ function test_step_1_renaming(data_R, data_julia)
     # R:
     RCall.rcopy(R"
         for (v in c(
-            data_R$data$Y,
-            data_R$data$G, 
-            data_R$data$T, 
-            data_R$data$D, 
-            data_R$data$D0)) {
+            data_R$Y,
+            data_R$G, 
+            data_R$T, 
+            data_R$D, 
+            data_R$D0)) {
             if (!inherits(data_R$data[[v]], \"numeric\")){
                 data_R$data[[v]] <- as.numeric(data_R$data[[v]])
             }
-        }    
+        }
         data_R$\"controls_rename\" = TwoWayFEWeights:::get_controls_rename(data_R$\"controls\")
         data_R$\"treatments_rename\" = TwoWayFEWeights:::get_treatments_rename(data_R$\"other_treatments\")
         data_R$\"random_weight_rename\" = TwoWayFEWeights:::get_random_weight_rename(data_R$\"test_random_weights\")
@@ -216,7 +216,7 @@ function test_step_5_result(data_R, data_julia)
 
     RCall.@rput data_R
 
-    data_julia[:res] = TwoWayFEWeights.twowayfeweights_result(
+    data_julia[:result] = TwoWayFEWeights.twowayfeweights_result(
         dat             = data_julia[:res][:dat],
         beta            = data_julia[:res][:beta],
         random_weights  = data_julia[:random_weight_rename],
@@ -224,7 +224,7 @@ function test_step_5_result(data_R, data_julia)
     )
     
     RCall.rcopy(R"
-        data_R$res = TwoWayFEWeights:::twowayfeweights_result(
+        data_R$result = TwoWayFEWeights:::twowayfeweights_result(
             dat            = data_R$res$dat,
             beta           = data_R$res$beta,
             random_weights = data_R$random_weight_rename,
@@ -232,58 +232,62 @@ function test_step_5_result(data_R, data_julia)
         )
     ")
 
+    data_R = RCall.rcopy(R"data_R")
+
     save_test_data(data_R, data_julia, "5")
 
     @testset "Step 5: results" begin
         Test.@test length(data_R) == length(data_julia)
-        for k in string.(keys(data_julia[:res]))
+        for k in string.(keys(data_julia[:result]))
             RCall.@rput k
-            if data_julia[:res][Symbol(k)] isa OrderedCollections.OrderedDict
-                for kk in string.(keys(data_julia[:res][Symbol(k)]))
+            if data_julia[:result][Symbol(k)] isa OrderedCollections.OrderedDict
+                for kk in string.(keys(data_julia[:result][Symbol(k)]))
                     RCall.@rput kk
                     result = isequal(
-                        data_julia[:res][Symbol(k)][Symbol(kk)],
-                        RCall.rcopy(R"data_R$res[[k]][[kk]]")
+                        data_julia[:result][Symbol(k)][Symbol(kk)],
+                        RCall.rcopy(R"data_R$result[[k]][[kk]]")
                     )
                     result_approx = isapprox(
-                        data_julia[:res][Symbol(k)][Symbol(kk)],
-                        RCall.rcopy(R"data_R$res[[k]][[kk]]");
+                        data_julia[:result][Symbol(k)][Symbol(kk)],
+                        RCall.rcopy(R"data_R$result[[k]][[kk]]");
                         atol = 1e-4
                     )
-                    print(k, " - ", kk, " - ", result, " - ", result_approx, "\n")
+                    # print(k, " - ", kk, " - ", result, " - ", result_approx, "\n")
                     Test.@test result_approx
                 end
-            elseif data_julia[:res][Symbol(k)] isa DataFrames.DataFrame
-                obj = data_julia[:res][Symbol(k)]
-                RCall.rcopy(R"obj <- data_R$res[[k]]")
+            elseif data_julia[:result][Symbol(k)] isa DataFrames.DataFrame
+                obj = data_julia[:result][Symbol(k)]
+                RCall.rcopy(R"obj <- data_R$result[[k]]")
+                @test names(obj) == RCall.rcopy(R"names(obj)")
                 for col in names(obj)
                     RCall.@rput col
                     result = isequal(
-                        obj[!, col][1],
-                        RCall.rcopy(R"obj")
+                        obj[!, col],
+                        RCall.rcopy(R"obj[, col]")
                     )
                     result_approx = isapprox(
-                        obj[!, col][1],
-                        RCall.rcopy(R"data_R$res[[k]][, col]");
+                        length(obj[!, col]) == 1  ? obj[!, col][1] : obj[!, col], # For 1-lined Dataframe.
+                        RCall.rcopy(R"obj[, col]");
                         atol = 1e-3
                     )
+                    # print(k, " - ", col, " - ", result, " - ", result_approx, "\n")
                     @test result_approx
                 end
             else
                 result = isequal(
-                    data_julia[:res][Symbol(k)],
-                    RCall.rcopy(R"data_R$res[[k]]")
+                    data_julia[:result][Symbol(k)],
+                    RCall.rcopy(R"data_R$result[[k]]")
                 )
                 result_approx = isapprox(
-                    data_julia[:res][Symbol(k)],
-                    RCall.rcopy(R"data_R$res[[k]]");
+                    data_julia[:result][Symbol(k)],
+                    RCall.rcopy(R"data_R$result[[k]]");
                     atol = 1e-4
                 )
-                print(k, " - ", result, " - ", result_approx, "\n")
+                # print(k, " - ", result, " - ", result_approx, "\n")
                 Test.@test result_approx
             end
         end;
-        Test.@test isapprox.(data_julia[:res][:beta], RCall.rcopy(R"data_R$res$\"beta\""))
+        Test.@test isapprox.(data_julia[:result][:beta], RCall.rcopy(R"data_R$result$\"beta\""))
         Test.@test length(data_R) == length(data_julia)
     end;
 

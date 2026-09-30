@@ -54,17 +54,16 @@ Test.@testset "final_internal_test.jl" begin
         Test.@test julia_resultat[:random_weights]      == R_resultat[:random_weights]
     end;
 
-
     Test.@testset "feS" begin 
         
         julia_resultat = twowayfeweights(
-            data = wagepan,
-            Y = "lwage",
-            G = "nr",
-            T = "year",
-            D = "union",
-            type = "feS",
-            summary_measures = true,
+            data                = wagepan,
+            Y                   = "lwage",
+            G                   = "nr",
+            T                   = "year",
+            D                   = "union",
+            type                = "feS",
+            summary_measures    = true,
             test_random_weights = "educ")
         
         R_resultat = RCall.rcopy(R"TwoWayFEWeights::twowayfeweights(
@@ -99,15 +98,15 @@ Test.@testset "final_internal_test.jl" begin
     Test.@testset "fdTR" begin
         
         julia_resultat = twowayfeweights(
-                data = wagepan,
-                Y = "diff_lwage",
-                G = "nr",
-                T = "year",
-                D = "diff_union", # use differenced versions of Y and D
-                type                = "fdTR",             # changed
-                D0                  = "union",            # added (req'd arg for fdTR type)
-                summary_measures    = true,
-                test_random_weights = "educ")
+            data                = wagepan,
+            Y                   = "diff_lwage",
+            G                   = "nr",
+            T                   = "year",
+            D                   = "diff_union",
+            type                = "fdTR",
+            D0                  = "union", 
+            summary_measures    = true,
+            test_random_weights = "educ")
 
         R_resultat = RCall.rcopy(R"TwoWayFEWeights::twowayfeweights(
                 wagepan,                        # input data

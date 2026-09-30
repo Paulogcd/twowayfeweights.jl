@@ -6,7 +6,7 @@ function save_test_data(data_R::OrderedCollections.OrderedDict, data_julia::Dict
     RCall.rcopy(R"
         base::saveRDS(
             object = data_R,
-            file = file.path(getwd(), \"test\", \"data\", \"output\", paste0(\"data_R_\", step, \".rds\"))
+            file = file.path(getwd(), \"data\", \"output\", paste0(\"data_R_\", step, \".rds\"))
         )")
     JLD2.@save joinpath(@__DIR__, "data", "output", string("data_julia_", step, ".jld2")) data_julia;
 end

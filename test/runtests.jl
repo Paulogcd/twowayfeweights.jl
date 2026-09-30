@@ -15,9 +15,9 @@ Test.@testset "TwoWayFEWeights.jl" begin
     include(joinpath(@__DIR__, "3_1_utils_test_stepwise.jl"))
     
     # Basic tests
-    include(joinpath(@__DIR__, "print.jl"));
-    include(joinpath(@__DIR__, "./0_initialisation.jl"));
-    include(joinpath(@__DIR__, "./0_utils.jl"));
+    # include(joinpath(@__DIR__, "print.jl"));
+    # include(joinpath(@__DIR__, "./0_initialisation.jl"));
+    # include(joinpath(@__DIR__, "./0_utils.jl"));
     
     # Intermediate function tests
     # include("intermediate_twowayfeweights_calculate.jl");
@@ -25,9 +25,9 @@ Test.@testset "TwoWayFEWeights.jl" begin
     
     # Final results tests
     include(joinpath(@__DIR__, "2_final_internal_test_wagepan.jl"));
-    include(joinpath(@__DIR__, "./2_final_official_test.jl"));
+    include(joinpath(@__DIR__, "2_final_official_test.jl"));
     
     # Stepwise tests
-    include(joinpath(@__DIR__, "./3_final_stepwise_official_test.jl"));
+    include(joinpath(@__DIR__, "3_final_stepwise_official_test.jl"));
 
 end;

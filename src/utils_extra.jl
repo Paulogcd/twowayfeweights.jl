@@ -1,3 +1,11 @@
+function parse_float_or_missing(x)
+    try
+        parse(Float64, x)
+    catch
+        missing
+    end
+end
+
 function weighted_mean(x::Vector{T}, w::Vector{W})::Real where {T<:Union{Missing, Real}, W<:Union{Missing, Real}}
     x_length = length(x)
     if length(w) != x_length @error("weighted_mean: x and w must have equal length") end

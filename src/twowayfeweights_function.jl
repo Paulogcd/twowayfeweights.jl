@@ -134,6 +134,12 @@ function twowayfeweights(;
       @error("When the `other_treatments` argument is specified, you need to specify `type = 'feTR'` too.")
     end
 
+    for v in filter(!isnothing, [Y, G, T, D, D0])
+        if !(typeof(data[!, Symbol(v)]) <: AbstractVector{T} where {T <: Union{Missing, Real}})
+            data[!, Symbol(v)] .= parse_float_or_missing.(data[!, Symbol(v)])
+        end
+    end
+
     # We rename:
     controls_rename         = get_controls_rename(controls)
     treatments_rename       = get_treatments_rename(other_treatments)

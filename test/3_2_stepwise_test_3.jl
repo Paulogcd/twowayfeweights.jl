@@ -1,8 +1,9 @@
 function stepwise_test_3()
 
     Test.@testset "Stepwise official test 3" begin
+        
         # Initialisation : 
-        data = CSV.read(joinpath(@__DIR__,"data", "2_official_test_3_data_original.csv"), DataFrames.DataFrame)
+        data = CSV.read(joinpath(@__DIR__, "data", "2_official_test_3_data_original.csv"), DataFrames.DataFrame)
         RCall.@rput data
         RCall.rcopy(R"styr_cols <- paste0(\"styr_\", levels(factor(data$styr)))")
         styr_cols = RCall.rcopy(R"styr_cols")
@@ -17,9 +18,10 @@ function stepwise_test_3()
             type        = 'fdTR',
             controls    = styr_cols,
             other_treatments   = NULL,
-            summary_measures   = NULL,
+            summary_measures   = TRUE,
             path               = NULL,
-            test_random_weights = NULL
+            test_random_weights = NULL,
+            weights = NULL
         )")
 
         data_R = RCall.rcopy(R"data_R")
@@ -36,11 +38,13 @@ function stepwise_test_3()
             :other_treatments   => nothing,
             :summary_measures   => true,
             :path               => nothing,
-            :test_random_weights => nothing
+            :test_random_weights => nothing,
+            :weights => nothing
         )
 
         data_R == data_julia
         for k in string.(keys(data_R))
+            RCall.@rput k
             data_julia[Symbol(k)] == RCall.rcopy(R"data_R[[k]]")
         end
 

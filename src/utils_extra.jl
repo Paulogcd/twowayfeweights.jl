@@ -134,7 +134,80 @@ function fdtr_wtilde2(
     return out
 end
 
-function feS_delta(g::Vector{Int}, t::Vector{Float64}, D::Vector{Float64}, P_gt::Vector{Float64})::NamedTuple{(:delta_D, :s_gt, :abs_delta_D, :nat_weight, :keep),Tuple{Vector{Float64}, Vector{Int}, Vector{Float64}, Vector{Float64}, Vector{Bool}}}
+function fdtr_wtilde2(
+    g::Vector{G},
+    t::AbstractVector{T},
+    eps_2::AbstractVector{W},
+    P_gt::AbstractVector{X},
+)::Vector{Union{Missing, Float64}} where {
+    G <: Integer,
+    T <: Union{Missing, Real},
+    W <: Union{Missing, Real},
+    X <: Union{Missing, Real},
+}
+
+    n = length(g)
+
+    if length(t) != n || length(eps_2) != n || length(P_gt) != n
+        throw(ArgumentError(
+            "fdtr_wtilde2: all inputs must have equal length"
+        ))
+    end
+
+    out = Vector{Union{Missing, Float64}}(undef, n)
+
+    for i in 1:n
+        eps_i = eps_2[i]
+        val = NaN
+
+        # C++: (i + 1 < n) && (g[i + 1] == g[i])
+        has_next = i < n && g[i + 1] == g[i]
+
+        if has_next
+            t_i = t[i]
+            t_n = t[i + 1]
+            P_i = P_gt[i]
+            P_n = P_gt[i + 1]
+            e_n = eps_2[i + 1]
+
+            # Treat both missing and NaN as invalid, like R's NA handling.
+            if !ismissing(t_i) &&
+               !ismissing(t_n) &&
+               !isnan(t_i) &&
+               !isnan(t_n) &&
+               (t_i + 1.0 == t_n) &&
+               !ismissing(P_i) &&
+               !isnan(P_i) &&
+               P_i != 0.0 &&
+               !ismissing(P_n) &&
+               !isnan(P_n) &&
+               !ismissing(e_n) &&
+               !isnan(e_n) &&
+               !ismissing(eps_i) &&
+               !isnan(eps_i)
+
+                val = eps_i - e_n * (P_n / P_i)
+            end
+        end
+
+        # C++:
+        # if (is_na(val) || !isfinite(val)) val = eps_i;
+        #
+        # If eps_i is missing, this naturally preserves missing.
+        if isnan(val) || !isfinite(val)
+            val = eps_i
+        end
+
+        out[i] = val
+    end
+
+    return out
+end
+
+
+function feS_delta(
+    g::Vector{Int}, t::Vector{T}, D::Vector{W}, P_gt::Vector{X}
+    )::DataFrames.DataFrame where {T<:Real, W<:Real, X<:Real}
 
     n = length(g)
 
@@ -189,7 +262,7 @@ function feS_delta(g::Vector{Int}, t::Vector{Float64}, D::Vector{Float64}, P_gt:
         end
     end
 
-    return (
+    return DataFrames.DataFrame(
         delta_D     = delta_D,
         s_gt        = s_gt,
         abs_delta_D = abs_delta_D,

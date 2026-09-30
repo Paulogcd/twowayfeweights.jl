@@ -121,8 +121,8 @@ function twowayfeweights_calculate(;
         # To implement
         E_eps_1_g_ge_aux        = rev_cumsum_by_group(g_int, eps_w) 
         weights_aux             = rev_cumsum_by_group(g_int, dat[:, :weights])
-        E_eps_1_g_ge            = E_eps_1_g_ge_aux / weights_aux
-        dat[:, :E_eps_1_g_ge]   .= E_eps_1_g_ge
+        E_eps_1_g_ge            = E_eps_1_g_ge_aux ./ weights_aux
+        dat[:, :E_eps_1_g_ge]   = E_eps_1_g_ge
     
     elseif type == "fdTR"
         
@@ -133,32 +133,32 @@ function twowayfeweights_calculate(;
     # Post-beta calculations per type
 
     if type == "fdTR"
-        DataFrames.sort!(dat, [:G, :TfactorNum])
+        DataFrames.sort!(dat, [:G, :TFactorNum])
         g_int = Int.(dat[!, :G])
         # To implement
         w_tilde_2 = fdtr_wtilde2(
-            d_int,
+            g_int,
             dat[!, :TFactorNum],
-            eps_2 = dat[!, :eps_2],
-            P_gt = dat[!, :P_gt])
+            dat[!, :eps_2],
+            dat[!, :P_gt])
         dat[:, :w_tilde_2] .= w_tilde_2
 
         DataFrames.transform!(
             dat,
-            [:w_tilde_2 :D0] => ((x, y) -> x .* y) => :w_tilde_2_E_D_gt)
+            [:w_tilde_2, :D0] => ((x, y) -> x .* y) => :w_tilde_2_E_D_gt)
         denom_W = weighted_mean(dat.w_tilde_2_E_D_gt, dat.P_gt)
-        DataFrames.transform!(dat, [:w_tilde_2, :mean_D] => ((x, y) -> x .* y / denom_W) => :W)
+        DataFrames.transform!(dat, [:w_tilde_2] => ((x) -> x .* mean_D / denom_W) => :W)
         DataFrames.transform!(dat, [:W, :nat_weight] => ((x, y) -> x .* y) => :weight_result)
 
         # Cleanup
-        dat = dat[:, Not(:eps_2, :P_gt, :w_tilde_2, :w_tilde_2_ED_gt)]
+        dat = dat[:, Not(:eps_2, :P_gt, :w_tilde_2, :w_tilde_2_E_D_gt)]
     
     elseif type == "feS"
 
-        DataFrames.sort!(dat, [:G, :TfactorNum])
+        DataFrames.sort!(dat, [:G, :TFactorNum])
         g_int = Int.(dat[!, :G])
         # To implement
-        delta_res = feS_delta(g_int, dat[!, :TFactorNum], dat[!, :D], P_gt = dat[!, :P_gt])
+        delta_res = feS_delta(g_int, dat[!, :TFactorNum], dat[!, :D], dat[!, :P_gt])
         
         # Here are some notes for future references: 
         # DataFrames.filter((x -> !ismissing(x.delta_D)), gdat) # Runs, but does not eliminate the missing values rows.
@@ -166,19 +166,19 @@ function twowayfeweights_calculate(;
         # We can just change the underlying dat dataframe, s.t.:
         # dropmissing!(dat, :delta_D)
         keep    = delta_res[!, :keep]
-        dat     = dat[!, keep]
+        dat     = dat[keep, :]
         delta_D         = delta_res[keep, :delta_D]
         s_gt            = delta_res[keep, :s_gt]
         abs_delta_D     = delta_res[keep, :abs_delta_D]
         nat_w           = delta_res[keep, :nat_weight]
 
-        delta_res[!, :delta_D]      = delta_D
-        delta_res[!, :s_gt]         = s_gt
-        delta_res[!, :abs_delta_D]  = abs_delta_D
-        delta_res[!, :nat_w]        = nat_w
+        dat[!, :delta_D]      = delta_D
+        dat[!, :s_gt]         = s_gt
+        dat[!, :abs_delta_D]  = abs_delta_D
+        dat[!, :nat_weight]        = nat_w
         
-        P_S = sum(skipmissing(nat_w))        
-        DataFrames.transform!(dat, [:nat_weight, :P_S] => ((x, y) -> x ./ y) => :nat_weight)
+        P_S = sum(skipmissing(nat_w))
+        DataFrames.transform!(dat, [:nat_weight] => ((x) -> x ./ P_S) => :nat_weight)
         DataFrames.transform!(dat, [:s_gt, :E_eps_1_g_ge, :P_gt] => ((x, y, z) -> x .* y ./ z) => :om_tilde_1)
 
         denom_W = weighted_mean(dat.om_tilde_1, dat.nat_weight)

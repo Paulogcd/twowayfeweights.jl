@@ -3,10 +3,12 @@ using JLD2
 function save_test_data(data_R::OrderedCollections.OrderedDict, data_julia::Dict, step::String)
     RCall.@rput data_R
     RCall.@rput step
+    test_directory = @__DIR__
+    RCall.@rput test_directory
     RCall.rcopy(R"
         base::saveRDS(
             object = data_R,
-            file = file.path(getwd(), \"data\", \"output\", paste0(\"data_R_\", step, \".rds\"))
+            file = file.path(test_directory, \"data\", \"output\", paste0(\"data_R_\", step, \".rds\"))
         )")
     JLD2.@save joinpath(@__DIR__, "data", "output", string("data_julia_", step, ".jld2")) data_julia;
 end
@@ -15,10 +17,22 @@ function test_step_1_renaming(data_R, data_julia)
 
     RCall.@rput data_R
     
+    Y                 = data_julia[:Y]
+    G                 = data_julia[:G]
+    T                 = data_julia[:T]
+    D                 = data_julia[:D]
+    D0                = data_julia[:D0]
     #Julia:
+    for v in filter(!isnothing, [Y, G, T, D, D0])
+        if !(typeof(data_julia[:data][!, Symbol(v)]) <: AbstractVector{T} where {T <: Union{Missing, Real}})
+            data_julia[:data][!, Symbol(v)] .= TwoWayFEWeights.parse_float_or_missing.(data_julia[:data][!, Symbol(v)])
+        end
+    end
+    
     data_julia[:controls_rename]         = TwoWayFEWeights.get_controls_rename(data_julia[:controls])
     data_julia[:treatments_rename]       = TwoWayFEWeights.get_treatments_rename(data_julia[:other_treatments])
     data_julia[:random_weight_rename]    = TwoWayFEWeights.get_random_weight_rename(data_julia[:test_random_weights])
+    
     data_julia[:data_renamed] = TwoWayFEWeights.twowayfeweights_rename_var(
       df                = data_julia[:data],
       Y                 = data_julia[:Y],
@@ -68,6 +82,7 @@ function test_step_1_renaming(data_R, data_julia)
         data_R[:random_weight_rename] = nothing
     end
     data_R = RCall.@rput data_R
+
     # This is not enough to work due to local binding.
     # We return the value at the end of the function.
 
@@ -79,7 +94,7 @@ function test_step_1_renaming(data_R, data_julia)
             RCall.rcopy(R"data_R$data_renamed")
         )
         Test.@test length(data_R) == length(data_julia)
-    end
+    end;
 
     return(data_R, data_julia)
 

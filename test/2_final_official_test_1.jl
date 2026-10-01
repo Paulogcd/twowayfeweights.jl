@@ -13,8 +13,11 @@ Test.@testset "1 - Wolfers 2006" begin
     data = DataFrames.DataFrame(data)
 
     # R
-    RCall.@rput url
-    RCall.rcopy(R"data = haven::read_dta(url)")
+    RCall.@rput tmp
+    RCall.rcopy(R"
+        data = haven::read_dta(tmp)
+    ")
+    # RCall.rcopy(R"data <- haven::read_dta(tmp)")
 
     # Julia:
     other_treatments = ["rel_time$(i)" for i in 2:16]

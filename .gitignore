@@ -2,3 +2,4 @@
 /starting.jl
 /utils_pkg
 /test/data/output/*
+/test/sandbox.jl

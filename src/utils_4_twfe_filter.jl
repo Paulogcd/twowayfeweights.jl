@@ -1,5 +1,19 @@
 """
-    twowayfeweights_filter(df, Y, G, T, D, D0, cmd_type, controls, treatments)
+Internal function used in the twowayfeweights_filter function.
+"""
+function na_count(df, cols)
+    isempty(cols) && return zeros(Int, nrow(df))
+
+    cols = Symbol.(cols)
+
+    return [
+        count(ismissing, df[i, cols])
+        for i in axes(df, 1)
+    ]
+end
+
+"""
+    twowayfeweights_filter(df_result, Y, G, T, D, D0, cmd_type, controls, treatments)
 
 Description.
 """
@@ -7,53 +21,49 @@ function twowayfeweights_filter(;
     df::Union{DataFrames.DataFrame},
     Y::Union{String},
     G::Union{String},
-    T::Union{String}, 
+    T::Union{String},
     D::Union{String},
     D0::Union{String, Nothing},
     cmd_type::Union{String},
     controls::Union{String, Vector{String}, Nothing},
     treatments::Union{String, Vector{String}, Nothing})
 
-    # To define the column names so that they can be called correctly, we use the Symbol function.
+    # We rename the df variable to not modify the df input object.
+    df_result = copy(df)
 
-    if (cmd_type != "fdTR")
+    if cmd_type != "fdTR"
 
-        # In the original package, they seem to not allow for NA in the 
-        # Y, G, T, D, controls, and treatments columns.
-        # We are going to use the missing value instead.
-        columns_to_filter = ifelse(isnothing(treatments), [G, T, D], [G, T, D, treatments])
-        if !isnothing(controls)
-            push!(columns_to_filter, controls)
-        end
-        df = dropmissing(df, columns_to_filter)
+        cols = vcat(
+            [Y, G, T],
+            something(controls, String[]),
+            something(treatments, String[])
+        )
+
+        counts = na_count(df_result, cols)
+
+        df_result = df_result[counts .== 0, :]
+
     else
 
-        # They allow for another case:
-        # When at least one of D, T, and Y is not na (tag 1),
-        # OR when D0 is not na (tag 2).
-        df[!, :tag1] .= ismissing(df[!, c] for c in Symbol.([D, T, Y]))
-        df[!, :tag2] .= ismissing(df[!, Symbol(D0)])
-        df = df[df.tag1 .== 0 .| df.tag2 .== 0, :]
-        
+        tag1 = na_count(df_result, [D, T, Y])
+        tag2 = na_count(df_result, [D0])
+
+        keep = (tag1 .== 0) .| (tag2 .== 0)
+
+        df_result = df_result[keep, :]
+        tag1 = tag1[keep]
+
+        if !isnothing(controls) && !isempty(controls)
+            tag3 = na_count(df_result, controls)
+
+            df_result = df_result[
+                (tag1 .== 1) .| (tag3 .== 0),
+                :
+            ]
+        end
     end
 
-    if !isnothing(controls)
-        # df[!, :tag3] .= ismissing.(df[!, Symbol.(controls)]) # former version
-        df[!, :tag3] = [any(ismissing, row) for row in eachrow(df[:, Symbol.(controls)])]
-        df = df[(df.tag1 .== 1) .| (df.tag3 .== 0), :]
-        df = df[:, Not(:tag3)]
-    end
-        
-    
-    if "tag1" in names(df)
-        df = df[:, Not(:tag1)]
-    end
-
-    if "tag2" in names(df)
-        df = df[:, Not(:tag2)]
-    end
-
-    return df
+    return df_result
 end
 # Work on the lmited case that the variables are defined with the same exact names
 # :Y, :D, etc...

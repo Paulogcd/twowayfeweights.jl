@@ -1,2 +1,4 @@
 /Manifest*.toml
-./starting.jl
+/starting.jl
+/utils_pkg
+/test/data/output/*

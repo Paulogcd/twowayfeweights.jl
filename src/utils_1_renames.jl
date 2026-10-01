@@ -60,7 +60,7 @@ The `fn_treatment_weight_rename` function is the equivalent of the original `fn_
     fn_treatment_weight_rename <- function(x) paste("weight_", x, sep = "")
 """
 function fn_treatment_weight_rename(x) 
-    result = ifelse.(.!isnothing.(treatments), string.("weight_", x), nothing)
+    result = ifelse.(.!isnothing.(x), string.("weight_", x), nothing)
     return result
 end
 

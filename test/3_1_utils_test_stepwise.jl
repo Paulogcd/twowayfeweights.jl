@@ -24,27 +24,28 @@ function test_step_1_renaming(data_R, data_julia, save = false)
         T                 = data_julia[:T]
         D                 = data_julia[:D]
         D0                = data_julia[:D0]
+        
         #Julia:
         for v in filter(!isnothing, [Y, G, T, D, D0])
             if !(typeof(data_julia[:data][!, Symbol(v)]) <: AbstractVector{T} where {T <: Union{Missing, Real}})
-                data_julia[:data][!, Symbol(v)] .= TwoWayFEWeights.parse_float_or_missing.(data_julia[:data][!, Symbol(v)])
+                data_julia[:data][!, Symbol(v)] .= parse_float_or_missing.(data_julia[:data][!, Symbol(v)])
             end
         end
         
-        data_julia[:controls_rename]         = TwoWayFEWeights.get_controls_rename(data_julia[:controls])
-        data_julia[:treatments_rename]       = TwoWayFEWeights.get_treatments_rename(data_julia[:other_treatments])
-        data_julia[:random_weight_rename]    = TwoWayFEWeights.get_random_weight_rename(data_julia[:test_random_weights])
+        data_julia[:controls_rename]         = get_controls_rename(data_julia[:controls])
+        data_julia[:treatments_rename]       = get_treatments_rename(data_julia[:other_treatments])
+        data_julia[:random_weight_rename]    = get_random_weight_rename(data_julia[:test_random_weights])
         
-        data_julia[:data_renamed] = TwoWayFEWeights.twowayfeweights_rename_var(
-        df                = data_julia[:data],
-        Y                 = data_julia[:Y],
-        G                 = data_julia[:G],
-        T                 = data_julia[:T],
-        D                 = data_julia[:D],
-        D0                = data_julia[:D0],
-        controls          = data_julia[:controls],
-        treatments        = data_julia[:other_treatments],
-        random_weights    = data_julia[:test_random_weights]
+        data_julia[:data_renamed] = twowayfeweights_rename_var(
+            df                = data_julia[:data],
+            Y                 = data_julia[:Y],
+            G                 = data_julia[:G],
+            T                 = data_julia[:T],
+            D                 = data_julia[:D],
+            D0                = data_julia[:D0],
+            controls          = data_julia[:controls],
+            treatments        = data_julia[:other_treatments],
+            random_weights    = data_julia[:test_random_weights]
         )
 
         # R:
@@ -84,17 +85,19 @@ function test_step_1_renaming(data_R, data_julia, save = false)
             data_R[:random_weight_rename] = nothing
         end
         data_R = RCall.@rput data_R
+        data_julia
 
         # This is not enough to work due to local binding.
         # We return the value at the end of the function.
 
         if save save_test_data(data_R, data_julia, "1") end
 
+        Test.@test length(data_R) == length(data_julia)
+        Test.@test size(data_R[:data_renamed]) == size(data_julia[:data_renamed])
         Test.@test isequal(
             data_julia[:data_renamed],
             RCall.rcopy(R"data_R$data_renamed")
         )
-        Test.@test length(data_R) == length(data_julia)
     end;
 
     return(data_R, data_julia)
@@ -108,20 +111,22 @@ function test_step_2_transform(data_R, data_julia, save = false)
         RCall.@rput data_R
 
         # Julia: 
-        data_julia[:data_transformed] = TwoWayFEWeights.twowayfeweights_transform(
+        data_julia[:data_transformed] = twowayfeweights_transform(
             df          = data_julia[:data_renamed],
             controls    = data_julia[:controls_rename],
             weights     = data_julia[:weights],
             treatments  = data_julia[:treatments_rename])
         
+        # Takes 7 minutes to run.
         RCall.rcopy(R"
             data_R$\"data_transformed\" = TwoWayFEWeights:::twowayfeweights_transform(
                 data_R$\"data_renamed\",
                 data_R$\"controls_rename\",
                 data_R$\"weights\",
                 data_R$\"treatments_rename\")
-        ")
+        ") # Running...
         data_R = RCall.rcopy(R"data_R")
+        RCall.rcopy(R"data_R$data_transformed")
 
         # Here, we have to adapt.
         # The numbers are the same, but the type imply that the test will always fail.
@@ -134,7 +139,10 @@ function test_step_2_transform(data_R, data_julia, save = false)
 
         if save save_test_data(data_R, data_julia, "2") end
 
-        @test isequal(data_julia[:data_transformed][:, DataFrames.Not(:Tfactor)], RCall.rcopy(R"data_R$data_transformed |> dplyr::select(- Tfactor)"))
+        @test isequal(
+            data_julia[:data_transformed][:, DataFrames.Not(:Tfactor)],
+            RCall.rcopy(R"data_R$data_transformed |> dplyr::select(- Tfactor)")
+        )
         # @test data_julia_for_test == RCall.rcopy(R"data_R$data_transformed |> dplyr::pull(Tfactor)")
         @test corrected_values == RCall.rcopy(R"data_R$data_transformed |> dplyr::pull(Tfactor)")
         Test.@test length(data_R) == length(data_julia)
@@ -165,7 +173,7 @@ function test_step_3_filter(data_R, data_julia, save = false)
         )
         data_R = RCall.rcopy(R"data_R")
 
-        data_julia[:data_filtered] = TwoWayFEWeights.twowayfeweights_filter(
+        data_julia[:data_filtered] = twowayfeweights_filter(
             df = data_julia[:data_transformed],
             Y = "Y",
             G = "G",
@@ -192,11 +200,12 @@ function test_step_4_calculate(data_R, data_julia, save = false)
         
         RCall.@rput data_R
 
-        data_julia[:res] = TwoWayFEWeights.twowayfeweights_calculate(
-        dat        = data_julia[:data_filtered],
-        type       = data_julia[:type],
-        controls   = data_julia[:controls_rename],
-        treatments = data_julia[:treatments_rename])
+        data_julia[:res] = twowayfeweights_calculate(
+            dat        = data_julia[:data_filtered],
+            type       = data_julia[:type],
+            controls   = data_julia[:controls_rename],
+            treatments = data_julia[:treatments_rename]
+        )
 
         # Here, we have to adapt to convert the data into a data.table object.
         RCall.rcopy(R"
@@ -247,7 +256,7 @@ function test_step_5_result(data_R, data_julia, save = false)
 
         RCall.@rput data_R
 
-        data_julia[:result] = TwoWayFEWeights.twowayfeweights_result(
+        data_julia[:result] = twowayfeweights_result(
             dat             = data_julia[:res][:dat],
             beta            = data_julia[:res][:beta],
             random_weights  = data_julia[:random_weight_rename],

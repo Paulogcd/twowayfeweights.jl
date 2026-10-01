@@ -1,7 +1,7 @@
 using TwoWayFEWeights
 using Test
 using RCall
-using Random 
+using Random
 using DataFrames
 using Downloads
 using OrderedCollections

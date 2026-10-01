@@ -44,9 +44,9 @@ Test.@testset "fdS" begin
         RCall.@rput path
 
         ## Julia
-        controls_rename         = get_controls_rename(controls)
-        treatments_rename       = get_treatments_rename(other_treatments)
-        random_weight_rename    = get_random_weight_rename(test_random_weights)
+        controls_rename         = TwoWayFEWeights.get_controls_rename(controls)
+        treatments_rename       = TwoWayFEWeights.get_treatments_rename(other_treatments)
+        random_weight_rename    = TwoWayFEWeights.get_random_weight_rename(test_random_weights)
 
         ## R
         RCall.rcopy(R"controls_rename = TwoWayFEWeights:::get_controls_rename(controls)")

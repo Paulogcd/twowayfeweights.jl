@@ -4,8 +4,9 @@ function stepwise_test_1()
         
         # Initialisation :
         url = "https://raw.githubusercontent.com/anzonyquispe/did_book/main/cc_xd_didtextbook_2025_9_30/Data%20sets/Wolfers%202006/wolfers2006_didtextbook.dta"
-        RCall.@rput url
-        RCall.rcopy(R"data = haven::read_dta(url)")
+        tmp = Downloads.download(url)
+        RCall.@rput tmp
+        RCall.rcopy(R"data = haven::read_dta(tmp)")
         data = RCall.rcopy(R"data")
 
         data_julia = Dict(

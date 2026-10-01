@@ -67,6 +67,7 @@ jobs:
           install.packages("tidyselect", repos = "https://cloud.r-project.org")
           install.packages("tibble", repos = "https://cloud.r-project.org")
           install.packages("haven", repos = "https://cloud.r-project.org")
+          install.packages("dplyr", repos = "https://cloud.r-project.org")
     
           install.packages("TwoWayFEWeights", repos = "https://cloud.r-project.org")
 

@@ -106,7 +106,7 @@ end
 
 function test_step_2_transform(data_R, data_julia, save = false)
 
-     Test.@testset "Step 2: transforming" begin
+    Test.@testset "Step 2: transforming" begin
     
         RCall.@rput data_R
 
@@ -124,7 +124,7 @@ function test_step_2_transform(data_R, data_julia, save = false)
                 data_R$\"controls_rename\",
                 data_R$\"weights\",
                 data_R$\"treatments_rename\")
-        ") # Running...
+        ")
         data_R = RCall.rcopy(R"data_R")
         RCall.rcopy(R"data_R$data_transformed")
 

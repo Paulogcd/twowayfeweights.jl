@@ -24,11 +24,11 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.12.6'
+          - '1.13.1'
           - 'pre'
           - 'nightly'
         R:
-          - '4.5.1'
+          - '4.6.1'
         os:
           - ubuntu-latest
         arch:

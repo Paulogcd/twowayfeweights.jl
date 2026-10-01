@@ -14,6 +14,7 @@ It provides a set of functions to compute the two way fixed effects (TWFE) estim
 - Harmonize documentation for utils (internal functions).
 - Harmonize the display of message in the Julia REPL.
 - Harmonize the use of the "weights" argument.
+- Allow Metal.jl use with the FixedEffectModels calls.
 
 Website-Documentation: 
 - Internal process

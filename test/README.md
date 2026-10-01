@@ -40,7 +40,7 @@ In R, we can indeed load the data as:
 ```
     # Load the whole list:
     data_R <- base::readRDS(
-        file = file.path("/", "Users", "paulogcd", "twowayfeweights.jl", "test", "data", "output", "data_R_4.rds"))
+        file = file.path("/", "Users", "paulogcd", "twowayfeweights.jl", "test", "data", "output", "data_R_3.rds"))
     
     # And then each item of data_R:
     dt <- data_R$data_filtered
@@ -48,4 +48,36 @@ In R, we can indeed load the data as:
     controls <- data_R$controls_rename
     treatments <- data_R$treatments_rename
 ```
+
+# Result of step 2
+
+## Julia:
+data_julia = JLD2.load(joinpath("/Users", "paulogcd", "twowayfeweights.jl", "test", "data", "output", string("data_julia_", 2, ".jld2")))["data_julia"]
+
+## R:
+
+data_R <- base::readRDS(
+        file = file.path('/', 'Users', 'paulogcd', 'twowayfeweights.jl', 'test', 'data', 'output', 'data_R_2.rds'))
+data_R$data_filtered = TwoWayFEWeights:::twowayfeweights_filter(
+    data_R$data_transformed,
+    data_R$Y,
+    data_R$G,
+    data_R$T,
+    data_R$D,
+    data_R$D0,
+    data_R$type,
+    data_R$controls_rename,
+    data_R$treatments_rename
+)
+
+# Result of the step 3
+
+data_julia = JLD2.load(joinpath("/Users", "paulogcd", "twowayfeweights.jl", "test", "data", "output", string("data_julia_", 3, ".jld2")))["data_julia"]
+
+dat        = data_julia[:data_filtered]
+type       = data_julia[:type]
+controls   = data_julia[:controls_rename]
+treatments = data_julia[:treatments_rename]
+
+
 

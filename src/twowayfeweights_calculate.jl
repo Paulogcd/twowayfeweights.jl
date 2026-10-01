@@ -19,6 +19,9 @@ function twowayfeweights_calculate(;
         mean_D = weighted_mean(dat[:, DVAR], dat[:, :weights])
     end
 
+    # This code block creates a discrepancy!
+    # BUG
+    ###
     obs = sum(dat.weights)
     gdat = DataFrames.combine(
         DataFrames.groupby(dat, [:G, :T]),

@@ -7,7 +7,6 @@ module TwoWayFEWeights
 
     using Random
     using DataFrames
-    using RCall
     using Test
     using Statistics
     using OrderedCollections

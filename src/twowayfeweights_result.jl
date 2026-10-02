@@ -100,7 +100,6 @@ function twowayfeweights_result(;
 
         dat_result = dat[:, columns]
         dat_result = DataFrames.rename(dat_result, :weight_result => :weight)
-
         
         ret[:beta] = beta
         ret[:dat_result] = dat_result

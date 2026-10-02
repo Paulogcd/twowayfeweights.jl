@@ -85,7 +85,6 @@ function test_step_1_renaming(data_R, data_julia, save = false)
             data_R[:random_weight_rename] = nothing
         end
         data_R = RCall.@rput data_R
-        data_julia
 
         # This is not enough to work due to local binding.
         # We return the value at the end of the function.
@@ -94,10 +93,20 @@ function test_step_1_renaming(data_R, data_julia, save = false)
 
         Test.@test length(data_R) == length(data_julia)
         Test.@test size(data_R[:data_renamed]) == size(data_julia[:data_renamed])
-        Test.@test isequal(
+        result = Test.@test isequal(
             data_julia[:data_renamed],
             RCall.rcopy(R"data_R$data_renamed")
         )
+        if !result
+            result_approx = isapprox(
+                data_julia[:data_renamed],
+                RCall.rcopy(R"data_R$data_renamed"),
+                atol = 1e-4
+            )
+            Test.@test result_approx
+        else
+            Test.@test result
+        end
     end;
 
     return(data_R, data_julia)
@@ -286,44 +295,57 @@ function test_step_5_result(data_R, data_julia, save = false)
                         data_julia[:result][Symbol(k)][Symbol(kk)],
                         RCall.rcopy(R"data_R$result[[k]][[kk]]")
                     )
-                    result_approx = isapprox(
-                        data_julia[:result][Symbol(k)][Symbol(kk)],
-                        RCall.rcopy(R"data_R$result[[k]][[kk]]");
-                        atol = 1e-4
-                    )
-                    # print(k, " - ", kk, " - ", result, " - ", result_approx, "\n")
-                    Test.@test result_approx
+                    if !result
+                        result_approx = isapprox(
+                            data_julia[:result][Symbol(k)][Symbol(kk)],
+                            RCall.rcopy(R"data_R$result[[k]][[kk]]");
+                            atol = 1e-4
+                        )
+                        # print(k, " - ", kk, " - ", result, " - ", result_approx, "\n")
+                        Test.@test result_approx
+                    else 
+                        Test.@test result
+                    end
+
                 end
             elseif data_julia[:result][Symbol(k)] isa DataFrames.DataFrame
                 obj = data_julia[:result][Symbol(k)]
                 RCall.rcopy(R"obj <- data_R$result[[k]]")
-                @test names(obj) == RCall.rcopy(R"names(obj)")
+                Test.@test names(obj) == RCall.rcopy(R"names(obj)")
                 for col in names(obj)
                     RCall.@rput col
                     result = isequal(
                         obj[!, col],
                         RCall.rcopy(R"obj[[col]]")
                     )
-                    result_approx = isapprox(
-                        length(obj[!, col]) == 1  ? obj[!, col][1] : obj[!, col], # For 1-lined Dataframe.
-                        RCall.rcopy(R"obj[[col]]");
-                        atol = 1e-3
-                    )
-                    # print(k, " - ", col, " - ", result, " - ", result_approx, "\n")
-                    @test result_approx
+                    if !result
+                        result_approx = isapprox(
+                            length(obj[!, col]) == 1  ? obj[!, col][1] : obj[!, col], # For 1-lined Dataframe.
+                            RCall.rcopy(R"obj[[col]]");
+                            atol = 1e-3
+                        )
+                        # print(k, " - ", col, " - ", result, " - ", result_approx, "\n")
+                        Test.@test result_approx
+                    else
+                        Test.@test result
+                    end
                 end
             else
                 result = isequal(
                     data_julia[:result][Symbol(k)],
                     RCall.rcopy(R"data_R$result[[k]]")
                 )
-                result_approx = isapprox(
-                    data_julia[:result][Symbol(k)],
-                    RCall.rcopy(R"data_R$result[[k]]");
-                    atol = 1e-4
-                )
-                # print(k, " - ", result, " - ", result_approx, "\n")
-                Test.@test result_approx
+                if !result
+                    result_approx = isapprox(
+                        data_julia[:result][Symbol(k)],
+                        RCall.rcopy(R"data_R$result[[k]]");
+                        atol = 1e-4
+                    )
+                    # print(k, " - ", result, " - ", result_approx, "\n")
+                    Test.@test result_approx
+                else
+                    Test.@test result
+                end
             end
         end;
         Test.@test isapprox.(data_julia[:result][:beta], RCall.rcopy(R"data_R$result$\"beta\""))

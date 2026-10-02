@@ -93,7 +93,7 @@ function test_step_1_renaming(data_R, data_julia, save = false)
 
         Test.@test length(data_R) == length(data_julia)
         Test.@test size(data_R[:data_renamed]) == size(data_julia[:data_renamed])
-        result = Test.@test isequal(
+        result = isequal(
             data_julia[:data_renamed],
             RCall.rcopy(R"data_R$data_renamed")
         )

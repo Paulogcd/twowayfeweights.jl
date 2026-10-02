@@ -78,9 +78,8 @@ function twowayfeweights_result(;
     else
         
         for v in vcat("result", treatments)
-            if !isnothing(v)
-                dat[:, Symbol("weight_", v)] = zero_below_eps(dat[:, Symbol("weight_", v)])
-            end
+            colname = string("weight_", v)
+            dat[:, Symbol(colname)] = zero_below_eps(dat[:, Symbol(colname)])
         end
 
         columns = ["T", "G", "weight_result"]

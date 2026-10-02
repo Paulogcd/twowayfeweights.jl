@@ -25,17 +25,17 @@ function stepwise_test_4()
         )
 
         RCall.rcopy(R"data_R <- list(
-            data = data,
-            Y = 'prestout',
-            G = 'cnty90',
-            T = 'year',
-            D = 'changedailies',
-            D0 = NULL,
-            type = 'feTR',
+            data    = data,
+            Y       = 'prestout',
+            G       = 'cnty90',
+            T       = 'year',
+            D       = 'changedailies',
+            D0      = NULL,
+            type    = 'feTR',
             controls = styr_cols,
-            summary_measures = TRUE,
-            other_treatments   = NULL,
-            path               = NULL,
+            summary_measures    = TRUE,
+            other_treatments    = NULL,
+            path                = NULL,
             test_random_weights = NULL,
             weights = NULL
         )")

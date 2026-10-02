@@ -8,24 +8,6 @@ function stepwise_test_3()
         RCall.rcopy(R"styr_cols <- paste0(\"styr_\", levels(factor(data$styr)))")
         styr_cols = RCall.rcopy(R"styr_cols")
 
-        RCall.rcopy(R"data_R <- list(
-            data        = data,
-            Y           = 'changeprestout',
-            G           = 'cnty90',
-            T           = 'year',
-            D           = 'changedailies',
-            D0          = 'numdailies',
-            type        = 'fdTR',
-            controls    = styr_cols,
-            other_treatments   = NULL,
-            summary_measures   = TRUE,
-            path               = NULL,
-            test_random_weights = NULL,
-            weights = NULL
-        )")
-
-        data_R = RCall.rcopy(R"data_R")
-        
         data_julia = Dict(
             :data       => data,
             :Y          => "changeprestout",
@@ -41,6 +23,23 @@ function stepwise_test_3()
             :test_random_weights => nothing,
             :weights => nothing
         )
+        
+        RCall.rcopy(R"data_R <- list(
+            data        = data,
+            Y           = 'changeprestout',
+            G           = 'cnty90',
+            T           = 'year',
+            D           = 'changedailies',
+            D0          = 'numdailies',
+            type        = 'fdTR',
+            controls    = styr_cols,
+            other_treatments   = NULL,
+            summary_measures   = TRUE,
+            path               = NULL,
+            test_random_weights = NULL,
+            weights = NULL
+        )")
+        data_R = RCall.rcopy(R"data_R")
 
         data_R == data_julia
         for k in string.(keys(data_R))

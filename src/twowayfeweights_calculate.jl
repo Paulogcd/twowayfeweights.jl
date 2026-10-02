@@ -5,7 +5,8 @@ function twowayfeweights_calculate(;
     dat::DataFrames.DataFrame,
     type::String,
     controls::Union{String, Vector{String}, Vector{Any}, Nothing},
-    treatments::Union{String, Vector{String}, Nothing})
+    treatments::Union{String, Vector{String}, Nothing},
+    method::Symbol=:cpu)
 
     if (!isnothing(treatments) && type != "feTR")
         @error("When the `other_treatments` argument is specified, you need to specify `type = 'feTR'` too.")
@@ -64,9 +65,9 @@ function twowayfeweights_calculate(;
 
     if type == "fdS"
         dat_regression = dat[dat[:, :weights] .!= 0,:]
-        denom_lm = FixedEffectModels.reg(dat_regression, fml, weights = :weights, save = :all)
+        denom_lm = FixedEffectModels.reg(dat_regression, fml, weights = :weights, save = :all; method = method)
     else 
-        denom_lm = FixedEffectModels.reg(dat, fml, weights = :weights, save = :all)
+        denom_lm = FixedEffectModels.reg(dat, fml, weights = :weights, save = :all; method = method)
     end
 
     EPS_VAR = type_fe ? "eps_1" : "eps_2"
@@ -85,9 +86,9 @@ function twowayfeweights_calculate(;
 
     if type == "fdS"
         dat_regression_beta = dat[dat[:, :weights] .!= 0, :]
-        beta_lm = FixedEffectModels.reg(dat_regression_beta, fml_beta, weights = :weights, save = :none)
+        beta_lm = FixedEffectModels.reg(dat_regression_beta, fml_beta, weights = :weights, save = :none; method = method)
     else
-        beta_lm = FixedEffectModels.reg(dat, fml_beta, weights = :weights)
+        beta_lm = FixedEffectModels.reg(dat, fml_beta, weights = :weights; method = method)
     end
     beta = coef(beta_lm)[coefnames(beta_lm) .== "D"][1]
 

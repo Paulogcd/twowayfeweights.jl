@@ -34,7 +34,7 @@ function twowayfeweights_filter(;
     if cmd_type != "fdTR"
 
         cols = vcat(
-            [Y, G, T],
+            [Y, G, T, D],
             something(controls, String[]),
             something(treatments, String[])
         )

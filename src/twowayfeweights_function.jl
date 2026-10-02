@@ -122,7 +122,8 @@ function twowayfeweights(;
     weights::Union{AbstractVector{Float32}, Float32, AbstractVector{Int32}, Int32, AbstractVector{Int64}, Int64, String, Nothing} = nothing,
     other_treatments::Union{Vector{String}, String, Nothing} = nothing,
     test_random_weights::Union{String, Nothing} = nothing,
-    path::Union{String, Nothing} = nothing)
+    path::Union{String, Nothing} = nothing,
+    method::Symbol = :cpu)
 
     @assert type ∈ ["feTR", "feS", "fdTR", "fdS"] "Argument `type` must be one of `feTR`, `feS`, `fdRTR`, or `fdS`."
 

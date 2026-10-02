@@ -1,3 +1,10 @@
+function force_to_vector(x)
+    if x isa AbstractVector{<:AbstractString}
+        return x
+    elseif x isa String
+        return [x]
+    end
+end
 
 """
 
@@ -32,39 +39,20 @@ function twowayfeweights_transform(;
 
 
     if !isnothing(controls)
+        
+        controls = force_to_vector(controls)
 
-        if controls isa AbstractVector{<:AbstractString}
+        Threads.@threads for control in controls
+            
+            ret = twowayfeweights_normalize_var(df = df_result, varname = control)
 
-            for control in controls
-                
-                ret = twowayfeweights_normalize_var(df = df_result, varname = control)
-
-                if ret[:retcode]
-                    df_result = ret[:df]
-                    @info("The control variable %s in the regression varies within some group * period cells.", control)
-                    @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
-                    @info("with controls apply to group * period level controls.")
-                    @info("The command will replace replace control variable %s by its average value in each group * period.", control)
-                    @info("The results below apply to the regression with control variable %s averaged at the group * period level.", control)
-                end
-
-            end
-
-        elseif controls isa AbstractString
-
-            for control in [controls]
-                
-                ret = twowayfeweights_normalize_var(df = df_result, varname = control)
-
-                if ret[:retcode]
-                    df_result = ret[:df]
-                    @info("The control variable %s in the regression varies within some group * period cells.", control)
-                    @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
-                    @info("with controls apply to group * period level controls.")
-                    @info("The command will replace replace control variable %s by its average value in each group * period.", control)
-                    @info("The results below apply to the regression with control variable %s averaged at the group * period level.", control)
-                end
-
+            if ret[:retcode]
+                df_result = ret[:df]
+                @info("The control variable $control in the regression varies within some group * period cells.")
+                @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
+                @info("with controls apply to group * period level controls.")
+                @info("The command will replace replace control variable $control by its average value in each group * period.")
+                @info("The results below apply to the regression with control variable $control averaged at the group * period level.")
             end
 
         end
@@ -73,36 +61,19 @@ function twowayfeweights_transform(;
 
     if !isnothing(treatments)
         
-        if treatments isa AbstractVector{<:String}
+        treatments = force_to_vector(treatments)
 
-            for treatment in treatments
-                
-                ret = twowayfeweights_normalize_var(df = df_result, varname = treatment)
-                
-                if ret[:retcode]
-                    df_result = ret[:df]
-                    @info("The other treatment variable $treatment in the regression varies within some group * period cells.")
-                    @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
-                    @info("with several treatments apply to group * period level controls.")
-                    @info("The command will replace replace other treatment variable $treatment by its average value in each group * period.")
-                    @info("The results below apply to the regression with other treatment variable $treatment averaged at the group * period level.")
-                end
-            end
-
-        elseif treatments isa String
+        Threads.@threads for treatment in treatments
             
-            for treatment in [treatments]
-                
-                ret = twowayfeweights_normalize_var(df = df_result, varname = treatment)
-                
-                if ret[:retcode]
-                    df_result = ret[:df]
-                    @info("The other treatment variable $treatment in the regression varies within some group * period cells.")
-                    @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
-                    @info("with several treatments apply to group * period level controls.")
-                    @info("The command will replace replace other $treatment variable %s by its average value in each group * period.")
-                    @info("The results below apply to the regression with other $treatment variable %s averaged at the group * period level.")
-                end
+            ret = twowayfeweights_normalize_var(df = df_result, varname = treatment)
+            
+            if ret[:retcode]
+                df_result = ret[:df]
+                @info("The other treatment variable $treatment in the regression varies within some group * period cells.")
+                @info("The results in de Chaisemartin, C. and D'Haultfoeuille, X. (2020) apply to two-way fixed effects regressions")
+                @info("with several treatments apply to group * period level controls.")
+                @info("The command will replace replace other treatment variable $treatment by its average value in each group * period.")
+                @info("The results below apply to the regression with other treatment variable $treatment averaged at the group * period level.")
             end
         end
     end

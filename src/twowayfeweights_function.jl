@@ -180,7 +180,8 @@ function twowayfeweights(;
       dat        = data_filtered,
       type       = type,
       controls   = controls_rename,
-      treatments = treatments_rename)
+      treatments = treatments_rename,
+      method     = method)
   
     # Create main return object list
     res = twowayfeweights_result(

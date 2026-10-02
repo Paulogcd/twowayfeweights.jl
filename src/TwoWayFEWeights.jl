@@ -21,6 +21,7 @@ module TwoWayFEWeights
     using PrettyTables
     using Crayons
     using CSV
+    using Base.Threads
 
     begin
         # Util functions

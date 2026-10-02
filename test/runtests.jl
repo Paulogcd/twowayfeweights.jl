@@ -10,7 +10,7 @@ using CSV
 
 Test.@testset "TwoWayFEWeights.jl" begin
 
-    # Helper: 
+    # Helper:
     include(joinpath(@__DIR__, "3_0_utils_test_helper.jl"))
     include(joinpath(@__DIR__, "3_1_utils_test_stepwise.jl"))
     

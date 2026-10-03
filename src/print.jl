@@ -118,14 +118,16 @@ function Base.show(io::IO, x::twowayfeweights)
         subscr = x[:type][1:2]
         summary_measures_string = "Summary Measures:\n TWFE Coefficient β_fe: " * string(x[:beta][1])
         
-        if !isnothing(x[:sensibility])
+        if :sensibility ∈ keys(x) 
+            if !isnothing(x[:sensibility])
         
-            summary_measures_string = summary_measures_string * "\n" * "   min \U03C3(\U0394) compatible with \U03B2_" * subscr * " and \U0394_TR = 0: " * string(x[:sensibility])
+                summary_measures_string = summary_measures_string * "\n" * "   min \U03C3(\U0394) compatible with \U03B2_" * subscr * " and \U0394_TR = 0: " * string(x[:sensibility])
         
-            if (:sensibility2 in keys(x)) && x[:sensibility2] > 0 && x[:sum_minus] < 0
-                summary_measures_string = summary_measures_string * "\n" * "   min \U03C3(\U0394) compatible with treatment effect of opposite sign than \U03B2_" * subscr * " in all (g,t) cells: " * string(x[:sensibility2])
+                if (:sensibility2 in keys(x)) && x[:sensibility2] > 0 && x[:sum_minus] < 0
+                    summary_measures_string = summary_measures_string * "\n" * "   min \U03C3(\U0394) compatible with treatment effect of opposite sign than \U03B2_" * subscr * " in all (g,t) cells: " * string(x[:sensibility2])
+                end
+                summary_measures_string = summary_measures_string * "\n Reference: Corollary 1, de Chaisemartin, C, and D'Haultfoeille, X (2020a)"
             end
-            summary_measures_string = summary_measures_string * "\n Reference: Corollary 1, de Chaisemartin, C, and D'Haultfoeille, X (2020a)"
         end
     end
 

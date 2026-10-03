@@ -56,7 +56,7 @@ Test.@testset "4 - Gentzkow et al. 2011" begin
     #    @ ~/.julia/packages/RCall/fTLHT/src/macros.jl:75 [inlined]
     
     test_4_julia = twowayfeweights(
-        data = data_copy,
+        data = data,
         Y = "prestout",
         G = "cnty90",
         T = "year",

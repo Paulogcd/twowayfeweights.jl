@@ -20,16 +20,16 @@ Test.@testset "1 - Wolfers 2006" begin
     # RCall.rcopy(R"data <- haven::read_dta(tmp)")
 
     # Julia:
-    other_treatments = ["rel_time$(i)" for i in 2:16]
-    controls = ["rel_timeminus$(i)" for i in 1:9]
-    Y       = "div_rate"
-    G       = "state"
-    T       = "year"
-    D       = "rel_time1"
-    D0      = nothing
-    type    = "feTR"
+    other_treatments    = ["rel_time$(i)" for i in 2:16]
+    controls            = ["rel_timeminus$(i)" for i in 1:9]
+    Y                   = "div_rate"
+    G                   = "state"
+    T                   = "year"
+    D                   = "rel_time1"
+    D0                  = nothing
+    type                = "feTR"
     test_random_weights = "year"
-    weights             = data.stpop
+    weights             = data[!, :stpop]
 
     # R
     RCall.rcopy(R"Y = 'div_rate'")
@@ -59,10 +59,14 @@ Test.@testset "1 - Wolfers 2006" begin
         T                   = "year",
         D                   = "rel_time1",
         type                = "feTR",
+        D0                  = nothing,
+        summary_measures    = true,
+        controls            = ["rel_timeminus$(i)" for i in 1:9],
+        weights             = data[!, :stpop],
+        other_treatments    = ["rel_time$(i)" for i in 2:16],
         test_random_weights = "year",
-        weights             = weights,
-        other_treatments    = other_treatments,
-        controls            = controls)
+        path                = nothing
+    )
 
     test_1_R = RCall.rcopy(R"TwoWayFEWeights::twowayfeweights(
         data        = data,

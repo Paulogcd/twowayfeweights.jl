@@ -14,8 +14,8 @@ function twowayfeweights_rename_var(;
     treatments::Union{String, Vector{String}, Nothing},
     random_weights::Union{String, Vector{String}, Nothing})
 
-    controls_rename = get_controls_rename(controls)
-    treatments_rename = get_treatments_rename(treatments)
+    controls_rename     = get_controls_rename(controls)
+    treatments_rename   = get_treatments_rename(treatments)
 
     # If random weights are provided, we rename and include them.
     if !isnothing(random_weights)
@@ -49,7 +49,11 @@ function twowayfeweights_rename_var(;
     DataFrames.rename!(df, new_names)
 
     if !isnothing(random_weights)
-        df = hcat(df, random_weight_df)
+        if random_weights isa AbstractString
+            df[!, Symbol(random_weight_rename)] = random_weight_df[!, Symbol(random_weight_rename)]
+        else
+            df = hcat(df, random_weight_df)
+        end
     end
 
     return df

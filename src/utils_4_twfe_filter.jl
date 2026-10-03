@@ -2,9 +2,8 @@
 Internal function used in the twowayfeweights_filter function.
 """
 function na_count(df, cols)
+    
     isempty(cols) && return zeros(Int, nrow(df))
-
-    cols = Symbol.(cols)
 
     return [
         count(ismissing, df[i, cols])
@@ -29,7 +28,9 @@ function twowayfeweights_filter(;
     treatments::Union{String, Vector{String}, Nothing})
 
     # We rename the df variable to not modify the df input object.
-    df_result = copy(df)
+    # df_result = copy(df)
+    # But we should, as it would be more efficient...
+    df_result = df
 
     if cmd_type != "fdTR"
 
@@ -39,14 +40,14 @@ function twowayfeweights_filter(;
             something(treatments, String[])
         )
 
-        counts = na_count(df_result, cols)
+        counts = na_count(df_result, Symbol.(cols))
 
         df_result = df_result[counts .== 0, :]
 
     else
 
-        tag1 = na_count(df_result, [D, T, Y])
-        tag2 = na_count(df_result, [D0])
+        tag1 = na_count(df_result, Symbol.([D, T, Y]))
+        tag2 = na_count(df_result, Symbol.([D0]))
 
         keep = (tag1 .== 0) .| (tag2 .== 0)
 

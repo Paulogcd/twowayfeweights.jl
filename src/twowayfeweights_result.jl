@@ -1,4 +1,11 @@
 """
+Internal function used in twowayfeweights_result()
+"""
+zero_below_eps = function(x)
+    ifelse.(.!ismissing.(x) .& (abs.(x) .< 1e-10), 0, x)
+end
+
+"""
 Internal workhorse function for creating the return object of a
 `twowayfeweights()` call.
 
@@ -19,12 +26,6 @@ function twowayfeweights_result(;
     beta::Real,
     random_weights,
     treatments = nothing)
-
-    limit_sensitivity = 1e-10
-
-    zero_below_eps = function(x)
-        ifelse.(.!ismissing.(x) .& (abs.(x) .< limit_sensitivity), 0, x)
-    end
 
     dat[!, :weight_result] = zero_below_eps(dat[!, :weight_result])
     

@@ -119,7 +119,7 @@ function twowayfeweights(;
     D0::Union{String, Nothing} = nothing,
     summary_measures::Bool = false,
     controls::Union{Vector{Any}, Vector{String}, String, Nothing} = nothing,
-    weights::Union{AbstractVector{Float32}, Float32, AbstractVector{Int32}, Int32, AbstractVector{Int64}, Int64, String, Nothing} = nothing,
+    weights::Union{AbstractVector{T}, Nothing} where {T<:Real} = nothing,
     other_treatments::Union{Vector{String}, String, Nothing} = nothing,
     test_random_weights::Union{String, Nothing} = nothing,
     path::Union{String, Nothing} = nothing,
@@ -147,15 +147,15 @@ function twowayfeweights(;
     random_weight_rename    = get_random_weight_rename(test_random_weights)
     
     data_renamed = twowayfeweights_rename_var(
-      df = data,
-      Y = Y,
-      G = G,
-      T = T,
-      D = D,
-      D0 = D0,
-      controls = controls,
-      treatments = other_treatments,
-      random_weights = test_random_weights)
+      df              = data,
+      Y               = Y,
+      G               = G,
+      T               = T,
+      D               = D,
+      D0              = D0,
+      controls        = controls,
+      treatments      = other_treatments,
+      random_weights  = test_random_weights)
   
     # Transform
     data_transformed = twowayfeweights_transform(
@@ -166,15 +166,15 @@ function twowayfeweights(;
     
     # Filter
     data_filtered = twowayfeweights_filter(
-        df = data_transformed,
-        Y = "Y",
-        G = "G",
-        T = "T",
-        D = "D",
-        D0 = "D0",
-        cmd_type = type,
-        controls = controls_rename,
-        treatments = treatments_rename)
+        df          = data_transformed,
+        Y           = "Y",
+        G           = "G",
+        T           = "T",
+        D           = "D",
+        D0          = "D0",
+        cmd_type    = type,
+        controls    = controls_rename,
+        treatments  = treatments_rename)
 
     # Calculate the weights
     res = twowayfeweights_calculate(

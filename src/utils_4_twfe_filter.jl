@@ -2,14 +2,32 @@
 Internal function used in the twowayfeweights_filter function.
 """
 function na_count(df, cols)
-    
-    isempty(cols) && return zeros(Int, nrow(df))
+    n = nrow(df)
+    counts = zeros(Int, n)
 
-    return [
-        count(ismissing, df[i, cols])
-        for i in axes(df, 1)
-    ]
+    for col in cols
+        x = df[!, col]
+        @inbounds for i in 1:n
+            counts[i] += ismissing(x[i])
+        end
+    end
+
+    return counts
 end
+
+function complete_rows(df, cols)
+    keep = trues(nrow(df))
+
+    for col in cols
+        x = df[!, col]
+        @inbounds for i in eachindex(x)
+            keep[i] &= !ismissing(x[i])
+        end
+    end
+
+    return keep
+end
+
 
 """
     twowayfeweights_filter(df_result, Y, G, T, D, D0, cmd_type, controls, treatments)
@@ -40,28 +58,26 @@ function twowayfeweights_filter(;
             something(treatments, String[])
         )
 
-        counts = na_count(df_result, Symbol.(cols))
-
-        df_result = df_result[counts .== 0, :]
+        keep = complete_rows(df_result, Symbol.(cols))
+        df_result = df_result[keep, :]
 
     else
 
-        tag1 = na_count(df_result, Symbol.([D, T, Y]))
-        tag2 = na_count(df_result, Symbol.([D0]))
+        tag1 = complete_rows(df_result, Symbol.([D, T, Y]))
+        tag2  = complete_rows(df_result, Symbol.([D0]))
 
-        keep = (tag1 .== 0) .| (tag2 .== 0)
+        keep = tag1 .| tag2
 
         df_result = df_result[keep, :]
         tag1 = tag1[keep]
 
         if !isnothing(controls) && !isempty(controls)
-            tag3 = na_count(df_result, controls)
+            complete_controls = complete_rows(df_result, Symbol.(controls))
 
-            df_result = df_result[
-                (tag1 .== 1) .| (tag3 .== 0),
-                :
-            ]
+            keep = .!tag1 .| complete_controls
+            df_result = df_result[keep, :]
         end
+
     end
 
     return df_result

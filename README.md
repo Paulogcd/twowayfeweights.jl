@@ -8,14 +8,10 @@ It provides a set of functions to compute the two way fixed effects (TWFE) estim
 
 # Features that are still to implement
 
-- Fix Struct / function of twowayfeweights.
-- Fix the different methods errors of `twowayfeweights_test_random_weights`
 - Harmonize all intermediate tests.
 - Harmonize documentation for utils (internal functions).
 - Harmonize the display of message in the Julia REPL.
 - Harmonize the use of the "weights" argument.
-- Allow Metal.jl use with the FixedEffectModels calls.
-- Try to make use of multithreading.
 
 Website-Documentation: 
 - Internal process

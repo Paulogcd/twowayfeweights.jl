@@ -24,8 +24,9 @@ Internal workhorse function for creating the return object of a
 function twowayfeweights_result(;
     dat::DataFrames.DataFrame,
     beta::Real,
-    random_weights,
-    treatments = nothing)
+    random_weights::Union{Nothing, String, Vector{String}},
+    treatments = nothing,
+    method::Symbol)
 
     dat[!, :weight_result] = zero_below_eps(dat[!, :weight_result])
     
@@ -33,7 +34,7 @@ function twowayfeweights_result(;
     
         ret = twowayfeweights_summarize_weights(df = dat, var_weight = "weight_result")
         
-        W_mean = weighted_mean(dat.W, dat.nat_weight)
+        W_mean      = weighted_mean(dat.W, dat.nat_weight)
         M           = sum(skipmissing(dat.nat_weight .!= 0))
         W_sd        = sqrt(sum(skipmissing(dat.nat_weight .* (dat.W .- W_mean).^2))) * sqrt(M/(M - 1)) # na.rm here
         sensibility = abs.(beta) ./ W_sd
@@ -46,7 +47,7 @@ function twowayfeweights_result(;
         ret[:sensibility] = sensibility
 
         if !isnothing(random_weights)
-            ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights)
+            ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights, method)
         end
         
         if ret[:sum_minus] < 0
@@ -88,7 +89,7 @@ function twowayfeweights_result(;
         ret[:tot_cells] = sum((skipmissing(dat.nat_weight) .!= 0))
         
         if !isnothing(random_weights)
-            ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights)
+            ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights, method)
         end
         
         for treatment in treatments

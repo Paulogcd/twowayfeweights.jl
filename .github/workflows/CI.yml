@@ -58,16 +58,16 @@ jobs:
       - name: Install the original R package
         run: |
 
-          install.packages("forcats", repos = "https://cloud.r-project.org")
-          install.packages("readr", repos = "https://cloud.r-project.org")
-          install.packages("vctrs", repos = "https://cloud.r-project.org")
-          install.packages("glue", repos = "https://cloud.r-project.org")
-          install.packages("pillar", repos = "https://cloud.r-project.org")
-          install.packages("hms", repos = "https://cloud.r-project.org")
-          install.packages("tidyselect", repos = "https://cloud.r-project.org")
-          install.packages("tibble", repos = "https://cloud.r-project.org")
-          install.packages("haven", repos = "https://cloud.r-project.org")
-          install.packages("dplyr", repos = "https://cloud.r-project.org")
+          install.packages("forcats",     repos = "https://cloud.r-project.org")
+          install.packages("readr",       repos = "https://cloud.r-project.org")
+          install.packages("vctrs",       repos = "https://cloud.r-project.org")
+          install.packages("glue",        repos = "https://cloud.r-project.org")
+          install.packages("pillar",      repos = "https://cloud.r-project.org")
+          install.packages("hms",         repos = "https://cloud.r-project.org")
+          install.packages("tidyselect",  repos = "https://cloud.r-project.org")
+          install.packages("tibble",      repos = "https://cloud.r-project.org")
+          install.packages("haven",       repos = "https://cloud.r-project.org")
+          install.packages("dplyr",       repos = "https://cloud.r-project.org")
     
           install.packages("TwoWayFEWeights", repos = "https://cloud.r-project.org")
 

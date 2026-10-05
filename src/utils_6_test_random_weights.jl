@@ -9,7 +9,8 @@
 """
 function twowayfeweights_test_random_weights(
     df::DataFrames.DataFrame,
-    random_weights::Vector{Union{Nothing, String}})
+    random_weights::Union{String, Vector{String}}, # This causes an error.
+    method::Symbol)
 
     if !isnothing(random_weights)
         if(typeof(random_weights)) == Vector{String}
@@ -29,7 +30,7 @@ function twowayfeweights_test_random_weights(
             v = [random_weights][vv]
 
             formule = Term(Symbol(v)) ~ Term(:W)
-            rw_lm = FixedEffectModels.reg(df_filtered, formule, weights = :nat_weight, Vcov.cluster(:G));
+            rw_lm = FixedEffectModels.reg(df_filtered, formule, weights = :nat_weight, Vcov.cluster(:G), method=method);
 
             # Here, the use of "[coefnames(rw_lm) .== "W"]" seems a bit cumbersome.
             # There is maybe a clearer way to refer to the W coef.
@@ -76,7 +77,7 @@ function twowayfeweights_test_random_weights(
         v = [random_weights][vv]
 
         formule = Term(Symbol(v)) ~ Term(:W)
-        rw_lm = FixedEffectModels.reg(df_filtered, formule, weights = :nat_weight, Vcov.cluster(:G));
+        rw_lm = FixedEffectModels.reg(df_filtered, formule, weights = :nat_weight, Vcov.cluster(:G), method=method);
 
         # Here, the use of "[coefnames(rw_lm) .== "W"]" seems a bit cumbersome.
         # There is maybe a clearer way to refer to the W coef.
@@ -122,7 +123,7 @@ function twowayfeweights_test_random_weights(
         v = [random_weights][vv]
 
         formule = Term(Symbol(v)) ~ Term(:W)
-        rw_lm = FixedEffectModels.reg(df_filtered, formule, weights = :nat_weight, Vcov.cluster(:G));
+        rw_lm = FixedEffectModels.reg(df_filtered, formule, weights = :nat_weight, Vcov.cluster(:G), method=method);
 
         # Here, the use of "[coefnames(rw_lm) .== "W"]" seems a bit cumbersome.
         # There is maybe a clearer way to refer to the W coef.

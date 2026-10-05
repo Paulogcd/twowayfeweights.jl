@@ -213,7 +213,8 @@ function test_step_4_calculate(data_R, data_julia, save = false)
             dat        = data_julia[:data_filtered],
             type       = data_julia[:type],
             controls   = data_julia[:controls_rename],
-            treatments = data_julia[:treatments_rename]
+            treatments = data_julia[:treatments_rename],
+            method     = method
         )
 
         # Here, we have to adapt to convert the data into a data.table object.
@@ -269,7 +270,8 @@ function test_step_5_result(data_R, data_julia, save = false)
             dat             = data_julia[:res][:dat],
             beta            = data_julia[:res][:beta],
             random_weights  = data_julia[:random_weight_rename],
-            treatments      = data_julia[:treatments_rename]
+            treatments      = data_julia[:treatments_rename],
+            method          = method
         )
         
         RCall.rcopy(R"

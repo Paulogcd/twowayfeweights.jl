@@ -189,7 +189,8 @@ function twowayfeweights(;
       dat            = res[:dat],
       beta           = res[:beta],
       random_weights = random_weight_rename,
-      treatments     = treatments_rename)
+      treatments     = treatments_rename,
+      method         = method)
 
     # Set class and add extra features for post-processing (printing etc.)
     # class(res) = "twowayfeweights"

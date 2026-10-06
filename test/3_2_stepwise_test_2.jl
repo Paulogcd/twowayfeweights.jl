@@ -8,34 +8,42 @@ function stepwise_test_2()
 
         data_julia = Dict(
             :data                   => data,
+            
             :Y                      => "Y",
             :G                      => "indusid",
             :T                      => "time",
             :D                      => "D",
-            :type                   => "feTR",
             :D0                     => nothing,
-            :summary_measures       => true,
+
+            :type                   => "feTR",
+
             :controls               => nothing,
             :weights                => nothing,
             :other_treatments       => nothing,
             :test_random_weights    => nothing,
+            
+            :summary_measures       => true,
             :path                   => nothing,
         )
 
         RCall.rcopy(R"
             data_R = list(
                 data                   = data,
-                Y                      = \"Y\",
-                G                      = \"indusid\",
-                T                      = \"time\",
-                D                      = \"D\",
-                type                   = \"feTR\",
+
+                Y                      = 'Y',
+                G                      = 'indusid',
+                T                      = 'time',
+                D                      = 'D',
                 D0                     = NULL,
-                summary_measures       = TRUE,
+
+                type                   = 'feTR',
+                
                 controls               = NULL,
                 weights                = NULL,
                 other_treatments       = NULL,
                 test_random_weights    = NULL,
+                
+                summary_measures       = TRUE,
                 path                   = NULL
             )
         ")

@@ -136,9 +136,11 @@ function twowayfeweights(;
     end
 
     for v in filter(!isnothing, [Y, G, T, D, D0])
-        if !(typeof(data[!, Symbol(v)]) <: AbstractVector{T} where {T <: Union{Missing, Real}})
-            data[!, Symbol(v)] .= parse_float_or_missing.(data[!, Symbol(v)])
-        end
+      if data[!, Symbol(v)] isa LabeledVector
+        data[!, Symbol(v)] = data[!, Symbol(v)].values
+      elseif !(typeof(data[!, Symbol(v)]) <: AbstractVector{T} where {T <: Union{Missing, Real}})
+        data[!, Symbol(v)] .= parse_float_or_missing.(data[!, Symbol(v)])
+      end
     end
 
     # We rename:

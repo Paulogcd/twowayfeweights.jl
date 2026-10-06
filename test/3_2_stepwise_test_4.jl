@@ -10,34 +10,42 @@ function stepwise_test_4()
         
         data_julia = Dict(
             :data                   => data,
+            
             :Y                      => "prestout",
             :G                      => "cnty90",
             :T                      => "year",
             :D                      => "changedailies",
             :D0                     => nothing,
+            
             :type                   => "feTR",
+
             :controls               => styr_cols,
-            :summary_measures       => true,
+            :weights                => nothing,
             :other_treatments       => nothing,
-            :path                   => nothing,
             :test_random_weights    => nothing,
-            :weights                => nothing
+            
+            :summary_measures       => true,
+            :path                   => nothing,
         )
 
         RCall.rcopy(R"data_R <- list(
-            data    = data,
-            Y       = 'prestout',
-            G       = 'cnty90',
-            T       = 'year',
-            D       = 'changedailies',
-            D0      = NULL,
-            type    = 'feTR',
-            controls = styr_cols,
-            summary_measures    = TRUE,
+            data                = data,
+
+            Y                   = 'prestout',
+            G                   = 'cnty90',
+            T                   = 'year',
+            D                   = 'changedailies',
+            D0                  = NULL,
+            
+            type                = 'feTR',
+
+            controls            = styr_cols,
+            weights             = NULL,
             other_treatments    = NULL,
-            path                = NULL,
             test_random_weights = NULL,
-            weights = NULL
+
+            summary_measures    = TRUE,
+            path                = NULL
         )")
         data_R = RCall.rcopy(R"data_R")
 

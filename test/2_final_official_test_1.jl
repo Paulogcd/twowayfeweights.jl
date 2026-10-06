@@ -11,6 +11,7 @@ Test.@testset "1 - Wolfers 2006" begin
     tmp = Downloads.download(url)
     data = ReadStatTables.readstat(tmp)
     data = DataFrames.DataFrame(data)
+    data[!, :state]
 
     # R
     RCall.@rput tmp
@@ -30,6 +31,8 @@ Test.@testset "1 - Wolfers 2006" begin
     type                = "feTR"
     test_random_weights = "year"
     weights             = data[!, :stpop]
+
+    # state = data[:, :state]
 
     # R
     RCall.rcopy(R"Y = 'div_rate'")
@@ -54,7 +57,7 @@ Test.@testset "1 - Wolfers 2006" begin
     
     test_1_julia = TwoWayFEWeights.twowayfeweights(
         data                = data,
-        Y                   = "div_rate", 
+        Y                   = "div_rate",
         G                   = "state",
         T                   = "year",
         D                   = "rel_time1",

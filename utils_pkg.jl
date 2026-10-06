@@ -16,7 +16,7 @@ list_of_pkgs = [
     "PrettyTables",
     "Crayons",
     "CSV", 
-    Downloads
+    "Downloads"
 ]
 for paquet in list_of_pkgs
     Pkg.add(paquet)

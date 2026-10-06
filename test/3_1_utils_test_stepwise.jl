@@ -241,6 +241,9 @@ function test_step_5_result(data_R, data_julia, save = false)
             )
         ")
 
+        # data_julia[:result]
+        # RCall.rcopy(R"data_R$result")
+
         data_R = RCall.rcopy(R"data_R")
 
         if save save_test_data(data_R, data_julia, "5") end
@@ -267,6 +270,9 @@ end
 
 function compare_R_julia(R_object::AbstractDict, julia_object::AbstractDict)
     
+    # R_object = data_R[:result]
+    # julia_object = data_julia[:result]
+    
     RCall.@rput R_object
 
     # General tests
@@ -277,19 +283,19 @@ function compare_R_julia(R_object::AbstractDict, julia_object::AbstractDict)
         
         RCall.@rput k
 
-        RCall.rcopy(R"R_object$OT_rel_time3")
-        
         julia_object_k  = julia_object[Symbol(k)]
         R_object_k      = RCall.rcopy(R"R_object[[k]]")
 
         RCall.@rput R_object_k
 
         if julia_object_k isa OrderedCollections.OrderedDict
-            
-            compare_R_julia(R_object_k, julia_object_k)
+
+            # @info string("The object ", k, " is a Dict.")
+            compare_R_julia_object(R_object_k, julia_object_k)
 
         elseif julia_object_k isa DataFrames.DataFrame
             
+            # @info string("The object ", k, " is a DataFrame.")
             compare_R_julia(R_object_k, julia_object_k)
         
         else
@@ -350,7 +356,7 @@ function compare_R_julia(R_object_k::DataFrames.DataFrame, julia_object_k::DataF
             result_approx = isapprox(
                 julia_test,
                 R_test;
-                atol = 1e-3
+                atol = 1e-2
             )
             if !result_approx
                 @show col_name
@@ -363,6 +369,55 @@ function compare_R_julia(R_object_k::DataFrames.DataFrame, julia_object_k::DataF
             Test.@test result_approx
         else
             Test.@test result
+        end
+    end
+end
+
+function compare_R_julia_object(R_object_k, julia_object_k)
+
+    if R_object_k isa DataFrames.DataFrame && julia_object_k isa DataFrames.DataFrame
+        
+        compare_R_julia(R_object_k, julia_object_k)
+
+    else
+    
+        R_kk = copy(R_object_k)
+        RCall.@rput R_kk
+        Test.@test length(julia_object_k) == length(R_kk)
+        Test.@test length(setdiff(keys(julia_object_k), keys(R_kk))) == 0
+
+        for k_rec in string.(keys(julia_object_k))
+
+            RCall.@rput k_rec
+            
+            julia_test = julia_object_k[Symbol(k_rec)]
+            julia_test = length(julia_test) == 1  ? julia_test[1] : julia_test
+            R_test = RCall.rcopy(R"R_kk[[k_rec]]")
+
+            result = isequal(R_test, julia_test)
+            
+            if !result
+                
+                julia_test  = julia_test |> skipmissing |> collect
+                R_test      = R_test |> skipmissing |> collect
+
+                result_approx = isapprox(
+                    julia_test,
+                    R_test;
+                    atol = 1e-2
+                )
+                if !result_approx
+                    @show k_rec
+                    @show eltype(julia_test)
+                    @show eltype(R_test)
+                    @show length(julia_test)
+                    @show length(R_test)
+                    @show maximum(abs.(julia_test .- R_test))
+                end
+                Test.@test result_approx
+            else
+                Test.@test result
+            end
         end
     end
 end

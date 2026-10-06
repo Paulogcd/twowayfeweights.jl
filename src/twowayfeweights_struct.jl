@@ -12,8 +12,6 @@ Base.keys(x::twowayfeweights)                   = keys(x.data)
 Base.iterate(nt::twowayfeweights)               = iterate(nt.data)
 Base.iterate(nt::twowayfeweights, state)        = iterate(nt.data, state)
 
-# Maybe to define:  ############################################
-
 # Conversion to OrderedDict
 function OrderedCollections.OrderedDict(x::twowayfeweights)
 
@@ -21,5 +19,7 @@ function OrderedCollections.OrderedDict(x::twowayfeweights)
     for element in keys(x)
         resultat[Symbol(element)] = x.data[Symbol(element)]
     end
+
+    return resultat
 
 end

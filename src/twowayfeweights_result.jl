@@ -18,8 +18,6 @@ Internal workhorse function for creating the return object of a
 @returns A list.
 @details This function is normally run directly after
   `twowayfeweights_calculate()`.
-@importFrom magrittr %>%
-@noRd
 """
 function twowayfeweights_result(;
     dat::DataFrames.DataFrame,

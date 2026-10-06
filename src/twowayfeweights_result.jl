@@ -1,7 +1,7 @@
 """
 Internal function used in twowayfeweights_result()
 """
-zero_below_eps = function(x)
+zero_below_eps = function(x::AbstractVector{T}) where{T<:Real}
     ifelse.(.!ismissing.(x) .& (abs.(x) .< 1e-10), 0, x)
 end
 
@@ -108,6 +108,6 @@ function twowayfeweights_result(;
         
     end
 
-    return(ret)
+    return ret
 
 end

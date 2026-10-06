@@ -6,11 +6,8 @@ The `fn_ctrl_rename` function is the equivalent of the original `fn_ctrl_rename`
     fn_ctrl_rename <- function(x) paste("ctrl", x, sep="_")
 """
 function fn_ctrl_rename(x)
-
-    # result = ifelse.(!isnothing.(x), "ctrl_" .* x, nothing) # How does it compare to the simple "string.("ctrl_", x)"?
     result = ifelse.(.!isnothing.(x), string.("ctrl_", x), nothing) # How does it compare to the simple "string.("ctrl_", x)"?
-
-    return(result)
+    return result
 end
 
 """
@@ -22,9 +19,7 @@ The `get_controls_rename` function is the equivalent of the original `get_contro
 """
 function get_controls_rename(controls)
     result = fn_ctrl_rename.(controls)
-    # result = unlist(result) ? (equivalent) ? 
-
-    return(result)
+    return result
 end
 
 """
@@ -34,7 +29,7 @@ end
 """
 function fn_treatment_rename(treatments)
     result = ifelse.(.!isnothing.(treatments), string.("OT_", treatments), nothing)
-    return(result)
+    return result
 end
 
 """
@@ -46,11 +41,8 @@ The `get_treatments_rename` function is the equivalent of the original `get_trea
 """
 function get_treatments_rename(treatments)
     result = fn_treatment_rename.(treatments)
-    # result = unlis(result) # ? equivalent ?
-    return(result)
+    return result
 end
-# x = [1,2,3,4]
-# get_treatments_rename(x)
 
 """
     fn_treatment_weight_rename(x)
@@ -73,11 +65,8 @@ The `fn_random_weight_rename` function is the equivalent of the original `fn_ran
     fn_random_weight_rename <- function(x) paste("RW", x, sep="_")
 """
 function fn_random_weight_rename(x)
-    # x = string.(x)
-    # result = "RW_" .* x
     result = ifelse.(.!isnothing.(x), string.("RW_", x), nothing)
-
-    return(result)
+    return result
 end
 
 """
@@ -88,7 +77,6 @@ The `fn_random_weight_rename` function is the equivalent of the original `fn_ran
     # get_random_weight_rename <- function(ws) unlist(lapply(ws, fn_random_weight_rename))
 """
 function get_random_weight_rename(ws)
-    # ws = string.(ws)
     result = fn_random_weight_rename(ws)
     return result
 end

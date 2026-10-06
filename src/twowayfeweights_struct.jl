@@ -14,13 +14,6 @@ Base.iterate(nt::twowayfeweights, state)        = iterate(nt.data, state)
 
 # Maybe to define:  ############################################
 
-# Empty initialisator.
-# function twowayfeweights()
-#     # resultat = twowayfeweights(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-#     # resultat = twowayfeweights()
-#     # return resultat
-# end
-
 # Conversion to OrderedDict
 function OrderedCollections.OrderedDict(x::twowayfeweights)
 

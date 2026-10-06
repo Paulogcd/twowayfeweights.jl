@@ -10,9 +10,9 @@ end
 
 function twowayfeweights_transform(;
     df::DataFrames.DataFrame,
-    controls::Union{String, Vector{String}},
-    weights::Union{String, Vector{String}, Nothing},
-    treatments::Union{String, Vector{String}, Nothing})
+    controls::Union{Nothing, String, AbstractVector{<:String}},
+    weights::Union{Nothing, Number, AbstractVector{<:Number}},
+    treatments::Union{Nothing, String, Vector{<:String}})
 
 Internal function.
 

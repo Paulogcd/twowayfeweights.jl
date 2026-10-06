@@ -1,9 +1,21 @@
 """
 Internal function used in twowayfeweights_result()
 """
-zero_below_eps = function(x::AbstractVector{T}) where{T<:Real}
-    ifelse.(.!ismissing.(x) .& (abs.(x) .< 1e-10), 0, x)
+# zero_below_eps = function(x::AbstractVector{T}) where{T<:Real}
+#     ifelse.(.!ismissing.(x) .& (abs.(x) .< 1e-10), 0, x)
+# end
+function zero_below_eps(x::AbstractVector)
+    map(x) do v
+        if ismissing(v)
+            missing
+        elseif abs(v) < 1e-10
+            zero(v)
+        else
+            v
+        end
+    end
 end
+
 
 """
 Internal workhorse function for creating the return object of a
@@ -32,9 +44,16 @@ function twowayfeweights_result(;
     
         ret = twowayfeweights_summarize_weights(df = dat, var_weight = "weight_result")
         
-        W_mean      = weighted_mean(dat.W, dat.nat_weight)
+        W_mean      = stats_weighted_mean_na_rm(dat.W, dat.nat_weight)
         M           = sum(skipmissing(dat.nat_weight .!= 0))
-        W_sd        = sqrt(sum(skipmissing(dat.nat_weight .* (dat.W .- W_mean).^2))) * sqrt(M/(M - 1)) # na.rm here
+        W_sd_pre_sum = sum(skipmissing(dat.nat_weight .* (dat.W .- W_mean).^2))
+        W_sd_pre_sum = (W_sd_pre_sum > 0 ? W_sd_pre_sum : NaN)
+        W_sd        = sqrt(W_sd_pre_sum) * sqrt(M/(M - 1)) # NaN propagates if W_sd_pre_sum is negative.
+        # DomainError with -0.949300845859282:
+        # sqrt was called with a negative real argument but will only return a complex result if called with a complex argument. Try sqrt(Complex(x)).
+        # More specifically: 
+        # sum(skipmissing(dat.nat_weight .* (dat.W .- W_mean).^2)) # -0.949300845859282
+        # This behaviour is also observed in the R package
         sensibility = abs.(beta) ./ W_sd
         
         dat_result = dat[:, [:T, :G, :weight_result]]
@@ -59,11 +78,13 @@ function twowayfeweights_result(;
             DataFrames.sort!(dat_sens, [:W, :G, :T], rev = [true, false, false])
 
             N = nrow(dat_sens)
-            dat_sens.sens_measure2 = (abs.(beta) ./ sqrt.(dat_sens.T_k + ((dat_sens.S_k.^2) ./ (1 .- dat_sens.P_k))))
+            pre_sens_measure2 = dat_sens.T_k + ((dat_sens.S_k.^2) ./ (1 .- dat_sens.P_k))
+            pre_sens_measure2 = ifelse.(pre_sens_measure2 .> 0, pre_sens_measure2, NaN)
+            dat_sens.sens_measure2 = (abs.(beta) ./ sqrt.(pre_sens_measure2))
             dat_sens.indicator .= dat_sens.W .<  (.-(dat_sens.S_k)) ./ (1 .- dat_sens.P_k) # Quel ordre ? Même priorité des opérations que dans R ?
             
             dat_sens.indicator[1] = 0
-            dat_sens.indicator_l = lag(dat_sens.indicator, default = -1)
+            dat_sens.indicator_l = ShiftedArrays.lag(dat_sens.indicator, default = -1)
             dat_sens.indicator .= max.(dat_sens.indicator, dat_sens.indicator_l)
 
             total_indicator = sum(dat_sens.indicator)

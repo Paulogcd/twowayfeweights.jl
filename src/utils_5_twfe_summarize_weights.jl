@@ -10,7 +10,7 @@ function twowayfeweights_summarize_weights(;
     w = df[!, Symbol(var_weight)]
     ok = .!ismissing.(w)
 
-    weight_plus  = w[(ok) .&& w .> 0]
+    weight_plus  = w[ok .&& w .> 0]
     weight_minus = w[ok .&& w .< 0]
    
     result = OrderedCollections.OrderedDict{Symbol, Any}(

@@ -317,6 +317,8 @@ function compare_R_julia(R_object::AbstractDict, julia_object::AbstractDict)
                     @show length(julia_object_k)
                     @show length(R_object_k)
                     @show maximum(abs.(julia_object_k .- R_object_k))
+                    @show R_object_k
+                    @show julia_object_k
                 end
                 Test.@test result_approx
             else

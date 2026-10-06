@@ -26,6 +26,30 @@ function weighted_mean(x::Vector{T}, w::Vector{W})::Real where {T<:Union{Missing
     end
 end
 
+# Mimic the stats::weighted.mean(x, w, na.rm = TRUE) function in R 
+function stats_weighted_mean_na_rm(x::Vector{T}, w::Vector{W})::Real where {T<:Union{Missing, Real}, W<:Union{Missing, Real}}
+    
+    x = x |> skipmissing |> collect
+    
+    x_length = length(x)
+    if length(w) != x_length @error("weighted_mean: x and w must have equal length") end
+    num, den = zeros(2);
+    for i in 1:x_length
+        xi, wi = x[i], w[i];
+        if ismissing(xi) || ismissing(wi)
+            continue
+        else
+            num += xi * wi
+            den += wi
+        end
+    end
+    if den == 0
+        return NaN
+    else 
+        return num / den
+    end
+end
+
 function weighted_mean(x::Vector{T}, w::Vector{W})::Real where {T<:Real, W<:Real}
     x_length = length(x)
     if length(w) != x_length @error("weighted_mean: x and w must have equal length") end
@@ -278,3 +302,4 @@ function feS_delta(
         keep        = keep
     )
 end
+

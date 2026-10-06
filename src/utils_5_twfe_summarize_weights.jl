@@ -7,33 +7,19 @@ function twowayfeweights_summarize_weights(;
     df::DataFrames.DataFrame,
     var_weight::Union{String, Vector{String}})
 
-    var_weight = Symbol(var_weight)
+    w = df[!, Symbol(var_weight)]
+    ok = .!ismissing.(w)
 
-    # First, we take the list of weights that are positive and not missing.
-    weight_plus = df[
-        .!ismissing.(df[!, var_weight]) .& (df[!, var_weight] .> 0),
-        var_weight
-    ]
-    nr_plus         = length(weight_plus)
-    sum_plus        = sum(weight_plus)    
-
-    # Similar for negative and not missing.
-    weight_minus = df[
-        .!ismissing.(df[!, var_weight]) .& (df[!, var_weight] .< 0),
-        var_weight
-    ]
-
-    nr_minus        = length(weight_minus)
-    sum_minus       = sum(weight_minus)
-
-    nr_weights = nr_plus + nr_minus
+    weight_plus  = w[(ok) .&& w .> 0]
+    weight_minus = w[ok .&& w .< 0]
    
     result = OrderedCollections.OrderedDict{Symbol, Any}(
-        :nr_plus    => nr_plus,
-        :nr_minus   => nr_minus,
-        :nr_weights => nr_weights,
-        :sum_plus   => sum_plus,
-        :sum_minus  => sum_minus)
+        :nr_plus    => length(weight_plus),
+        :nr_minus   => length(weight_minus),
+        :nr_weights => length(weight_plus) + length(weight_minus),
+        :sum_plus   => sum(weight_plus),
+        :sum_minus  => sum(weight_minus)
+    )
 
     return result
 end

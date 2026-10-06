@@ -83,7 +83,7 @@ function twowayfeweights_result(;
         end
 
         columns = ["T", "G", "weight_result"]
-        ret = twowayfeweights_summarize_weights(df = dat, var_weight = "weight_result") # Error here, not all fields are included.
+        ret = twowayfeweights_summarize_weights(df = dat, var_weight = "weight_result")
         ret[:tot_cells] = sum((skipmissing(dat.nat_weight) .!= 0))
         
         if !isnothing(random_weights)

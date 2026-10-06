@@ -86,40 +86,9 @@ function test_step_1_renaming(data_R, data_julia, save = false)
         end
         data_R = RCall.@rput data_R
 
-        # This is not enough to work due to local binding.
-        # We return the value at the end of the function.
-
         if save save_test_data(data_R, data_julia, "1") end
 
-        Test.@test length(data_R) == length(data_julia)
-        Test.@test size(data_R[:data_renamed]) == size(data_julia[:data_renamed])
-        result = isequal(
-            data_julia[:data_renamed],
-            RCall.rcopy(R"data_R$data_renamed")
-        )
-        if !result
-            for col_name in string.(names(data_julia[:data_renamed]))
-                RCall.@rput col_name
-                julia_test = data_julia[:data_renamed][!, Symbol(col_name)] |> skipmissing |> collect
-                R_test = RCall.rcopy(R"data_R$data_renamed[[col_name]]") |> skipmissing |> collect
-                result_approx = isapprox(
-                    julia_test,
-                    R_test,
-                    atol = 1e-4
-                )
-                if !result_approx
-                    @show col_name
-                    @show eltype(julia_test)
-                    @show eltype(R_test)
-                    @show length(julia_test)
-                    @show length(R_test)
-                    @show maximum(abs.(julia_test .- R_test))
-                end
-                Test.@test result_approx
-            end
-        else
-            Test.@test result
-        end
+        compare_R_julia(data_R, data_julia)
     end;
 
     return(data_R, data_julia)
@@ -139,7 +108,6 @@ function test_step_2_transform(data_R, data_julia, save = false)
             weights     = data_julia[:weights],
             treatments  = data_julia[:treatments_rename])
         
-        # Takes 7 minutes to run.
         RCall.rcopy(R"
             data_R$\"data_transformed\" = TwoWayFEWeights:::twowayfeweights_transform(
                 data_R$\"data_renamed\",
@@ -159,38 +127,11 @@ function test_step_2_transform(data_R, data_julia, save = false)
         # What if the time units have more or less than 4 characters?
         # data_julia_for_test = first.(string.(data_julia[:data_transformed][!, "Tfactor"]), 4)
         corrected_values = string.(data_julia[:data_transformed][!, "Tfactor"])
-        corrected_values = [split.(corrected_values, ".")[i][1] for i in 1:length(corrected_values)]
+        julia_test = [split.(corrected_values, ".")[i][1] for i in 1:length(corrected_values)]
+        R_test = RCall.rcopy(R"data_R$data_transformed |> dplyr::pull(Tfactor)")
+        Test.@test julia_test == R_test
 
-        @test corrected_values == RCall.rcopy(R"data_R$data_transformed |> dplyr::pull(Tfactor)")
-        Test.@test length(data_R) == length(data_julia)
-
-        result = isequal(
-            data_julia[:data_transformed][:, DataFrames.Not(:Tfactor)],
-            RCall.rcopy(R"data_R$data_transformed |> dplyr::select(- Tfactor)")
-        )
-        if !result
-            for col_name in string.(names(data_julia[:data_transformed][:, DataFrames.Not(:Tfactor)]))
-                RCall.@rput col_name
-                julia_test = data_julia[:data_transformed][!, Symbol(col_name)] |> skipmissing |> collect
-                R_test = RCall.rcopy(R"data_R$data_transformed[[col_name]]") |> skipmissing |> collect
-                result_approx = isapprox(
-                    julia_test,
-                    R_test,
-                    atol = 1e-4
-                )
-                if !result_approx
-                    @show col_name
-                    @show eltype(julia_test)
-                    @show eltype(R_test)
-                    @show length(julia_test)
-                    @show length(R_test)
-                    @show maximum(abs.(julia_test .- R_test))
-                end
-                Test.@test result_approx
-            end
-        else
-            Test.@test result
-        end
+        compare_R_julia(data_R[:data_transformed], data_julia[:data_transformed])
     end
 
     return(data_R, data_julia)
@@ -199,7 +140,7 @@ end
 
 function test_step_3_filter(data_R, data_julia, save = false)
 
-     Test.@testset "Step 3: filtering" begin    
+    Test.@testset "Step 3: filtering" begin
         
         RCall.@rput data_R
 
@@ -231,36 +172,8 @@ function test_step_3_filter(data_R, data_julia, save = false)
 
         if save save_test_data(data_R, data_julia, "3") end
 
-        result = isequal(
-            data_julia[:data_filtered][:, DataFrames.Not(:Tfactor)],
-            RCall.rcopy(R"data_R$data_filtered |> dplyr::select(- Tfactor)")
-        )
-        if !result
-            # Extra steps for GitHub test pipeline.
-            for col_name in string.(names(data_julia[:data_filtered][:, DataFrames.Not(:Tfactor)]))
-                RCall.@rput col_name
-                julia_test = data_julia[:data_filtered][!, Symbol(col_name)] |> skipmissing |> collect
-                R_test = RCall.rcopy(R"data_R$data_filtered[[col_name]]") |> skipmissing |> collect
-                result_approx = isapprox(
-                    julia_test,
-                    R_test,
-                    atol = 1e-4
-                )
-                if !result_approx
-                    @show col_name
-                    @show eltype(julia_test)
-                    @show eltype(R_test)
-                    @show length(julia_test)
-                    @show length(R_test)
-                    @show maximum(abs.(julia_test .- R_test))
-                end
-                Test.@test result_approx
-            end
-        else
-            Test.@test result
-        end
-        Test.@test length(data_R) == length(data_julia)
-    end;
+        compare_R_julia(data_R[:data_filtered][:, DataFrames.Not(:Tfactor)], data_julia[:data_filtered][:, DataFrames.Not(:Tfactor)])
+    end
 
     return(data_R, data_julia)
 
@@ -268,7 +181,7 @@ end
 
 function test_step_4_calculate(data_R, data_julia, save = false)
     
-     Test.@testset "Step 4: calculate" begin
+    Test.@testset "Step 4: calculate" begin
         
         RCall.@rput data_R
 
@@ -297,39 +210,8 @@ function test_step_4_calculate(data_R, data_julia, save = false)
 
         if save save_test_data(data_R, data_julia, "4") end
 
-        for col_name in names(data_julia[:res][:dat][:, DataFrames.Not(:Tfactor)])
-            RCall.@rput col_name
-            result = isequal(
-                data_julia[:res][:dat][!, col_name],
-                RCall.rcopy(R"data_R$res$dat |> dplyr::pull(col_name)")
-            )
-            if !result # If the column contains missing values, it will pass the isequal test, but fail the isapprox one.
-                julia_test = data_julia[:res][:dat][!, col_name]
-                R_test = RCall.rcopy(R"data_R$res$dat |> dplyr::pull(col_name)")
-                result_approx = isapprox(
-                    julia_test,
-                    R_test;
-                    atol = 1e-4
-                )
-                if !result_approx
-                    @show col_name
-                    @show eltype(julia_test)
-                    @show eltype(R_test)
-                    @show length(julia_test)
-                    @show length(R_test)
-                    @show maximum(abs.(julia_test .- R_test))
-                end
-                Test.@test result_approx
-            else
-                # print(col, " - ", result, " - ", result_approx, "\n")
-                Test.@test result
-            end
-        end;
-        Test.@test isapprox(
-            data_julia[:res][:beta],
-            RCall.rcopy(R"data_R$res$\"beta\""),
-            atol = 1e-4)
-        Test.@test length(data_R) == length(data_julia)
+        compare_R_julia(data_R[:res], data_julia[:res])
+    
     end;
 
     return(data_R, data_julia)
@@ -338,7 +220,7 @@ end
 
 function test_step_5_result(data_R, data_julia, save = false)
 
-     Test.@testset "Step 5: results" begin
+    Test.@testset "Step 5: results" begin
 
         RCall.@rput data_R
 
@@ -363,105 +245,8 @@ function test_step_5_result(data_R, data_julia, save = false)
 
         if save save_test_data(data_R, data_julia, "5") end
 
-        Test.@test length(data_R) == length(data_julia)
-        Test.@test isapprox(
-            data_julia[:result][:beta],
-            RCall.rcopy(R"data_R$result$\"beta\""),
-            atol = 1e-4
-        )
+        compare_R_julia(data_R[:result], data_julia[:result])
 
-        for k in string.(keys(data_julia[:result]))
-            RCall.@rput k
-            if data_julia[:result][Symbol(k)] isa OrderedCollections.OrderedDict
-                for kk in string.(keys(data_julia[:result][Symbol(k)]))
-                    RCall.@rput kk
-                    julia_test = data_julia[:result][Symbol(k)][Symbol(kk)]
-                    R_test = RCall.rcopy(R"data_R$result[[k]][[kk]]")
-                    result = isequal(
-                        julia_test,
-                        R_test
-                    )
-                    if !result
-                        result_approx = isapprox(
-                            julia_test,
-                            R_test;
-                            atol = 1e-4
-                        )
-                        if !result_approx
-                            @show col_name
-                            @show eltype(julia_test)
-                            @show eltype(R_test)
-                            @show length(julia_test)
-                            @show length(R_test)
-                            @show maximum(abs.(julia_test .- R_test))
-                        end
-                        # print(k, " - ", kk, " - ", result, " - ", result_approx, "\n")
-                        Test.@test result_approx
-                    else 
-                        Test.@test result
-                    end
-
-                end
-            elseif data_julia[:result][Symbol(k)] isa DataFrames.DataFrame
-                obj = data_julia[:result][Symbol(k)]
-                RCall.rcopy(R"obj <- data_R$result[[k]]")
-                Test.@test names(obj) == RCall.rcopy(R"names(obj)")
-                for col_names in names(obj)
-                    RCall.@rput col_names
-                    julia_test = obj[!, col_names]
-                    R_test = RCall.rcopy(R"obj[[col_names]]")
-                    result = isequal(
-                        julia_test,
-                        R_test
-                    )
-                    if !result
-                        result_approx = isapprox(
-                            length(julia_test) == 1  ? julia_test[1] : julia_test, # For 1-lined Dataframe.
-                            R_test;
-                            atol = 1e-3
-                        )
-                        if !result_approx
-                            @show col_name
-                            @show eltype(julia_test)
-                            @show eltype(R_test)
-                            @show length(julia_test)
-                            @show length(R_test)
-                            @show maximum(abs.(julia_test .- R_test))
-                        end
-                        # print(k, " - ", col_names, " - ", result, " - ", result_approx, "\n")
-                        Test.@test result_approx
-                    else
-                        Test.@test result
-                    end
-                end
-            else
-                julia_test = data_julia[:result][Symbol(k)]
-                R_test = RCall.rcopy(R"data_R$result[[k]]")
-                result = isequal(
-                    julia_test,
-                    R_test
-                )
-                if !result
-                    result_approx = isapprox(
-                        julia_test,
-                        R_test;
-                        atol = 1e-4
-                    )
-                    if !result_approx
-                        @show col_name
-                        @show eltype(julia_test)
-                        @show eltype(R_test)
-                        @show length(julia_test)
-                        @show length(R_test)
-                        @show maximum(abs.(julia_test .- R_test))
-                    end
-                    # print(k, " - ", result, " - ", result_approx, "\n")
-                    Test.@test result_approx
-                else
-                    Test.@test result
-                end
-            end
-        end;
     end;
 
     return(data_R, data_julia)
@@ -480,3 +265,104 @@ function full_test_step_by_step(data_R, data_julia)
 
 end
 
+function compare_R_julia(R_object::AbstractDict, julia_object::AbstractDict)
+    
+    RCall.@rput R_object
+
+    # General tests
+    Test.@test length(R_object) == length(julia_object)
+    Test.@test keys(R_object) == keys(julia_object)
+
+    for k in string.(keys(julia_object))
+        
+        RCall.@rput k
+
+        RCall.rcopy(R"R_object$OT_rel_time3")
+        
+        julia_object_k  = julia_object[Symbol(k)]
+        R_object_k      = RCall.rcopy(R"R_object[[k]]")
+
+        RCall.@rput R_object_k
+
+        if julia_object_k isa OrderedCollections.OrderedDict
+            
+            compare_R_julia(R_object_k, julia_object_k)
+
+        elseif julia_object_k isa DataFrames.DataFrame
+            
+            compare_R_julia(R_object_k, julia_object_k)
+        
+        else
+
+            result = isequal(R_object_k, julia_object_k)
+            
+            if !result
+
+                result_approx = isapprox(
+                    R_object_k,
+                    julia_object_k;
+                    atol = 1e-4
+                )
+
+                if !result_approx
+                    @show k
+                    @show eltype(julia_object_k)
+                    @show eltype(R_object_k)
+                    @show length(julia_object_k)
+                    @show length(R_object_k)
+                    @show maximum(abs.(julia_object_k .- R_object_k))
+                end
+                Test.@test result_approx
+            else
+                Test.@test result
+            end
+        end
+    end
+end
+
+function compare_R_julia(R_object_k::DataFrames.DataFrame, julia_object_k::DataFrames.DataFrame)
+    
+    RCall.@rput R_object_k
+    Test.@test size(julia_object_k) == size(R_object_k)
+    Test.@test length(setdiff(names(julia_object_k), names(R_object_k))) == 0
+
+    # For Tfactor:
+    if "Tfactor" ∈ names(julia_object_k)
+        julia_object_k = julia_object_k[:, DataFrames.Not(:Tfactor)]
+        R_object_k = R_object_k[:, DataFrames.Not(:Tfactor)]
+    end
+
+    for col_name in names(julia_object_k)
+
+        RCall.@rput col_name
+        
+        julia_test = julia_object_k[!, col_name]
+        julia_test = length(julia_test) == 1  ? julia_test[1] : julia_test
+        R_test = RCall.rcopy(R"R_object_k[[col_name]]")
+
+        result = isequal(R_test, julia_test)
+        
+        if !result
+            
+            julia_test  = julia_test |> skipmissing |> collect
+            R_test      = R_test |> skipmissing |> collect
+
+            result_approx = isapprox(
+                julia_test,
+                R_test;
+                atol = 1e-3
+            )
+            if !result_approx
+                @show col_name
+                @show eltype(julia_test)
+                @show eltype(R_test)
+                @show length(julia_test)
+                @show length(R_test)
+                @show maximum(abs.(julia_test .- R_test))
+            end
+            Test.@test result_approx
+        else
+            Test.@test result
+        end
+    end
+end

@@ -11,34 +11,42 @@ function stepwise_test_1()
 
         data_julia = Dict(
             :data                   => data,
+            
             :Y                      => "div_rate",
             :G                      => "state",
             :T                      => "year",
             :D                      => "rel_time1",
-            :type                   => "feTR",
             :D0                     => nothing,
-            :summary_measures       => true,
+
+            :type                   => "feTR",
+
             :controls               => ["rel_timeminus$(i)" for i in 1:9],
             :weights                => data[!, :stpop],
             :other_treatments       => ["rel_time$(i)" for i in 2:16],
             :test_random_weights    => "year",
+            
+            :summary_measures       => true,
             :path                   => nothing,
         )
 
         RCall.rcopy(R"
             data_R = list(
                 data                   = data,
-                Y                      = \"div_rate\",
-                G                      = \"state\",
-                T                      = \"year\",
-                D                      = \"rel_time1\",
-                type                   = \"feTR\",
+                
+                Y                      = 'div_rate',
+                G                      = 'state',
+                T                      = 'year',
+                D                      = 'rel_time1',
                 D0                     = NULL,
+
+                type                   = 'feTR',
+                
+                controls               = paste0('rel_timeminus', 1:9),
+                weights                = data$'stpop',
+                other_treatments       = paste0('rel_time', 2:16),
+                test_random_weights    = 'year',
+                
                 summary_measures       = TRUE,
-                controls               = paste0(\"rel_timeminus\", 1:9),
-                weights                = data$\"stpop\",
-                other_treatments       = paste0(\"rel_time\", 2:16),
-                test_random_weights    = \"year\",
                 path                   = NULL
             )
         ")

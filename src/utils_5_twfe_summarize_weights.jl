@@ -10,11 +10,19 @@ function twowayfeweights_summarize_weights(;
     var_weight = Symbol(var_weight)
 
     # First, we take the list of weights that are positive and not missing.
-    weight_plus     = df[(df[!, var_weight] .> 0 .& ismissing.(df[!, var_weight])), var_weight]
+    weight_plus = df[
+        .!ismissing.(df[!, var_weight]) .& (df[!, var_weight] .> 0),
+        var_weight
+    ]
     nr_plus         = length(weight_plus)
     sum_plus        = sum(weight_plus)    
 
-    weight_minus    = df[(df[!, var_weight] .< 0 .& ismissing.(df[!, var_weight])), var_weight]
+    # Similar for negative and not missing.
+    weight_minus = df[
+        .!ismissing.(df[!, var_weight]) .& (df[!, var_weight] .< 0),
+        var_weight
+    ]
+
     nr_minus        = length(weight_minus)
     sum_minus       = sum(weight_minus)
 

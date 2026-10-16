@@ -5,8 +5,7 @@ function twowayfeweights_calculate(;
     dat_in::DataFrames.DataFrame,
     type::String,
     controls::Union{String, Vector{String}, Vector{Any}, Nothing},
-    treatments::Union{String, Vector{String}, Nothing},
-    method::Symbol=:cpu)
+    treatments::Union{String, Vector{String}, Nothing})
 
     dat = copy(dat_in)
 
@@ -22,9 +21,6 @@ function twowayfeweights_calculate(;
         mean_D = weighted_mean(dat[:, DVAR], dat[:, :weights])
     end
 
-    # This code block creates a discrepancy?
-    # BUG
-    ###
     obs = sum(dat.weights)
     gdat = DataFrames.combine(
         DataFrames.groupby(dat, [:G, :T]),
@@ -67,9 +63,9 @@ function twowayfeweights_calculate(;
 
     if type == "fdS"
         dat_regression = dat[dat[:, :weights] .!= 0,:]
-        denom_lm = FixedEffectModels.reg(dat_regression, fml, weights = :weights, save = :all, tol = 1e-8; method = method)
+        denom_lm = FixedEffectModels.reg(dat_regression, fml, weights = :weights, save = :all, tol = 1e-8)
     else 
-        denom_lm = FixedEffectModels.reg(dat, fml, weights = :weights, save = :all, tol = 1e-8; method = method)
+        denom_lm = FixedEffectModels.reg(dat, fml, weights = :weights, save = :all, tol = 1e-8)
     end
 
     EPS_VAR = type_fe ? "eps_1" : "eps_2"
@@ -88,9 +84,9 @@ function twowayfeweights_calculate(;
 
     if type == "fdS"
         dat_regression_beta = dat[dat[:, :weights] .!= 0, :]
-        beta_lm = FixedEffectModels.reg(dat_regression_beta, fml_beta, weights = :weights, save = :none, tol = 1e-8; method = method)
+        beta_lm = FixedEffectModels.reg(dat_regression_beta, fml_beta, weights = :weights, save = :none, tol = 1e-8)
     else
-        beta_lm = FixedEffectModels.reg(dat, fml_beta, weights = :weights, tol = 1e-8; method = method)
+        beta_lm = FixedEffectModels.reg(dat, fml_beta, weights = :weights, tol = 1e-8)
     end
     beta = coef(beta_lm)[coefnames(beta_lm) .== "D"][1]
 

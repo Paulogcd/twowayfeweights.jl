@@ -11,7 +11,6 @@ using CSV
 Test.@testset "TwoWayFEWeights.jl" begin
 
     # Helper:
-    include(joinpath(@__DIR__, "0_utils_Metal.jl"))
     include(joinpath(@__DIR__, "0_utils_R_packages.jl"))
     
     include(joinpath(@__DIR__, "3_0_utils_test_helper.jl"))

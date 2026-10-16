@@ -35,8 +35,7 @@ function twowayfeweights_result(;
     dat_in::DataFrames.DataFrame,
     beta::Real,
     random_weights::Union{Nothing, String, Vector{String}},
-    treatments = nothing,
-    method::Symbol)
+    treatments = nothing)
 
     dat = copy(dat_in)
     
@@ -61,7 +60,7 @@ function twowayfeweights_result(;
         ret[:sensibility] = sensibility
 
         if !isnothing(random_weights)
-            ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights, method)
+            ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights)
         end
         
         if ret[:sum_minus] < 0
@@ -105,7 +104,7 @@ function twowayfeweights_result(;
         ret[:tot_cells] = sum((skipmissing(dat.nat_weight) .!= 0))
         
         if !isnothing(random_weights)
-            ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights, method)
+            ret[:mat] = twowayfeweights_test_random_weights(dat, random_weights)
         end
         
         for treatment in treatments

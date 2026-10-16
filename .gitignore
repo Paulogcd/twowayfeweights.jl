@@ -4,4 +4,6 @@
 /test/data/output/*
 /test/sandbox_1.jl
 /test/sandbox_2.jl
-/utils*
+/utils_pkgs.jl
+/utils_docs.sh
+/utils_test.jl

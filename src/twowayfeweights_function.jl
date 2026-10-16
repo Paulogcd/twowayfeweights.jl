@@ -122,8 +122,7 @@ function twowayfeweights(;
     weights::Union{AbstractVector{T}, Nothing} where {T<:Real} = nothing,
     other_treatments::Union{Vector{String}, String, Nothing} = nothing,
     test_random_weights::Union{String, Nothing} = nothing,
-    path::Union{String, Nothing} = nothing,
-    method::Symbol = :cpu)
+    path::Union{String, Nothing} = nothing)
 
     @assert type ∈ ["feTR", "feS", "fdTR", "fdS"] "Argument `type` must be one of `feTR`, `feS`, `fdRTR`, or `fdS`."
 
@@ -183,16 +182,14 @@ function twowayfeweights(;
       dat_in     = data_filtered,
       type       = type,
       controls   = controls_rename,
-      treatments = treatments_rename,
-      method     = method)
+      treatments = treatments_rename)
   
     # Create main return object list
     res = twowayfeweights_result(
       dat_in         = res[:dat],
       beta           = res[:beta],
       random_weights = random_weight_rename,
-      treatments     = treatments_rename,
-      method         = method)
+      treatments     = treatments_rename)
 
     # Set class and add extra features for post-processing (printing etc.)
     # class(res) = "twowayfeweights"

@@ -209,8 +209,7 @@ res = twowayfeweights_result(
         dat_in         = resultat[:dat],
         beta           = resultat[:beta],
         random_weights = random_weight_rename,
-        treatments     = treatments_rename,
-        method          = method
+        treatments     = treatments_rename
     )
 
 res_r = RCall.rcopy(R"TwoWayFEWeights:::twowayfeweights_result(

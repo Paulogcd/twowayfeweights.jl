@@ -3,7 +3,7 @@ Test.@testset "4 - Gentzkow et al. 2011" begin
     using ReadStatTables
     using Downloads
     using DataFrames
-    using RData
+    # using RData
 
     # Julia
     data = CSV.read(joinpath(@__DIR__, "data", "2_official_test_3_data_original.csv"), DataFrames.DataFrame)
@@ -21,13 +21,12 @@ Test.@testset "4 - Gentzkow et al. 2011" begin
     
     test_4_R = RCall.rcopy(R"
         TwoWayFEWeights::twowayfeweights(
-            data = data,
-            Y = 'prestout',
-            G = 'cnty90',
-            T = 'year',
-            D = 'changedailies',
-            D0 = 'numdailies',
-            type = 'fdTR',
+            data    = data,
+            Y       = 'prestout',
+            G       = 'cnty90',
+            T       = 'year',
+            D       = 'numdailies',
+            type    = 'feTR',
             controls = styr_cols)")
     # ERROR: REvalError: NOTE: 1,245 observations removed because of NA values (LHS: 1,245).
     # Error: in fixest::feols(fml, data = dt, weights = dt$weight...: 
@@ -56,26 +55,29 @@ Test.@testset "4 - Gentzkow et al. 2011" begin
     #    @ ~/.julia/packages/RCall/fTLHT/src/macros.jl:75 [inlined]
     
     test_4_julia = twowayfeweights(
-        data = data,
-        Y = "prestout",
-        G = "cnty90",
-        T = "year",
-        D = "numdailies",
-        type = "feTR",
+        data    = data,
+        Y       = "prestout",
+        G       = "cnty90",
+        T       = "year",
+        D       = "numdailies",
+        type    = "feTR",
         controls = styr_cols
     )
 
-    # for cc in keys(test_4_julia)
-    #     if cc ∈ keys(test_4_R)
-    #         @test test_4_julia[cc] == test_4_R[cc]
-    #         if test_4_julia[cc] == test_4_R[cc]
-    #             print("No problem with: ", cc, "\n")
-    #         else
-    #             print("Problem with: ", cc, "\n")
-    #         end
-    #     end
-    # end
-    # @test test_4_julia == test_4_R
+    for cc in keys(test_4_julia)
+        if cc ∈ keys(test_4_R)
+            test_4_julia[cc] == test_4_R[cc]
+            if test_4_julia[cc] == test_4_R[cc]
+                print("No problem with: ", cc, "\n")
+            else
+                print("Problem with: ", cc, "\n")
+                print("R:", test_4_R[cc], " and Julia: ", test_4_julia[cc], "\n")
+            end
+        end
+    end
+    test_4_julia = OrderedCollections.OrderedDict(test_4_julia)
+    compare_R_julia(test_4_R, test_4_julia)
+    @test test_4_julia == test_4_R
 
     test_result(test_4_R, test_4_julia)
     

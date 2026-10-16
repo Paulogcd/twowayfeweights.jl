@@ -22,7 +22,12 @@ function twowayfeweights_test_random_weights(
         mat = DataFrames.DataFrame(zeros(0, 4), :auto)
     end
     rename!(mat, ["Coef", "SE", "t-stat", "Correlation"])
-    df_filtered = df[isfinite.(df[:, :W]), :]
+    df_filtered = df[
+        isfinite.(df[!, :W]) .&
+        .!ismissing.(df[!, :nat_weight]) .&
+        (df[!, :nat_weight] .!= 0),
+        :
+    ]
 
     if !isnothing(random_weights)
         for vv in 1:length([random_weights])
@@ -70,7 +75,12 @@ function twowayfeweights_test_random_weights(
     mat = DataFrames.DataFrame(zeros(length(random_weights), 4), :auto)
 
     rename!(mat, ["Coef", "SE", "t-stat", "Correlation"])
-    df_filtered = df[isfinite.(df[:, :W]), :]
+    df_filtered = df[
+        isfinite.(df[!, :W]) .&
+        .!ismissing.(df[!, :nat_weight]) .&
+        (df[!, :nat_weight] .!= 0),
+        :
+    ]
 
     for vv in 1:length(random_weights)
 
@@ -116,7 +126,12 @@ function twowayfeweights_test_random_weights(
     mat = DataFrames.DataFrame(zeros(length([random_weights]), 4), :auto)
 
     rename!(mat, ["Coef", "SE", "t-stat", "Correlation"])
-    df_filtered = df[isfinite.(df[:, :W]), :]
+    df_filtered = df[
+        isfinite.(df[!, :W]) .&
+        .!ismissing.(df[!, :nat_weight]) .&
+        (df[!, :nat_weight] .!= 0),
+        :
+    ]
 
     for vv in 1:length([random_weights])
 

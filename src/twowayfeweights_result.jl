@@ -48,12 +48,7 @@ function twowayfeweights_result(;
         M           = sum(skipmissing(dat.nat_weight .!= 0))
         W_sd_pre_sum = sum(skipmissing(dat.nat_weight .* (dat.W .- W_mean).^2))
         W_sd_pre_sum = (W_sd_pre_sum > 0 ? W_sd_pre_sum : NaN)
-        W_sd        = sqrt(W_sd_pre_sum) * sqrt(M/(M - 1)) # NaN propagates if W_sd_pre_sum is negative.
-        # DomainError with -0.949300845859282:
-        # sqrt was called with a negative real argument but will only return a complex result if called with a complex argument. Try sqrt(Complex(x)).
-        # More specifically: 
-        # sum(skipmissing(dat.nat_weight .* (dat.W .- W_mean).^2)) # -0.949300845859282
-        # This behaviour is also observed in the R package
+        W_sd        = sqrt(W_sd_pre_sum) * sqrt(M/(M - 1))
         sensibility = abs.(beta) ./ W_sd
         
         dat_result = dat[:, [:T, :G, :weight_result]]

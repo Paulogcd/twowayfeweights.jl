@@ -14,7 +14,7 @@ function save_test_data(data_R::OrderedCollections.OrderedDict, data_julia::Dict
     JLD2.@save joinpath(@__DIR__, "data", "output", string("data_julia_", step, ".jld2")) data_julia;
 end
 
-function test_step_1_renaming(data_R, data_julia, save = false)
+function test_step_1_renaming(data_R, data_julia, save_bool = false)
 
      Test.@testset "Step 1: renaming" begin
         RCall.@rput data_R
@@ -86,7 +86,7 @@ function test_step_1_renaming(data_R, data_julia, save = false)
         end
         data_R = RCall.@rput data_R
 
-        if save save_test_data(data_R, data_julia, "1") end
+        if save_bool save_test_data(data_R, data_julia, "1") end
 
         compare_R_julia(data_R, data_julia)
     end;
@@ -95,7 +95,7 @@ function test_step_1_renaming(data_R, data_julia, save = false)
 
 end
 
-function test_step_2_transform(data_R, data_julia, save = false)
+function test_step_2_transform(data_R, data_julia, save_bool = false)
 
     Test.@testset "Step 2: transforming" begin
     
@@ -118,7 +118,7 @@ function test_step_2_transform(data_R, data_julia, save = false)
         data_R = RCall.rcopy(R"data_R")
         RCall.rcopy(R"data_R$data_transformed")
 
-        if save save_test_data(data_R, data_julia, "2") end
+        if save_bool save_test_data(data_R, data_julia, "2") end
         
         # Here, we have to adapt.
         # The numbers are the same, but the type imply that the test will always fail.
@@ -138,7 +138,7 @@ function test_step_2_transform(data_R, data_julia, save = false)
 end
 
 
-function test_step_3_filter(data_R, data_julia, save = false)
+function test_step_3_filter(data_R, data_julia, save_bool = false)
 
     Test.@testset "Step 3: filtering" begin
         
@@ -170,7 +170,7 @@ function test_step_3_filter(data_R, data_julia, save = false)
             controls = data_julia[:controls_rename],
             treatments = data_julia[:treatments_rename])
 
-        if save save_test_data(data_R, data_julia, "3") end
+        if save_bool save_test_data(data_R, data_julia, "3") end
 
         compare_R_julia(data_R[:data_filtered][:, DataFrames.Not(:Tfactor)], data_julia[:data_filtered][:, DataFrames.Not(:Tfactor)])
     end
@@ -179,7 +179,7 @@ function test_step_3_filter(data_R, data_julia, save = false)
 
 end
 
-function test_step_4_calculate(data_R, data_julia, save = false)
+function test_step_4_calculate(data_R, data_julia, save_bool = false)
     
     Test.@testset "Step 4: calculate" begin
         
@@ -208,7 +208,7 @@ function test_step_4_calculate(data_R, data_julia, save = false)
         ")
         data_R = RCall.rcopy(R"data_R")
 
-        if save save_test_data(data_R, data_julia, "4") end
+        if save_bool save_test_data(data_R, data_julia, "4") end
 
         compare_R_julia(data_R[:res], data_julia[:res])
     
@@ -218,7 +218,7 @@ function test_step_4_calculate(data_R, data_julia, save = false)
 
 end
 
-function test_step_5_result(data_R, data_julia, save = false)
+function test_step_5_result(data_R, data_julia, save_bool = false)
 
     Test.@testset "Step 5: results" begin
 
@@ -246,7 +246,7 @@ function test_step_5_result(data_R, data_julia, save = false)
 
         data_R = RCall.rcopy(R"data_R")
 
-        if save save_test_data(data_R, data_julia, "5") end
+        if save_bool save_test_data(data_R, data_julia, "5") end
 
         compare_R_julia(data_R[:result], data_julia[:result])
 

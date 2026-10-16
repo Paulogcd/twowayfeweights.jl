@@ -8,10 +8,12 @@ It provides a set of functions to compute the two way fixed effects (TWFE) estim
 
 # Features that are still to implement
 
+- Make stepwise_test_4 pass on GitHub (3 are failing in the "Step5: results" function).
 - Harmonize all intermediate tests.
 - Harmonize documentation for utils (internal functions).
 - Harmonize the display of message in the Julia REPL.
 - Harmonize the use of the "weights" argument.
+- Remove utils_... at root.
 
 Website-Documentation: 
 - Internal process

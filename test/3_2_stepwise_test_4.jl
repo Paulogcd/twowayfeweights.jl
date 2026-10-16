@@ -49,6 +49,12 @@ function stepwise_test_4()
         )")
         data_R = RCall.rcopy(R"data_R")
 
+        # data_R = test_4_R
+        # data_R[:other_treatments] = nothing
+        # data_R[:random_weights] = nothing
+        # RCall.@rput data_R
+        # data_julia = test_4_julia
+
         data_R == data_julia
         for k in string.(keys(data_R))
             RCall.@rput k

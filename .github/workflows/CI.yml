@@ -24,8 +24,9 @@ jobs:
       matrix:
         version:
           - '1.13.1'
+          - '1.13'
+          - '1'
           - 'pre'
-          - 'nightly'
         R:
           - '4.6.1'
         os:

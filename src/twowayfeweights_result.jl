@@ -32,12 +32,14 @@ Internal workhorse function for creating the return object of a
   `twowayfeweights_calculate()`.
 """
 function twowayfeweights_result(;
-    dat::DataFrames.DataFrame,
+    dat_in::DataFrames.DataFrame,
     beta::Real,
     random_weights::Union{Nothing, String, Vector{String}},
     treatments = nothing,
     method::Symbol)
 
+    dat = copy(dat_in)
+    
     dat[!, :weight_result] = zero_below_eps(dat[!, :weight_result])
     
     if isnothing(treatments)

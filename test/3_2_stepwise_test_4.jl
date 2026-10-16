@@ -55,7 +55,7 @@ function stepwise_test_4()
         # RCall.@rput data_R
         # data_julia = test_4_julia
 
-        data_R == data_julia
+        Test.@test data_R == data_julia
         for k in string.(keys(data_R))
             RCall.@rput k
             data_julia[Symbol(k)] == RCall.rcopy(R"data_R[[k]]")

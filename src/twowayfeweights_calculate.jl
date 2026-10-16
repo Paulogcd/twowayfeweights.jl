@@ -2,11 +2,13 @@
 Internal funcion for calculating the twoway FE weights.
 """
 function twowayfeweights_calculate(;
-    dat::DataFrames.DataFrame,
+    dat_in::DataFrames.DataFrame,
     type::String,
     controls::Union{String, Vector{String}, Vector{Any}, Nothing},
     treatments::Union{String, Vector{String}, Nothing},
     method::Symbol=:cpu)
+
+    dat = copy(dat_in)
 
     if (!isnothing(treatments) && type != "feTR")
         @error("When the `other_treatments` argument is specified, you need to specify `type = 'feTR'` too.")
@@ -20,7 +22,7 @@ function twowayfeweights_calculate(;
         mean_D = weighted_mean(dat[:, DVAR], dat[:, :weights])
     end
 
-    # This code block creates a discrepancy!
+    # This code block creates a discrepancy?
     # BUG
     ###
     obs = sum(dat.weights)
@@ -65,9 +67,9 @@ function twowayfeweights_calculate(;
 
     if type == "fdS"
         dat_regression = dat[dat[:, :weights] .!= 0,:]
-        denom_lm = FixedEffectModels.reg(dat_regression, fml, weights = :weights, save = :all; method = method)
+        denom_lm = FixedEffectModels.reg(dat_regression, fml, weights = :weights, save = :all, tol = 1e-8; method = method)
     else 
-        denom_lm = FixedEffectModels.reg(dat, fml, weights = :weights, save = :all; method = method)
+        denom_lm = FixedEffectModels.reg(dat, fml, weights = :weights, save = :all, tol = 1e-8; method = method)
     end
 
     EPS_VAR = type_fe ? "eps_1" : "eps_2"
@@ -86,9 +88,9 @@ function twowayfeweights_calculate(;
 
     if type == "fdS"
         dat_regression_beta = dat[dat[:, :weights] .!= 0, :]
-        beta_lm = FixedEffectModels.reg(dat_regression_beta, fml_beta, weights = :weights, save = :none; method = method)
+        beta_lm = FixedEffectModels.reg(dat_regression_beta, fml_beta, weights = :weights, save = :none, tol = 1e-8; method = method)
     else
-        beta_lm = FixedEffectModels.reg(dat, fml_beta, weights = :weights; method = method)
+        beta_lm = FixedEffectModels.reg(dat, fml_beta, weights = :weights, tol = 1e-8; method = method)
     end
     beta = coef(beta_lm)[coefnames(beta_lm) .== "D"][1]
 

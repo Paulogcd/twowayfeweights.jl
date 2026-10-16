@@ -180,7 +180,7 @@ function twowayfeweights(;
 
     # Calculate the weights
     res = twowayfeweights_calculate(
-      dat        = data_filtered,
+      dat_in     = data_filtered,
       type       = type,
       controls   = controls_rename,
       treatments = treatments_rename,
@@ -188,7 +188,7 @@ function twowayfeweights(;
   
     # Create main return object list
     res = twowayfeweights_result(
-      dat            = res[:dat],
+      dat_in         = res[:dat],
       beta           = res[:beta],
       random_weights = random_weight_rename,
       treatments     = treatments_rename,

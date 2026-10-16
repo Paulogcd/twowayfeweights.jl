@@ -172,7 +172,7 @@ function test_step_3_filter(data_R, data_julia, save_bool = false)
 
         if save_bool save_test_data(data_R, data_julia, "3") end
 
-        compare_R_julia(data_R[:data_filtered][:, DataFrames.Not(:Tfactor)], data_julia[:data_filtered][:, DataFrames.Not(:Tfactor)])
+        compare_R_julia(data_R[:data_filtered], data_julia[:data_filtered])
     end
 
     return(data_R, data_julia)
@@ -186,7 +186,7 @@ function test_step_4_calculate(data_R, data_julia, save_bool = false)
         RCall.@rput data_R
 
         data_julia[:res] = TwoWayFEWeights.twowayfeweights_calculate(
-            dat        = data_julia[:data_filtered],
+            dat_in     = data_julia[:data_filtered],
             type       = data_julia[:type],
             controls   = data_julia[:controls_rename],
             treatments = data_julia[:treatments_rename],
@@ -225,7 +225,7 @@ function test_step_5_result(data_R, data_julia, save_bool = false)
         RCall.@rput data_R
 
         data_julia[:result] = TwoWayFEWeights.twowayfeweights_result(
-            dat             = data_julia[:res][:dat],
+            dat_in          = data_julia[:res][:dat],
             beta            = data_julia[:res][:beta],
             random_weights  = data_julia[:random_weight_rename],
             treatments      = data_julia[:treatments_rename],
@@ -270,8 +270,8 @@ end
 
 function compare_R_julia(R_object::AbstractDict, julia_object::AbstractDict)
     
-    # R_object = data_R[:result]
-    # julia_object = data_julia[:result]
+    # R_object = data_R[:res]
+    # julia_object = data_julia[:res]
     
     RCall.@rput R_object
 
@@ -342,6 +342,8 @@ function compare_R_julia(R_object_k::DataFrames.DataFrame, julia_object_k::DataF
 
     for col_name in names(julia_object_k)
 
+        # col_name = "weight_result"
+
         RCall.@rput col_name
         
         julia_test = julia_object_k[!, col_name]
@@ -349,6 +351,11 @@ function compare_R_julia(R_object_k::DataFrames.DataFrame, julia_object_k::DataF
         R_test = RCall.rcopy(R"R_object_k[[col_name]]")
 
         result = isequal(R_test, julia_test)
+
+        # diff = R_test .- julia_test
+        # inspect = isapprox.(diff, 0)
+        # R_object_k[inspect, [:Y, :G, :T]]
+        # R_object_k[inspect, :]
         
         if !result
             
@@ -358,7 +365,7 @@ function compare_R_julia(R_object_k::DataFrames.DataFrame, julia_object_k::DataF
             result_approx = isapprox(
                 julia_test,
                 R_test;
-                atol = 1e-2
+                atol = 1e-3
             )
             if !result_approx
                 @show col_name
